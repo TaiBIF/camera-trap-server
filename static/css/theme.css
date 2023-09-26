@@ -3997,7 +3997,7 @@ h3.light-green {
 .pop-box.error-pop .icon-1 {
     flex: 0 0 20px;
     margin-right: 5px;
-    margin-top: 3px
+    margin-top: 4px
 }
 
 .pop-box.error-pop .flex-box {
@@ -6087,7 +6087,7 @@ h3.light-green {
 .create-newpj .ccbox li .select-box .item {
     display: flex;
     align-items: center;
-    cursor: default;
+    cursor: pointer;
     margin-bottom: 20px
 }
 
@@ -6321,8 +6321,7 @@ h3.light-green {
 }
 
 @media only screen and (min-width: 1000px) {
-    .management-box .left-menu-area ul li:hover,
-    .faq-box .left-menu-area ul li:hover {
+    .management-box .left-menu-area ul li:hover, .faq-box .left-menu-area ul li:hover {
         transition: all .3s;
         -moz-transition: all .3s;
         -o-transition: all .3s;

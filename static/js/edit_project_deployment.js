@@ -383,9 +383,9 @@ $( function() {
                         </tr>`)
                 }
 
-                $('select[name=protectedarea]').select2({placeholder:'--請選擇--'})
-                $('select[name=vegetation]').select2()
-                $('select[name=county]').select2()        
+                $('select[name=protectedarea]').select2({placeholder:'--請選擇--',language: "zh-TW"})
+                $('select[name=vegetation]').select2({language: "zh-TW"})
+                $('select[name=county]').select2({language: "zh-TW"})    
             
                 alert('設定已儲存');
             },
@@ -468,9 +468,9 @@ $( function() {
             </td>
         </tr>`)
 
-        $('select[name=protectedarea]').select2({placeholder:'--請選擇--'})
-        $('select[name=vegetation]').select2()
-        $('select[name=county]').select2()
+        $('select[name=protectedarea]').select2({placeholder:'--請選擇--',language: "zh-TW"})
+        $('select[name=vegetation]').select2({language: "zh-TW"})
+        $('select[name=county]').select2({language: "zh-TW"})
 
     })
 
@@ -673,9 +673,9 @@ function getDep(id, sa_name){
                 </tr>`)
             }
 
-            $('select[name=protectedarea]').select2({placeholder:'--請選擇--'})
-            $('select[name=vegetation]').select2()
-            $('select[name=county]').select2()
+            $('select[name=protectedarea]').select2({placeholder:'--請選擇--',language: "zh-TW"})
+            $('select[name=vegetation]').select2({language: "zh-TW"})
+            $('select[name=county]').select2({language: "zh-TW"})
             //$('select').selectpicker();
             if (response.length > 0){
                 $('#geodetic_datum').val(response[0][10])

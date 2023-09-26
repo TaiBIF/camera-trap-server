@@ -1,4 +1,4 @@
-$(".select-sa").select2({placeholder: "請選擇"});
+$(".select-sa").select2({placeholder: "請選擇", language: "zh-TW"});
 
 
 $( function() {

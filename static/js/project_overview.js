@@ -165,6 +165,8 @@ function updateTable(page) {
       });
 
       // 修改筆數資數
+
+      $($(`.page-inf[data-table=${list_name}-page] .page-num`)).remove('d-none')
       /* 這邊要修改成當前狀況 */
       $(`.page-inf[data-table=${list_name}-page] span.show-start`).html(response.show_start);
       $(`.page-inf[data-table=${list_name}-page] span.show-end`).html(response.show_end);
