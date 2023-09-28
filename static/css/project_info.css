@@ -1,3 +1,35 @@
+.clear-up {
+    border: 1px solid #257455;
+    background: #FFF;
+    color: #257455;
+    font-size: 14px;
+    height: 35px;
+    padding: 0px 10px;
+    border-radius: 30px;
+    min-width: 60px;
+    transition: all .3s;
+    -moz-transition: all .3s;
+    -o-transition: all .3s;
+    -ms-transition: all .3s;
+    -webkit-transition: all .3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+@media only screen and (min-width: 1000px) {
+    .clear-up:hover {
+        color: #FFF;
+        background: #257455;
+        transition: all .3s;
+        -moz-transition: all .3s;
+        -o-transition: all .3s;
+        -ms-transition: all .3s;
+        -webkit-transition: all .3s
+    }
+}
+
 .species-percentage-list:hover {
     color: lightgrey !important;
 }

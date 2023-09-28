@@ -26,6 +26,17 @@ $( document ).ready(function() {
 
     }})
 
+    $.ajax({
+        type: 'GET',
+        url: `/api/get_image_info/?pk=${pk}`,
+        success: function (response) {  
+            setImageLineChart(response.line_chart_data);
+
+            window.line_chart_data = response.line_chart_data;
+            window.image_counts = response.image_counts;
+        }}
+    )
+
 
     $('#updateSpeciesPie').on('click',function(){
         updateSpeciesPie()
@@ -61,7 +72,8 @@ $( document ).ready(function() {
 
     $('.filter').on('change', function(){
         updateSpeciesPie();
-    })
+        updateImageLineChart()   
+    });
         
     
     let date_locale = { days: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
@@ -198,6 +210,9 @@ $( document ).ready(function() {
         ValidateEmail($(this).val())
     });
     
+    $('.clear-up').on('click', function (event) {
+        location.reload();
+    });
 });
 
 
@@ -223,6 +238,7 @@ function getSaPoints(sa_list){
                         // 如果是子樣區？
                         $('.sa-select').val(i[3]);
                         updateSpeciesPie();
+                        updateImageLineChart()
                     })
                     .addTo(map))
               );
@@ -454,6 +470,7 @@ function setSpeciesPie(pie_data, other_data, deployment_points){
                         // 如果是子樣區？
                         $('.subsa-select').val(r[4]);
                         updateSpeciesPie();
+                        updateImageLineChart()
                     })
                     .bindTooltip(r[2], { permanent: true, direction: 'top' })
                     .addTo(map)
@@ -493,7 +510,7 @@ function updateSpeciesPie(){
     if ((!start_date) & (!end_date) & (title == '全部')){
         setSpeciesPie(window.pie_data, window.other_data, []);
         getSaPoints(window.sa_list)
-        $('#sa-title').html('全部');
+        $('#pie-sa-title').text('全部樣區');
         $('#species-count-title').html(window.species_count);
         $('#species_last_updated').html(window.species_last_updated);
     } else {
@@ -503,7 +520,7 @@ function updateSpeciesPie(){
             url: "/update_species_pie",
             success: function(response){
                 $('.loading-pop').addClass('d-none')
-                $('#sa-title').html(title);
+                $('#pie-sa-title').text(title);
                 $('#species-count-title').html(response.species_count);
                 $('#species_last_updated').html(response.species_last_updated);
                 setSpeciesPie(response.pie_data, response.other_data, response.deployment_points)
@@ -617,4 +634,98 @@ function pointToLayer(count, latlng) {
         fillOpacity: 0.75,
         className: 'speciesMapIcon',
         }) // Change marker to circle
+}
+
+function setImageLineChart(line_chart_data){
+    Highcharts.chart('line-chart', {
+        chart: {
+            backgroundColor: 'transparent',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            height: 340,
+          },
+        exporting: { enabled: false },
+        credits: { enabled: false },
+        legend: {
+            enabled: false,
+        },
+        plotOptions:{
+            series:{
+                label:{
+                    enabled: false,
+                },
+            },
+        },
+        title: { text: "" },
+        xAxis:[{
+            type:'datetime',
+            labels: {
+                format: '{value:%Y-%b}',
+                rotation: -45,
+                align: 'right',
+              },
+        }],
+        yAxis:[{
+            title: {
+                text: '照片張數',
+              },
+        }],
+        series: [{
+            name: '照片張數',
+            data: line_chart_data,
+            size: '80%',
+            color: '#257455', 
+        }]
+    });
+}
+
+function updateImageLineChart(){
+    // 地圖相關的移除
+    $('.species-map-legend').addClass('d-none')
+    $('.speciesMapIcon').remove()
+    $('.species-pie,#species-pie,#species-percentage').removeClass('d-none')
+    $('.species-map').addClass('d-none')
+    // 樣區 子樣區 日期
+    let said;
+    // 子樣區優先
+    let subsa_select = $('.subsa-select option:selected').val();
+    let sa_select = $('.sa-select option:selected').val();
+    let title;
+    if ((subsa_select!='all') & (subsa_select!=undefined) ){
+        said = subsa_select
+        title = $( ".subsa-select option:selected" ).text()
+    } else if ((sa_select!='all') & (sa_select!=undefined) ) {
+        said = sa_select
+        title = $( ".sa-select option:selected" ).text()
+    } else {
+        said = $('input[name=pk]').val()
+        title = '全部'
+    }
+
+    let start_date = $('input[name="start_date"]').val()
+    let end_date = $('input[name="end_date"]').val()
+    if ((!start_date) && (!end_date) && (title == '全部')){
+        setImageLineChart(window.line_chart_data)
+        $('#sa-title').text('全部樣區');
+        $('#image_counts').text(window.image_counts);
+    } else {
+        $('.loading-pop').removeClass('d-none')
+        $.ajax({
+            data: {'said': said, 'start_date': start_date, 'end_date': end_date},            
+            url: "/update_line_chart",
+            success: function(response){
+                console.log(response);
+                setImageLineChart(response.line_chart_data);
+                var selectedSa = $('.sa-select').find("option:selected").text()
+                $('#sa-title').text(selectedSa);
+                $('#image_counts').text(response.image_counts);
+            },
+            error: function(){
+                alert('未知錯誤，請聯繫管理員');
+                $('.loading-pop').addClass('d-none')
+
+            }
+        })
+    }
 }

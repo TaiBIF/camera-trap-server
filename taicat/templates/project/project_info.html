@@ -140,6 +140,7 @@
 							</div>
 						</li>
 					</ul>
+					<button class="clear-up">清除條件</button>
 				</div>
 				<div class="right-box">
 					<div class="wbgbox">
@@ -262,7 +263,7 @@
 					<li>
 						<div class="chart-title">
 
-							<h2 class="species-pie">全部樣區已辨識物種<span id="species-count-title" class="title-dark">{{ species_count }}</span>種</h2>
+							<h2 class="species-pie"><sapn id="pie-sa-title">全部樣區</sapn>已辨識物種<span id="species-count-title" class="title-dark">{{ species_count }}</span>種</h2>
 							<p class="date species-pie">最後更新時間：<span id="species_last_updated">{{ species_last_updated|date:'o-m-d' }}</span></p>
 
 							<h2 class="m-0 species-map d-none">
@@ -284,9 +285,10 @@
 					</li>
 					<li>
 						<div class="chart-title">
-							<h2>(圖片設計中...)</h2>
+							<h2 class="line-chart-title"><sapn id="sa-title">全部樣區</sapn>已上傳照片<span class="title-dark" id="image_counts">{{ image_count }}</span>張</h2>
 						</div>
 						<div class="chart-are">
+							<div id="line-chart"></div>
 						</div>
 						<div class="dottarea">
 						</div>
