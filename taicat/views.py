@@ -2410,126 +2410,36 @@ def update_line_chart(request):
 
     if said:
         sa = int(said)
-        subsa = StudyArea.objects.filter(id=said) # Check if sa is studyarea_id or project_id
-        if subsa: # Grab image data based on studyarea_id
-            image_data = Image.objects.filter(studyarea_id=sa).values('studyarea', 'datetime', 'species')
-            datetime_value = [str(item['datetime']) for item in image_data]
-            species = [str(item['species']) for item in image_data]
-            studyarea = [item['studyarea'] for item in image_data]
-            
-            # Sort image data into a dateframe
-            df = pd.DataFrame({'datetime':datetime_value,
-                            'species':species,
-                            'studyarea':studyarea})
-            df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d').dt.tz_localize(None)
+        # Check if sa is studyarea_id or project_id and grab the image data based on studyarea_id or project_id
+        image_data = Image.objects.filter(studyarea_id=sa) if StudyArea.objects.filter(id=sa) else Image.objects.filter(project_id=sa)
+        
+        # Deal with datetime 
+        if start_date:
+            image_data = image_data.filter(datetime__gte=start_date)
+        if end_date:
+            image_data = image_data.filter(datetime__lte=end_date)
+        
+        datetime_values = [str(item.datetime) for item in image_data]
+        species = [str(item.species) for item in image_data]
+        
+        # Sort selected image data into a dataframe
+        df = pd.DataFrame({'datetime': datetime_values, 'species': species})
+        df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d').dt.tz_localize(None)
+        
+        df['year'] = df['datetime'].dt.year
+        df['month'] = df['datetime'].dt.month
 
-            # Handle the image data for line chart
-            if start_date and end_date: 
-                date_condition_start = (df['datetime'] >= start_date) 
-                df_filtered = df[date_condition_start]
-                date_condition_end = (df['datetime'] <= end_date)
-                df_filtered = df_filtered[date_condition_end]
-                df_filtered['year'] = df_filtered['datetime'].dt.year
-                df_filtered['month'] = df_filtered['datetime'].dt.month
-                df_filtered['year-month'] = pd.to_datetime(df_filtered[['year', 'month']].assign(day=1))
-                df_filtered['timestamp'] = df_filtered['year-month'].astype(int) / 10**6
-
-                df2 = df_filtered.groupby(['timestamp']).size().reset_index(name='counts')
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                image_counts = df2['counts'].sum()
-                response['line_chart_data'] = line_chart_data
-                response['image_counts'] = image_counts
-            elif start_date:               
-                date_condition = (df['datetime'] >= start_date) 
-                df_filtered = df[date_condition]
-                df_filtered['year'] = df_filtered['datetime'].dt.year
-                df_filtered['month'] = df_filtered['datetime'].dt.month
-                df_filtered['year-month'] = pd.to_datetime(df_filtered[['year', 'month']].assign(day=1))
-                df_filtered['timestamp'] = df_filtered['year-month'].astype(int) / 10**6
-
-                df2 = df_filtered.groupby(['timestamp']).size().reset_index(name='counts')
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                image_counts = df2['counts'].sum()
-                response['line_chart_data'] = line_chart_data
-                response['image_counts'] = image_counts
-            elif end_date:
-                date_condition = (df['datetime'] <= end_date)
-                df_filtered = df[date_condition]
-                df_filtered['year'] = df_filtered['datetime'].dt.year
-                df_filtered['month'] = df_filtered['datetime'].dt.month
-                df_filtered['year-month'] = pd.to_datetime(df_filtered[['year', 'month']].assign(day=1))
-                df_filtered['timestamp'] = df_filtered['year-month'].astype(int) / 10**6
-
-                df2 = df_filtered.groupby(['timestamp']).size().reset_index(name='counts')
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                image_counts = df2['counts'].sum()
-                response['line_chart_data'] = line_chart_data  
-                response['image_counts'] = image_counts
-            else: # If there is no datetime available
-                df['year'] = df['datetime'].dt.year
-                df['month'] = df['datetime'].dt.month
-                df['year-month'] = pd.to_datetime(df[['year', 'month']].assign(day=1))
-                df['timestamp'] = df['year-month'].astype(int) / 10**6
-
-                df2 = df.groupby(['timestamp']).size().reset_index(name='counts')
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                image_counts = df2['counts'].sum()
-                response['line_chart_data'] = line_chart_data
-                response['image_counts'] = image_counts
-        else: # Grab image data based on project_id
-            image_data = Image.objects.filter(project_id=sa).values('studyarea', 'datetime', 'species')
-            datetime_value = [str(item['datetime']) for item in image_data]
-            species = [str(item['species']) for item in image_data]
-            studyarea = [item['studyarea'] for item in image_data]
-            
-            # Sort image data into a dateframe
-            df = pd.DataFrame({'datetime':datetime_value,
-                            'species':species,
-                            'studyarea':studyarea})
-            df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d').dt.tz_localize(None)
-
-            # Handle the image data for line chart
-            if start_date and end_date:
-                date_condition_start = (df['datetime'] >= start_date) 
-                df_filtered = df[date_condition_start]
-                date_condition_end = (df['datetime'] <= end_date)
-                df_filtered = df_filtered[date_condition_end]
-                df_filtered['year'] = df_filtered['datetime'].dt.year
-                df_filtered['month'] = df_filtered['datetime'].dt.month
-                df_filtered['year-month'] = pd.to_datetime(df_filtered[['year', 'month']].assign(day=1))
-                df_filtered['timestamp'] = df_filtered['year-month'].astype(int) / 10**6
-
-                df2 = df_filtered.groupby(['timestamp']).size().reset_index(name='counts')
-                image_counts = df2['counts'].sum()
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                response['image_counts'] = image_counts
-
-                response['line_chart_data'] = line_chart_data
-            elif start_date:               
-                date_condition = (df['datetime'] >= start_date) 
-                df_filtered = df[date_condition]
-                df_filtered['year'] = df_filtered['datetime'].dt.year
-                df_filtered['month'] = df_filtered['datetime'].dt.month
-                df_filtered['year-month'] = pd.to_datetime(df_filtered[['year', 'month']].assign(day=1))
-                df_filtered['timestamp'] = df_filtered['year-month'].astype(int) / 10**6
-
-                df2 = df_filtered.groupby(['timestamp']).size().reset_index(name='counts')
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                image_counts = df2['counts'].sum()
-                response['line_chart_data'] = line_chart_data
-                response['image_counts'] = image_counts
-            elif end_date: # If there is no datetime available
-                date_condition = (df['datetime'] <= end_date)
-                df_filtered = df[date_condition]
-                df_filtered['year'] = df_filtered['datetime'].dt.year
-                df_filtered['month'] = df_filtered['datetime'].dt.month
-                df_filtered['year-month'] = pd.to_datetime(df_filtered[['year', 'month']].assign(day=1))
-                df_filtered['timestamp'] = df_filtered['year-month'].astype(int) / 10**6
-
-                df2 = df_filtered.groupby(['timestamp']).size().reset_index(name='counts')
-                line_chart_data = df2[['timestamp', 'counts']].values.tolist()
-                image_counts = df2['counts'].sum()
-                response['line_chart_data'] = line_chart_data     
-                response['image_counts'] = image_counts        
+        # Combine year and month into a timestamp
+        df['year-month'] = pd.to_datetime(df[['year', 'month']].assign(day=1))
+        df['timestamp'] = df['year-month'].astype(int) / 10**6
+        
+        # Caluate line chart data
+        df2 = df.groupby(['timestamp']).size().reset_index(name='counts')
+        line_chart_data = df2[['timestamp', 'counts']].values.tolist()
+        image_counts = df2['counts'].sum()
+        
+        response['line_chart_data'] = line_chart_data
+        response['image_counts'] = image_counts
 
     return HttpResponse(json.dumps(response, default=str), content_type='application/json')
+    
