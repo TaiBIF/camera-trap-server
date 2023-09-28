@@ -2442,3 +2442,4 @@ def update_line_chart(request):
         response['image_counts'] = image_counts
 
     return HttpResponse(json.dumps(response, default=str), content_type='application/json')
+    
