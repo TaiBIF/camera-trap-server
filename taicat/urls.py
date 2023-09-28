@@ -34,7 +34,10 @@ urlpatterns = [
     path('api/check_login/', views.check_login, name='check_login'),
     path('api/project/overview', views.get_project_overview, name='get_project_overview'),
     path('download/<pk>', views.download_request, name='download'),
-    
+
+    path('api/get_image_info/', views.get_image_info, name='get_image_info'),
+    path('update_line_chart/', views.update_line_chart, name='update_line_chart'),
+
     #    path('download/data/<uidb64>/<token>', views.download_data, name='download_data'),
     path('search/', search_view.index, name='search'),
     path('api/search', search_view.api_search, name='get_search'),

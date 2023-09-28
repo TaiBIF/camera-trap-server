@@ -1,8 +1,8 @@
-  $(function () {
+$(function () {
 
     $.ajax({
-      url: "/api/get_growth_data",
-      success: function (data) {
+        url: "/api/get_growth_data",
+        success: function (data) {
         // plot
         data_growth_year = [];
         data.data_growth_image.forEach((i) => data_growth_year.push(i[0]));
@@ -15,36 +15,36 @@
 
         // plot - data_growth
         Highcharts.chart("data_growth", {
-          chart: {
+            chart: {
             marginTop: 40,
             backgroundColor: null,
-          },
-          exporting: { enabled: false },
-          credits: { enabled: false },
-          title: { text: "" },
-          xAxis: [
-            {
-              categories: data_growth_year,
-              crosshair: true,
             },
-          ],
-          legend: {
+            exporting: { enabled: false },
+            credits: { enabled: false },
+            title: { text: "" },
+            xAxis: [
+            {
+                categories: data_growth_year,
+                crosshair: true,
+            },
+            ],
+            legend: {
             itemStyle: {
-              fontSize: "14px",
-              fontWeight: "regular",
+                fontSize: "14px",
+                fontWeight: "regular",
             },
-          },
-          yAxis: [
+            },
+            yAxis: [
             {
-              // Primary yAxis
-              allowDecimals: false,
-              labels: {
+                // Primary yAxis
+                allowDecimals: false,
+                labels: {
                 format: "{value}",
                 style: {
-                  fontSize: "14px",
+                    fontSize: "14px",
                 },
-              },
-              title: {
+                },
+                title: {
                 align: "high",
                 offset: 0,
                 text: "相機位置數",
@@ -52,16 +52,16 @@
                 y: -20,
                 x: -10,
                 style: {
-                  fontSize: "14px",
+                    fontSize: "14px",
                 },
-              },
-              opposite: true,
+                },
+                opposite: true,
             },
             {
-              // Secondary yAxis
-              allowDecimals: false,
-              gridLineWidth: 0,
-              title: {
+                // Secondary yAxis
+                allowDecimals: false,
+                gridLineWidth: 0,
+                title: {
                 align: "high",
                 offset: 0,
                 text: "影像累積筆數(萬)",
@@ -69,163 +69,178 @@
                 y: -20,
                 x: 30,
                 style: {
-                  fontSize: "14px",
+                    fontSize: "14px",
                 },
-              },
-              labels: {
+                },
+                labels: {
                 format: "{value}",
                 style: {
-                  fontSize: "14px",
+                    fontSize: "14px",
                 },
-              },
+                },
             },
-          ],
-          tooltip: {
+            ],
+            tooltip: {
             shared: true,
-          },
-          series: [
+            },
+            series: [
             {
-              name: "影像累積筆數(萬)",
-              type: "column",
-              yAxis: 1,
-              data: data_growth_image_count,
-              tooltip: {},
-              color: "#AECC82",
+                name: "影像累積筆數(萬)",
+                type: "column",
+                yAxis: 1,
+                data: data_growth_image_count,
+                tooltip: {},
+                color: "#AECC82",
             },
             {
-              name: "相機位置數",
-              type: "spline",
-              data: data_growth_deployment_count,
-              tooltip: {},
-              marker: {
+                name: "相機位置數",
+                type: "spline",
+                data: data_growth_deployment_count,
+                tooltip: {},
+                marker: {
                 lineWidth: 2,
                 lineColor: "#AECC82",
                 fillColor: "white",
-              },
-              color: "#AECC82",
-              label: {
+                },
+                color: "#AECC82",
+                label: {
                 enabled: false,
-              },
+                },
             },
-          ],
-          responsive: {
+            ],
+            responsive: {
             rules: [
-              {
+                {
                 condition: {
-                  maxWidth: 500,
+                    maxWidth: 500,
                 },
                 chartOptions: {
-                  legend: {
+                    legend: {
                     floating: false,
                     layout: "horizontal",
                     align: "center",
                     verticalAlign: "bottom",
                     x: 0,
                     y: 0,
-                  },
-                  yAxis: [
+                    },
+                    yAxis: [
                     {
-                      labels: {
+                        labels: {
                         align: "right",
                         x: 0,
                         y: -6,
-                      },
-                      showLastLabel: false,
+                        },
+                        showLastLabel: false,
                     },
                     {
-                      labels: {
+                        labels: {
                         align: "left",
                         x: 0,
                         y: -6,
-                      },
-                      showLastLabel: false,
+                        },
+                        showLastLabel: false,
                     },
                     {
-                      visible: false,
+                        visible: false,
                     },
-                  ],
+                    ],
                 },
-              },
+                },
             ],
-          },
+            },
         });
-      },
+        },
     });
 
     $.ajax({
-      url: "/api/get_species_data",
-      success: function (data) {
+        url: "/api/get_species_data",
+        success: function (data) {
         // plot - species
+            species_data_name = [];
+            data.species_data.forEach((i) => species_data_name.push(i[1]));
+            species_data_count = [];
+            data.species_data.forEach((i) => species_data_count.push(i[0] / 10000));
 
-        species_data_name = [];
-        data.species_data.forEach((i) => species_data_name.push(i[1]));
-        species_data_count = [];
-        data.species_data.forEach((i) => species_data_count.push(i[0] / 10000));
-        Highcharts.chart("species_data", {
-          chart: {
-            type: "bar",
-            marginTop: 40,
-            backgroundColor: null,
-          },
-          exporting: { enabled: false },
-          credits: { enabled: false },
-          title: { text: "" },
-          xAxis: {
-            categories: species_data_name,
-            tickInterval: 1,
-            title: {
-              text: null,
-              style: {
-                fontSize: "14px",
-              },
-            },
-            labels: {
-              step: 1,
-              style: {
-                fontSize: "14px",
-              },
-            },
-          },
-          yAxis: {
-            allowDecimals: false,
-            min: 0,
-            title: {
-              text: "資料累積筆數(萬)",
-              align: "high",
-              style: {
-                fontSize: "14px",
-              },
-            },
-            labels: {
-              overflow: "justify",
-              style: {
-                fontSize: "14px",
-              },
-            },
-          },
-          tooltip: {
-            pointFormatter: function () {
-              var string = this.series.name + ": " + this.y + "<br>";
-              return string;
-            },
-          },
-          series: [
-            {
-              name: "資料累積筆數(萬)",
-              data: species_data_count,
-              color: "#AECC82",
-            },
-          ],
-          legend: {
-            itemStyle: {
-              fontSize: "14px",
-              fontWeight: "regular",
-            },
-          },
-        });
-      },
-    });
-  });
+            // Select the top 10 species
+            let xAxisCategories = species_data_name.slice(0, 10);
+            // If the amount of species is more than 10, add '其他' as the last category
+            if (species_data_name.length > 10) {
+                xAxisCategories.push('其他');
+            }
+
+            // Accumulating the speceis number, except for the top 10 species
+            const remainingCount = species_data_count.slice(10).reduce((a, b) => a + b, 0);
+            const yAxisData = species_data_count.slice(0, 10);
+            if (species_data_count.length > 10) {
+                yAxisData.push(remainingCount);
+            }
+            // console.log(yAxisData);
+
+            Highcharts.chart("species_data", {
+                chart: {
+                    type: "bar",
+                    marginTop: 40,
+                    backgroundColor: null,
+                },
+                exporting: { enabled: false },
+                credits: { enabled: false },
+                title: { text: "" },
+                xAxis: {
+                    categories: xAxisCategories,
+                    tickInterval: 1,
+                    title: {
+                    text: null,
+                    style: {
+                        fontSize: "14px",
+                    },
+                    },
+                    labels: {
+                    step: 1,
+                    style: {
+                        fontSize: "14px",
+                    },
+                    },
+                },
+                yAxis: {
+                    allowDecimals: false,
+                    min: 0,
+                    title: {
+                    text: "資料累積筆數(萬)",
+                    align: "high",
+                    style: {
+                        fontSize: "14px",
+                    },
+                    },
+                    labels: {
+                    overflow: "justify",
+                    style: {
+                        fontSize: "14px",
+                    },
+                    },
+                },
+                tooltip: {
+                    pointFormatter: function () {
+                    var string = this.series.name + ": " + this.y + "<br>";
+                    return string;
+                    },
+                },
+                series: [
+                    {
+                    name: "資料累積筆數(萬)",
+                    data: yAxisData,
+                    color: "#AECC82",
+                    },
+                ],
+                legend: {
+                    itemStyle: {
+                    fontSize: "14px",
+                    fontWeight: "regular",
+                    },
+                },
+            });
+        },
+    });  
+});
 
   // map
   
