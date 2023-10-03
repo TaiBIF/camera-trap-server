@@ -538,6 +538,7 @@ function updateSpeciesPie(){
 }
 
 function updateSpeciesMap(species){
+    let pk = $('input[name=pk]').val();
     // 樣區 子樣區 日期
     let said;
     // 子樣區優先
@@ -576,15 +577,35 @@ function updateSpeciesMap(species){
                     pre = `<img class="marker-icon" src='/static/icon/marker-icon-error.png'>`
                 }
 
+                let pk = $('input[name=pk]').val();
                 $('#species-map-stat').html('')
                 //$('#species-map-stat').append(`<h5>${response.type}</h5>`)
                 response.data.forEach(function(i) {
                     marker = pointToLayer(i[0], [i[2],i[1]])
                             .bindTooltip(pre+i[3],{className: 'species-map-tooltip'})
                             .addTo(map)
+                    url = `/project/details/${pk}/?sa=${i[3]}&start_date=${start_date}&end_date=${end_date}&species=${species}`
                     $('#species-map-stat').append(
-                        `<p>${i[3]}：${i[0]}筆</p>`
-                    )
+                        `
+                        <div class="link-container">
+                            <p><a href="${url}">${i[3]}：${i[0]}筆</a></p>
+                            <div class="svg-container">
+                                <svg class="icon02" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 26.414 26.414">
+                                    <g id="Group_771" data-name="Group 771" transform="translate(-966.586 -1128.083)">
+                                        <g id="Group_719" data-name="Group 719" transform="translate(968 1128.083)">
+                                            <g class="cir" id="Ellipse_5" data-name="Ellipse 5" transform="translate(3 0)" fill="none" stroke="#257455" stroke-width="2">
+                                                <ellipse cx="11" cy="11" rx="11" ry="11" stroke="none"></ellipse>
+                                                <ellipse cx="11" cy="11" rx="10" ry="10" fill="none"></ellipse>
+                                            </g>
+                                            <line id="Line_5" data-name="Line 5" x1="6" y2="6" transform="translate(0 19)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"></line>
+                                        </g>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
+                        `
+                    );
+                    
                 })                  
 
                 // 右側統計
