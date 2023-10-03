@@ -389,6 +389,40 @@ function updateTable(page, page_from) {
 
 $(document).ready(function () {
 
+    // Parse the parameters in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const speciesValue = urlParams.get('species');
+    const saValue = urlParams.get('sa');
+    const startdateValue = urlParams.get('start_date');
+    const enddateValue = urlParams.get('end_date');
+    
+    if (speciesValue) {
+        // Remove all now class and add it to the specific species
+        $('.species-check-list li').removeClass('now');
+        $(`.species-check-list li[data-species="${speciesValue}"]`).addClass('now'); 
+    }
+    if (saValue) {
+        // Remove all now class and add it to the specific sa
+        $('.studyarea-list li').removeClass('now');
+        $(`.studyarea-list p:contains("${saValue}")`).parents('li').addClass('now'); 
+        // Check if the parsed sa is the subsa
+        if ($(`.studyarea-list .dep-checkbox p`).filter(function() {
+            return $(this).text() === saValue;
+        }).length) {
+            // if it is the subsa, unclick all of the checkboxes except for parsed one
+            $(`.studyarea-list .dep-checkbox p`).not(function() {
+                return $(this).text() === saValue;
+            }).siblings('input').prop('checked', false);
+        }   
+    }
+    if (startdateValue) {
+    $('#start_date').val(startdateValue)
+    }
+    if (enddateValue) {
+    $('#end_date').val(enddateValue)
+    }
+
+
 
   // 取消按鈕
   $('#canceledit').on('click', function(){
