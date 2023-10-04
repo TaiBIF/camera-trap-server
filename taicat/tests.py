@@ -1,7 +1,15 @@
 from django.test import TestCase
 from http import HTTPStatus
 
+from taicat.models import Project
 # Create your tests here.
+class FooTest(TestCase):
+    def setUp(self):
+        Project.objects.create(id='')
+
+    def test_proj(self):
+        p = Project.objects.get(keyword='k')
+        self.assertEqual(p.name, 'testcase')
 
 class RobotsTest(TestCase):
     def test_get(self):

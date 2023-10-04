@@ -92,6 +92,7 @@ class Contact(models.Model):
     # is_forestry_bureau = models.BooleanField('是否能進入林務局管考系統', default=False)
     is_system_admin = models.BooleanField('是否為系統管理員', default=False)
     identity = models.CharField(max_length=1000, blank=True, null=True)
+    desktop_login = models.CharField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
         return '<Contact {}> {}'.format(self.id, self.name)
