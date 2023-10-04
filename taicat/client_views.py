@@ -31,7 +31,8 @@ from base.models import (
 )
 from .utils import (
     set_image_annotation,
-    set_deployment_journal
+    set_deployment_journal,
+    get_my_project_list,
 )
 from taicat.tasks import process_image_annotation_task
 
@@ -60,13 +61,25 @@ def index(request):
 #     })
 
 def get_project_list(request):
-    projects = Project.objects.all()
-    ret = {
-        'results': [{
-            'project_id': x.id,
-            'name': x.name,
-        } for x in projects]
-    }
+    if user_id := request.GET.get('user_id'):
+        plist = get_my_project_list(user_id)
+        projects = Project.objects.filter(id__in=plist).all()
+        ret = {'results': []}
+        for p in projects:
+            data = {
+                'project_id': p.id,
+                'name': p.name,
+                'studyareas': p.get_deployment_list(),
+            }
+            ret['results'].append(data)
+    else:
+        projects = Project.objects.all()
+        ret = {
+            'results': [{
+                'project_id': x.id,
+                'name': x.name,
+            } for x in projects]
+        }
     return JsonResponse(ret)
 
 def get_project(request, project_id):

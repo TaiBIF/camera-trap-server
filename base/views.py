@@ -38,6 +38,25 @@ from django.views.decorators.csrf import csrf_exempt
 import geopandas as gpd
 from shapely.geometry import Point
 
+
+def desktop_login(request):
+    code = request.GET.get('t')
+    verify_code = code[-4:]
+    return render(request, 'base/desktop_login.html', {'verify_code': verify_code})
+
+def desktop_login_verify(request):
+    code = request.GET.get('code')
+    res = {}
+    if user := Contact.objects.filter(desktop_login=code).first():
+        user.desktop_login = f'logged-in:{code}'
+        user.save()
+        res['user_id'] = user.id
+        res['name'] = user.name
+        res['email'] = user.email
+
+    return JsonResponse(res)
+
+
 def desktop(request):
     title = ''
     version = 'v1'
@@ -547,9 +566,18 @@ def get_auth_callback(request):
     # check if orcid exists in db
     if Contact.objects.filter(orcid=orcid).exists():
         # if exists, update login status
-        info = Contact.objects.filter(orcid=orcid).values('name', 'id').first()
-        name = info['name']
-        id = info['id']
+        #info = Contact.objects.filter(orcid=orcid).values('name', 'id').first()
+        #name = info['name']
+        #id = info['id']
+        contact = Contact.objects.filter(orcid=orcid).first()
+        name = contact.name
+        id = contact.id
+
+        if 'desktop_login' in original_page_url:
+            url_parts = original_page_url.split('?t=')
+            contact.desktop_login = url_parts[1]
+            contact.save()
+
         request.session["first_login"] = False
     else:
         # if not, create one
@@ -561,6 +589,11 @@ def get_auth_callback(request):
         request.session["orcid"] = orcid
         request.session["id"] = id
         request.session["first_login"] = True
+
+        if 'desktop_login' in original_page_url:
+            url_parts = original_page_url.split('?t=')
+            new_user.desktop_login = url_parts[1]
+            new_user.save()
 
         return redirect(personal_info)
 
