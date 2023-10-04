@@ -1316,6 +1316,9 @@ def project_overview(request):
     #     public_project_list = [l[0] for l in cursor.fetchall()]
     public_project_list = ProjectSpecies.objects.filter(project_id__in=Project.objects.filter(mode='official', is_public=True)).order_by('project_id').distinct('project_id').values_list('project_id',flat=True)
 
+    public_total = 0
+    public_total_page = 0
+    public_page_list = []
     if public_project_list:
         current_page = 1
         public_total = len(public_project_list)
