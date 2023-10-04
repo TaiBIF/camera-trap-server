@@ -11,5 +11,5 @@ urlpatterns = [
     path('check_deployment_journal_upload_status/<pk>/', client_views.check_deployment_journal_upload_status, name='check-deployment-journal-upload-status'),
     path('check_update/<version>/', client_views.check_update, name='check-update'),
     path('check_folder/<name>/', client_views.check_folder, name='check-folder'),
-    path('user_info/<int:user_id>', client_views.get_user_info, name='get-user-info'),
+    path('user_info/<int:user_id>/', client_views.get_user_info, name='get-user-info'),
 ]

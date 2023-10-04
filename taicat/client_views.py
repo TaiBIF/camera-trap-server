@@ -72,10 +72,10 @@ def get_user_info(request, user_id):
     ret = {
         'results': {
             'projects': [],
-            'user_info': {
-                'user_name': user.name,
-                'user_id': user.id,
-                'user_email': user.email,
+            'user': {
+                'name': user.name,
+                'id': user.id,
+                'email': user.email,
             },
         }
     }
