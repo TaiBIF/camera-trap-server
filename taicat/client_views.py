@@ -25,6 +25,7 @@ from taicat.models import (
     Deployment,
     DeploymentJournal,
     Image_info,
+    Contact,
 )
 from base.models import (
     Announcement,
@@ -60,26 +61,42 @@ def index(request):
 #         'image_list': image_list,
 #     })
 
-def get_project_list(request):
-    if user_id := request.GET.get('user_id'):
-        plist = get_my_project_list(user_id)
-        projects = Project.objects.filter(id__in=plist).all()
-        ret = {'results': []}
-        for p in projects:
-            data = {
-                'project_id': p.id,
-                'name': p.name,
-                'studyareas': p.get_deployment_list(),
-            }
-            ret['results'].append(data)
-    else:
-        projects = Project.objects.all()
-        ret = {
-            'results': [{
-                'project_id': x.id,
-                'name': x.name,
-            } for x in projects]
+def get_user_info(request, user_id):
+    try:
+        user = Contact.objects.get(pk=user_id)
+    except Contact.DoesNotExist:
+        raise Http404
+
+    plist = get_my_project_list(user_id)
+    projects = Project.objects.filter(id__in=plist).all()
+    ret = {
+        'results': {
+            'projects': [],
+            'user_info': {
+                'user_name': user.name,
+                'user_id': user.id,
+                'user_email': user.email,
+            },
         }
+    }
+    for p in projects:
+        item = {
+            'project_id': p.id,
+            'name': p.name,
+            'studyareas': p.get_deployment_list(),
+        }
+        ret['results']['projects'].append(item)
+
+    return JsonResponse(ret)
+
+def get_project_list(request):
+    projects = Project.objects.all()
+    ret = {
+        'results': [{
+            'project_id': x.id,
+            'name': x.name,
+        } for x in projects]
+    }
     return JsonResponse(ret)
 
 def get_project(request, project_id):
