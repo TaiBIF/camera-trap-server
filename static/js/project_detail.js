@@ -1249,23 +1249,41 @@ function changeEditContent(row) {
 
     // Append the download link to the button
     const rawImageSrc = row.find('img').attr('data-src');
+    const rawVideoSrc = row.find('video source').attr('src');
     const imageUuid = row.data('image_uuid');
 
     // Default media as video
-    let downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}.mp4`;
+    if (rawVideoSrc) {
+      const videoUrl = rawVideoSrc.split('/').pop();
+      downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${videoUrl}`;
+
+      // If media is available, show download button
+      $('.image-download-btn').removeClass('d-none');
+      // Set the download link URL
+      $('.download-link').attr('href', downloadLinkUrl);
+    }
 
     // If media is image
     if (rawImageSrc) {
         if (rawImageSrc.includes('cloudfront') && rawImageSrc.includes('.jpg')) {
             // Images stored in the old format
-            downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}.jpg`;
+            const imageUrl = rawImageSrc.split('/').pop();
+            downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUrl}`;
         } else if (!rawImageSrc.includes('cloudfront')) {
             // Images stored in the new format
             downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}-x.jpg`;
         }
+
+        // If media is available, show download button
+        $('.image-download-btn').removeClass('d-none');
+        // Set the download link URL
+        $('.download-link').attr('href', downloadLinkUrl);
     }
-    // Set the download link URL
-    $('.download-link').attr('href', downloadLinkUrl);
+    
+    // If media is not available, remove the download button
+    if (!rawImageSrc && !rawVideoSrc) {
+      $('.image-download-btn').addClass('d-none');
+    }
 
 
   if ($('#edit-image video').length) {
