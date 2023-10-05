@@ -422,6 +422,10 @@ $(document).ready(function () {
     $('#end_date').val(enddateValue)
     }
 
+    // Forbid right click
+    $("body").on("contextmenu", function(e) {
+        return false;
+    });
 
 
   // 取消按鈕
@@ -1243,6 +1247,27 @@ function changeEditContent(row) {
   $('#edit-image_id').val(row.data('image_id'))
   $('#edit-image').html(row.find('td').last().html())
 
+    // Append the download link to the button
+    const rawImageSrc = row.find('img').attr('data-src');
+    const imageUuid = row.data('image_uuid');
+
+    // Default media as video
+    let downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}.mp4`;
+
+    // If media is image
+    if (rawImageSrc) {
+        if (rawImageSrc.includes('cloudfront') && rawImageSrc.includes('.jpg')) {
+            // Images stored in the old format
+            downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}.jpg`;
+        } else if (!rawImageSrc.includes('cloudfront')) {
+            // Images stored in the new format
+            downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}-x.jpg`;
+        }
+    }
+    // Set the download link URL
+    $('.download-link').attr('href', downloadLinkUrl);
+
+
   if ($('#edit-image video').length) {
     $("#edit-image video").prop("controls", true);
   }
@@ -1339,3 +1364,22 @@ function changeEditContent(row) {
 
 
 }
+
+// function testURL(row) {
+//     const download_link_url = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${row.data('image_uuid')}-l.jpg`;
+//     const test_url = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/63e0a773ae43e99a4360d663-l.jpg`;
+//     // For old images which only one resolution were stored
+//     const download_link_url_alt = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${row.data('image_uuid')}.jpg`;
+    
+//     // Test if the download link url is available
+//     fetch(test_url)
+//         .then(response => {
+//             if (response.status == 200) {
+//                 // If it works, append download link url to href attribute
+//                 $('.download-link').attr('href', test_url)
+//             } else {
+//                 // If not, replace url with alternative download link url 
+//                 $('.download-link').attr('href', download_link_url_alt)
+//             }
+//         });
+// }

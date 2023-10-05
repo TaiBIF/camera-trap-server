@@ -1,4 +1,59 @@
+.img-all {
+  position: relative;
+}
 
+.image-download-btn {
+  z-index: 10;
+  position: absolute;
+  right: 20px;
+  top: 35px !important;
+  border: 1px solid #257455;
+  height: 45px;
+  padding: 0px 15px;
+  border-radius: 24px;
+  font-size: 14px;
+  color: #257455;
+  background-color: #FFF !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  -moz-transition: all .3s;
+  -o-transition: all .3s;
+  -ms-transition: all .3s;
+  -webkit-transition: all .3s
+}
+
+.image-download-btn:hover {
+  z-index: 10;
+  position: absolute;
+  right: 20px;
+  top: 35px !important;
+  border: 1px solid #257455;
+  height: 45px;
+  padding: 0px 15px;
+  border-radius: 24px;
+  font-size: 14px;
+  color: #FFF;
+  fill: #FFF;
+  background-color: #257455 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  -moz-transition: all .3s;
+  -o-transition: all .3s;
+  -ms-transition: all .3s;
+  -webkit-transition: all .3s
+}
+
+.image-download-btn:hover .download-icon {
+  fill: #FFF !important;
+  -moz-transition: all .3s;
+  -o-transition: all .3s;
+  -ms-transition: all .3s;
+  -webkit-transition: all .3s
+}
 
 /* 以下因應新切版 */
 input[name=start_altitude], input[name=end_altitude] {
