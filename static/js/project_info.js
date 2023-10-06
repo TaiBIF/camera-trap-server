@@ -567,7 +567,6 @@ function updateSpeciesMap(species){
                 // 先把所有地圖上的移除
                 $('.leaflet-marker-icon,.leaflet-tooltip,.speciesMapIcon').remove()
                 $('.species-map-legend').removeClass('d-none');
-
                 //$('#species-map-stat').html('<a class="text-gray link text-decoration-none mb-5" onClick="updateSpeciesPie()"><i class="fa fa-chevron-left"></i> 返回</a>')
 
                 let pre
@@ -736,7 +735,7 @@ function updateImageLineChart(){
             data: {'said': said, 'start_date': start_date, 'end_date': end_date},            
             url: "/update_line_chart",
             success: function(response){
-                console.log(response);
+                // console.log(response);
                 setImageLineChart(response.line_chart_data);
                 var selectedSa = $('.sa-select').find("option:selected").text()
                 $('#sa-title').text(selectedSa);
