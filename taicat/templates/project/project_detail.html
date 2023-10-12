@@ -415,8 +415,8 @@
 							<div class="item1">
 								<h4>資料夾名稱</h4>
 								<div class="input-item">
-									<select id="select-folder" name="folder_name" placeholder="請選擇資料夾名稱">
-										<option value="">請選擇資料夾名稱</option>
+									<select id="select-folder" name="folder_name" placeholder="請選擇資料夾名稱" multiple="multiple">
+										<!-- <option value="">請選擇資料夾名稱</option> -->
 										{% for f in folder_list %}
 										<option value="{{ f.folder_name }}" {% if f.folder_name == folder %} selected {% endif %}>
 											{{ f.folder_name }} (最後更新：{{ f.folder_last_updated }})

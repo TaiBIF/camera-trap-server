@@ -70,22 +70,25 @@
 
 		<h2>上傳紀錄</h2>
 		<div class="search-box">
-			<div class="input-item">
-				<input type="text" placeholder="請輸入關鍵字" {% if q != '' %} value="{{ q }}"{% endif %} id="q-text" name="q-text">
-				<button class="searchicon" id="q-button">
-					<svg xmlns="http://www.w3.org/2000/svg" width="21.061" height="21.061" viewBox="0 0 21.061 21.061">
-						<g id="Group_718" data-name="Group 718" transform="translate(-966.939 -1128)">
-							<g id="Group_719" data-name="Group 719" transform="translate(968 1128)">
-								<g id="Ellipse_5" data-name="Ellipse 5" transform="translate(2)" fill="none" stroke="#257455" stroke-width="1.5">
-									<circle cx="9" cy="9" r="9" stroke="none"/>
-									<circle cx="9" cy="9" r="8.25" fill="none"/>
+			<form method="POST" action="/upload-history">
+				{% csrf_token %}
+				<div class="input-item">
+					<input type="text" placeholder="請輸入關鍵字" {% if q != '' %} value="{{ q }}"{% endif %} id="q-text" name="q-text">
+					<button class="searchicon" id="q-button">
+						<svg xmlns="http://www.w3.org/2000/svg" width="21.061" height="21.061" viewBox="0 0 21.061 21.061">
+							<g id="Group_718" data-name="Group 718" transform="translate(-966.939 -1128)">
+								<g id="Group_719" data-name="Group 719" transform="translate(968 1128)">
+									<g id="Ellipse_5" data-name="Ellipse 5" transform="translate(2)" fill="none" stroke="#257455" stroke-width="1.5">
+										<circle cx="9" cy="9" r="9" stroke="none"/>
+										<circle cx="9" cy="9" r="8.25" fill="none"/>
+									</g>
+									<line id="Line_5" data-name="Line 5" x1="5" y2="5" transform="translate(0 15)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
 								</g>
-								<line id="Line_5" data-name="Line 5" x1="5" y2="5" transform="translate(0 15)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
 							</g>
-						</g>
-					</svg>
-				</button>
-			</div>
+						</svg>
+					</button>
+				</div>
+			</form>
 		</div>
 	</div>
 

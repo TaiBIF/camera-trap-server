@@ -1692,9 +1692,12 @@ def data(request):
         time_filter = f"AND datetime::time AT TIME ZONE 'UTC' = time '{result.strftime('%H:%M:%S')}'"
 
     folder_filter = ''
-    if folder_name := requests.get('folder_name'):
-        folder_filter = f"AND folder_name = '{folder_name}'"
-    
+    folder_names = requests.getlist('folder_name[]')
+    if folder_names:
+        folder = [folder for folder in folder_names]
+        folder = str(folder).replace('[', '(').replace(']', ')')
+        folder_filter = f"AND folder_name IN {folder}" 
+
     # Deployment table
     county_filter = ''
     if county_name := requests.get('county_name'):
