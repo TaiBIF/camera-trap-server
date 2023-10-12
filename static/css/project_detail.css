@@ -1,3 +1,19 @@
+/* 2023 new veriosn UI */
+
+
+/* select2: fixes word text wrap issues on long select values */
+.select2-container .select2-selection--multiple .select2-selection__choice {
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* Prevent element.style add style */
+.message-box {
+  display: block !important;
+}
+
 .img-all {
   position: relative;
 }

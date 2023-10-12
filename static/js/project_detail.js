@@ -168,6 +168,13 @@ function updateTable(page, page_from) {
     });
   }
 
+  var folder_names = $('#select-folder option:selected').map(function() {
+    return $(this).val();
+  }).get();
+
+  console.log(folder_names);
+
+
   $.ajax({
     type: "POST",
     url: "/api/data",
@@ -185,7 +192,7 @@ function updateTable(page, page_from) {
       end_altitude: $("input[name=end_altitude]").val(),
       start_date: $("input[name=start_date]").val(),
       end_date: $("input[name=end_date]").val(),
-      folder_name: $('#select-folder option:selected').val(),
+      folder_name: folder_names,
       county_name: $('#select-county option:selected').val(),
       protectarea_name: $('#select-protectarea option:selected').val(),
       deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
@@ -1265,10 +1272,12 @@ function changeEditContent(row) {
 
     // If media is image
     if (rawImageSrc) {
-        if (rawImageSrc.includes('cloudfront') && rawImageSrc.includes('.jpg')) {
-            // Images stored in the old format
-            const imageUrl = rawImageSrc.split('/').pop();
-            downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUrl}`;
+        if (rawImageSrc.includes('cloudfront')){
+            if (rawImageSrc.includes('.jpg') || rawImageSrc.includes('.jpeg')) {
+                // Images stored in the old format
+                const imageUrl = rawImageSrc.split('/').pop();
+                downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUrl}`;
+            }
         } else if (!rawImageSrc.includes('cloudfront')) {
             // Images stored in the new format
             downloadLinkUrl = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${imageUuid}-x.jpg`;
