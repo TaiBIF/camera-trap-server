@@ -1,0 +1,545 @@
+
+
+
+<script>
+ const btnList = document.querySelectorAll(".check-form");
+ btnList.forEach((x)=>{
+   x.onclick = (e) => {
+     e.preventDefault();
+     const modal = document.getElementById("myModal");
+     const textEle = document.getElementById("my-modal-text");
+     const queryType = document.getElementById("query-type");
+     const form = document.getElementById('my-form');
+     modal.style.display = "block";
+     //const text = (x.value == "query") ? "篩選中" : "計算中";
+     //textEle.innnerHTML = `${text}...`;
+     queryType.value = x.value;
+
+     if (x.value === 'calculate') {
+       const intervalSelect = document.getElementById('interval');
+       const intervalSelect2 = document.getElementById('interval2');
+
+       if (form.checkValidity()) {
+         form.requestSubmit(); // won't process name=submit ?
+       } else {
+         form.classList.add('was-validated');
+         modal.style.display = "none";
+       }
+     } else {
+       form.requestSubmit();
+     }
+   }
+ });
+
+ let projectStudyareas = {% if project_deployment_list %}{{project_deployment_list|safe}}{% else %}null{% endif %};
+
+ const handleProjectChange = () =>{
+   const selectedProjectList = document.getElementById('project').selectedOptions;
+   const studyareaEle = document.getElementById('studyarea');
+   studyareaEle.innerHTML = '<option value="">---</option>';
+   if (selectedProjectList.length == 1) {
+     const projectId = selectedProjectList[0].value;
+     fetch(`/api/client/v1/projects/${projectId}`)
+       .then((resp) => resp.json())
+       .then((jsonData) => {
+         //console.log(jsonData)
+         studyareaEle.innerHTML = '<option value="">---</option>';
+         projectStudyareas = jsonData.studyareas;
+         projectStudyareas.forEach((x)=>{
+           const optionEle = document.createElement('option');
+           optionEle.value = x.studyarea_id;
+           optionEle.innerHTML = x.name;
+           studyareaEle.appendChild(optionEle);
+         });
+       });
+   }
+ }
+ const handleStudyareaChange = () =>{
+   const studyareaId = document.getElementById('studyarea').value;
+   if (studyareaId !== '') {
+     if (projectStudyareas) {
+       const found = projectStudyareas.find((x)=> parseInt(x.studyarea_id, 10) === parseInt(studyareaId, 10));
+       if (found && found.deployments.length > 0) {
+         const deploymentEle = document.getElementById('deployment');
+         deploymentEle.innerHTML = '<option value="">---</option>';
+         found.deployments.forEach((x)=>{
+           const optionEle = document.createElement('option');
+           optionEle.value = x.deployment_id;
+           optionEle.innerHTML = x.name;
+           deploymentEle.appendChild(optionEle);
+         });
+       }
+     }
+   }
+ }
+
+  console.log('debug query:', '{{ debug_query|safe}}' );
+</script>
+
+
+{% comment %}
+      <h3>篩選條件</h3>
+      <form action="{% url 'search' %}" method="post" class="row g-3 needs-validation" novalidate id="my-form">
+        {% csrf_token %}
+        <div class="col-md-4">
+          <label for="species">Species</label>
+          <select name="species" class="form-select" aria-label="選擇物種">
+            <option value="">---</option>
+            {% for i in species_list %}
+            <option value="{{ i.0 }}"{% if request.GET.species == i.0 %} selected{% endif %}>{{ i.0 }} ({{ i.1 }})</option>
+            {% endfor %}
+          </select>
+          <small class="form-text text-muted">單選</small>
+        </div>
+        <div class="col-md-4">
+          <label for="date-start">資料起始日期</label>
+          <input type="text" class="form-control" id="date-start" name="date_start" aria-describedby="dateStartHelp" placeholder="2017-04-01"{% if request.GET.date_start %} value="{{ request.GET.date_start}}"{% endif %}>
+          <small id="dateStartHelp" class="form-text text-muted">格式: YYYY-MM-DD</small>
+        </div>
+        <div class="col-md-4">
+          <label for="date-end">資料起始日期</label>
+          <input type="text" class="form-control" id="date-end" name="date_end" placeholder="2017-06-30" aria-describedby="dateEndHelp"{% if request.GET.date_end %} value="{{ request.GET.date_end}}"{% endif %}>
+          <small id="dateEndHelp" class="form-text text-muted">格式: YYYY-MM-DD</small>
+        </div>
+        <div class="col-md-4">
+        <label for="keyword">計畫關鍵字</label>
+        <input type="text" class="form-control" id="keyword" name="keyword"{% if request.GET.keyword %} value="{{ request.GET.keyword}}"{% endif %}>
+        <small class="form-text text-muted">*keyword*，如果有輸入關鍵字就會忽略計畫下拉選單</small>
+      </div>
+        <div class="col-md-12">
+          <label for="project">計畫</label>
+          <select name="project" class="form-select" aria-label="選擇計畫" id="project" onChange="handleProjectChange()" multiple size="3">
+            <option value="">---</option>
+            <optgroup label="我的計劃">
+              {% for i in project_list.my %}
+              <option value="{{ i.id }}"{% if request.GET.project|to_int == i.id|to_int %} selected{% endif %}>{{ i.name }}</option>
+              {% endfor %}
+            </optgroup>
+            <optgroup label="公開計劃">
+              {% for i in project_list.public %}
+              <option value="{{ i.id }}"{% if request.GET.project|to_int == i.id|to_int %} selected{% endif %}>{{ i.name }}</option>
+              {% endfor %}
+            </optgroup>
+          </select>
+          <small class="form-text text-muted">可按 <code>Control</code> 複選</small>
+        </div>
+        <div class="col-md-6">
+          <label for="studyarea">樣區</label>
+          <select name="studyarea" class="form-select" aria-label="選擇樣區" id="studyarea" onChange="handleStudyareaChange()">
+            <option value="">---</option>
+            {% for i in project_deployment_list %}
+            <option value="{{ i.studyarea_id }}"{% if request.GET.studyarea|to_int == i.studyarea_id|to_int %} selected{% endif %}>{{ i.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="deployment">相機位置</label>
+          <select name="deployment" class="form-select" aria-label="選擇相機位置" id="deployment">
+            <option value="">---</option>
+            {% for i in project_deployment_list %}
+            {% if i.studyarea_id|to_int == request.GET.studyarea|to_int %}
+            {% for j in i.deployments %}
+            <option value="{{ j.deployment_id }}"{% if request.GET.deployment|to_int == j.deployment_id|to_int %} selected{% endif %}>{{ j.name }}</option>
+            {% endfor %}
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+    <div class="mb-3">
+      <button type="submit" class="btn btn-primary check-form" name="query_type" value="query">篩選</button> <button type="submit" class="btn btn-secondary" value="clear" name="submit">清除</input>
+    </div>
+    {% endcomment %}
+       {% comment %}
+        <div class="form-group">
+          <label for="calculation">計算分析</label>
+          <select name="calculation" class="form-control" aria-label="計算分析" id="calculation">
+            <option value="">---</option>
+            <option value="working_hour">相機工作時數</option>
+            <option value="num_image">有效照片數</option>
+            <option value="num_event">目擊事件數</option>
+          </select>
+          <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+        </div>
+        {% endcomment %}
+
+        {% if request.GET.query_type == "query" %}
+        <legend>篩選結果</legend>
+        <span class="text-muted">篩選時間: {{ elapsed_time|floatformat:3 }} 秒</span>
+          {% if page_obj.count <= 0 %}
+          無資料
+          {% else %}
+      <table class="table table-striped">
+        <thead class="thead-light"><tr><th>#</th><th scope="col">計畫</th><th scope="col">樣區</th><th scope="col">相機位置</th><th scope="col">filename</th><th scope="col">datetime</th><th scope="col">species</th></tr></thead>
+        <tbody>
+          {% for i in page_obj.items %}
+          <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ i.deployment.project.name }}</td>
+            <td>{{ i.deployment.study_area.name }}</td>
+            <td>{{ i.deployment.name }}</td>
+            <td>{{ i.filename }}</td>
+            <td>{{ i.datetime|date:'Y-m-d H:i:s' }}</td>
+            <td>{{ i.species_list|join:', ' }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+      {% endif %}
+      {% comment %}
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+          <li class="page-item"><a class="page-link" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item"><a class="page-link" href="#">Next</a></li>
+        </ul>
+      </nav>
+
+      <div class="pagination mb-4">
+        <span class="mx-2"><strong>總共: {{ page_obj.count }} 筆</strong></span>
+        <span class="step-links">
+          {% if page_obj.has_previous %}
+          <a href="?page=1&{{ page_append }}">&laquo; 第一頁</a>
+          <a href="?page={{ page_obj.previous_page_number }}&{{ page_append }}">上一頁</a>
+          {% endif %}
+
+          <span class="current">
+            [ {{ page_obj.number }} / {{ page_obj.num_pages }} ]
+          </span>
+
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&{{ page_append }}">下一頁</a>
+          <a href="?page={{ page_obj.num_pages }}&{{ page_append }}">最後一頁 &raquo;</a>
+          {% endif %}
+        </span>
+      </div>
+      {% endif %}
+
+      <h3>分析與計算</h3>
+      <small class="form-text text-muted">有效照片數 | 目擊事件 | OI 1  | OI 2  | OI 3 | 捕獲回合比例 | 存缺 | 活動機率</small>
+
+      <div class="col-md-3">
+        <label for="session">回合</label>
+        <select name="session" class="form-select" aria-label="選擇" id="session">
+          <option value="all"{% if request.GET.session == 'all' %} selected{% endif %}>選取之時間範圍全部</option>
+          <option value="month"{% if request.GET.session == 'month' %} selected{% endif %}>月</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="interval">有效照片間隔</label>
+        <select name="interval" class="form-select" aria-label="選擇" id="interval" required>
+          <option value="">---</option>
+          <option value="2"{% if request.GET.interval == '2' %} selected{% endif %}>2 分鐘</option>
+          <option value="5"{% if request.GET.interval == '5' %} selected{% endif %}>5 分鐘</option>
+          <option value="10"{% if request.GET.interval == '10' %} selected{% endif %}>10 分鐘</option>
+          <option value="30"{% if request.GET.interval == '30' %} selected{% endif %}>30 分鐘</option>
+          <option value="60"{% if request.GET.interval == '60' %} selected{% endif %}>60 分鐘</option>
+        </select>
+        <div class="invalid-feedback">
+          必填欄位
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label for="interval2">目擊事件間隔</label>
+        <select name="interval2" class="form-select" aria-label="選擇" id="interval2" required>
+          <option value="">---</option>
+          <option value="2"{% if request.GET.interval2 == '2' %} selected{% endif %}>2 分鐘</option>
+          <option value="5"{% if request.GET.interval2 == '5' %} selected{% endif %}>5 分鐘</option>
+          <option value="10"{% if request.GET.interval2 == '10' %} selected{% endif %}>10 分鐘</option>
+          <option value="30"{% if request.GET.interval2 == '30' %} selected{% endif %}>30 分鐘</option>
+          <option value="60"{% if request.GET.interval2 == '60' %} selected{% endif %}>60 分鐘</option>
+        </select>
+        <div class="invalid-feedback">
+          必填欄位
+        </div>
+      </div>
+      <div class="mb-3">
+        <button type="submit" class="btn btn-danger check-form" name="submit" value="calculate">計算</button>
+        <input type="hidden" name="query_type" value="" id="query-type"/>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          計算項目的說明
+        </button>
+      </div>
+      </form>
+      {% endcomment %}
+      {% comment %}
+      <code>
+{{result.year_list}}
+{{result.month_list}}
+      {% for k,v in result.deployment.items %}
+      {{ v.name }} {{v}}
+      {% endfor %}
+      </code>
+      {% endcomment %}
+
+{% if result %}
+      <legend>計算結果</legend>
+      <span class="text-muted">計算時間: {{ elapsed_time|floatformat:3 }} 秒</span>
+      <div>相機位置:
+      {% for k, v in result.deployment.items %}
+      {{ v.name }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+      </div>
+<div class="accordion" id="accordionExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingOne">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        相機工作時數
+      </button>
+    </h2>
+    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Camera</th>
+              {% if result.session == "month" %}
+              <th scope="col">Year</th>
+              <th scope="col">Month</th>
+              {% endif %}
+              <th scope="col">Work hours (hr)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k,v in result.deployment.items %}
+              {% for r in v.session_list %}
+              <tr>
+                <th scope="row">{{ v.name }}</th>
+                {% if result.session == "month" %}
+                <td>{{ r.year }}</td>
+                <td>{{ r.month }}</td>
+                {% endif %}
+                <td>{{ r.working_hour.0 }} ({{ r.working_hour.1.0|date:'Y-m-d H:i:s' }} ~ {{ r.working_hour.1.1|date:'Y-m-d H:i:s' }})</td>
+              </tr>
+                {% endfor %}
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingTwo">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+        有效照片數
+      </button>
+    </h2>
+    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Camera</th>
+              {% if result.session == "month" %}
+              <th scope="col">Year</th>
+              <th scope="col">Month</th>
+              {% endif %}
+              <th scope="col">有效照片數</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k,v in result.deployment.items %}
+              {% for r in v.session_list %}
+              <tr>
+                <th scope="row">{{ v.name }}</th>
+              {% if result.session == "month" %}
+                <td>{{ r.year }}</td>
+                <td>{{ r.month }}</td>
+              {% endif %}
+                <td>{{ r.image_num }}</td>
+              </tr>
+                {% endfor %}
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingThree">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+        目擊事件
+      </button>
+    </h2>
+    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Camera</th>
+              {% if result.session == "month" %}
+              <th scope="col">Year</th>
+              <th scope="col">Month</th>
+              {% endif %}
+              <th scope="col">目擊事件</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k,v in result.deployment.items %}
+              {% for r in v.session_list %}
+              <tr>
+                <th scope="row">{{ v.name }}</th>
+              {% if result.session == "month" %}
+                <td>{{ r.year }}</td>
+                <td>{{ r.month }}</td>
+              {% endif %}
+                <td>{{ r.event_num.0 }}{% if r.event_num.0 %} ({{ r.event_num.1.0 }}/{{ r.event_num.1.1 }}){% endif %}</td>
+              </tr>
+                {% endfor %}
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingFour">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+        OI 3
+      </button>
+    </h2>
+    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Camera</th>
+              {% if result.session == "month" %}
+              <th scope="col">Year</th>
+              <th scope="col">Month</th>
+              {% endif %}
+              <th scope="col">OI 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k,v in result.deployment.items %}
+              {% for r in v.session_list %}
+              <tr>
+                <th scope="row">{{ v.name }}</th>
+              {% if result.session == "month" %}
+                <td>{{ r.year }}</td>
+                <td>{{ r.month }}</td>
+              {% endif %}
+                <td>{{ r.oi3 }}</td>
+              </tr>
+                {% endfor %}
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingFive">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+        捕獲回合比例
+      </button>
+    </h2>
+    <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Camera</th>
+              {% if result.session == "month" %}
+              <th scope="col">Year</th>
+              <th scope="col">Month</th>
+              {% endif %}
+              <th scope="col">捕獲回合比例</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k,v in result.deployment.items %}
+              {% for r in v.session_list %}
+              <tr>
+                <th scope="row">{{ v.name }}</th>
+              {% if result.session == "month" %}
+                <td>{{ r.year }}</td>
+                <td>{{ r.month }}</td>
+              {% endif %}
+                <td>{{ r.pod.0 }} ({{ r.pod.1.0 }}/{{ r.pod.1.1 }})</td>
+              </tr>
+                {% endfor %}
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingSix">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+        存缺
+      </button>
+    </h2>
+    <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Camera</th>
+              {% if result.session == "month" %}
+              <th scope="col">Year</th>
+              <th scope="col">Month</th>
+              {% endif %}
+              <th scope="col">存缺</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k,v in result.deployment.items %}
+              {% for r in v.session_list %}
+              <tr>
+                <th scope="row">{{ v.name }}</th>
+              {% if result.session == "month" %}
+                <td>{{ r.year }}</td>
+                <td>{{ r.month }}</td>
+              {% endif %}
+                <td>{{ r.presence_absence }}</td>
+              </tr>
+                {% endfor %}
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% comment %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingSeven">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+        活動機率
+      </button>
+    </h2>
+    <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <table class="table table-striped table-hover">
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endcomment %}
+</div>
+{% endif %}{# end of "if results" #}
+{% comment "tab view" %}
+      <div class="card text-center">
+        <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="true" href="#">Active</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Link</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link disabled">Disabled</a>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Special title treatment</h5>
+          <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+          <a href="#" class="btn btn-primary">Go somewhere</a>
+        </div>
+      </div>
+{% endcomment %}

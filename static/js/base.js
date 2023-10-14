@@ -56,10 +56,12 @@ $('.mbbtn-2').on('click',function (event) {
 
 $(function(){
 
-	$('.xx').on('click',function (event) {
-		$('.pop-box').addClass('d-none');
-		$('body').css("overflow", "initial");
-	});
+  $('.xx').on('click',function (event) {
+    if (window.location.pathname !== '/search/') { // exclude search page
+      $('.pop-box').addClass('d-none');
+      $('body').css("overflow", "initial");
+    }
+  });
 
 
     $(function (){

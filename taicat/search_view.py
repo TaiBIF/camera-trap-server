@@ -193,7 +193,8 @@ def api_search(request):
             out_format = calc_dict['fileFormat']
             calc_type = calc_dict['calcType']
 
-            ''' direct download
+            # direct download
+            '''
             # results = calc(query, calc_data, query_start, query_end)
             results = calculated_data(filter_dict, calc_data)
             # print(results, out_format, calc_type)

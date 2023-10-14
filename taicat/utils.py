@@ -905,7 +905,11 @@ def humen_readable_filter(filter_dict):
                     if proj_name := p['project']['name']:
                         if proj_name not in project_dict:
                             project_dict[proj_name] = []
-                        project_dict[proj_name].append(f"樣區：{d['studyarea_name']}/相機位置：{d['name']}")
+
+                        if sa_name := d.get('studyarea_name'):
+                            project_dict[proj_name].append(f"樣區：{sa_name}/相機位置：{d['name']}")
+                        else:
+                            project_dict[proj_name].append(f"相機位置：{d['name']}")
             if studyareas := p.get('studyareas'):
                 for sa in studyareas:
                     if proj_name := p['project']['name']:
