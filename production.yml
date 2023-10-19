@@ -7,7 +7,7 @@ services:
   django:
     build:
       context: .
-      dockerfile: Dockerfile-prod
+      dockerfile: Dockerfile
     container_name: ct22-django-prod-container
     image: ct22-django-prod-image
     expose:
@@ -38,7 +38,11 @@ services:
         max-size: "1m"
         max-file: "3"
   postgres:
-    image: postgres:13-alpine
+    #image: postgres:13-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    image: ct-postgres-image
     container_name: ct22-postgres-container
     restart: always
     volumes:
@@ -94,7 +98,7 @@ services:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: Dockerfile-prod
+      dockerfile: Dockerfile
     container_name: ct22-celery-prod-container
     image: ct22-django-prod-image
     command: /root/.local/bin/celery -A conf worker -l info
