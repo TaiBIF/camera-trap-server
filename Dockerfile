@@ -10,6 +10,8 @@ RUN apt-get update \
   && apt-get install -y build-essential \
   # tools
   && apt-get install -y curl \
+  # Geospatial libraries for Django
+  && apt-get install -y binutils libproj-dev gdal-bin \
   # psycopg2 dependencies
   # && apt-get install -y libpq-dev \
   # Translations dependencies

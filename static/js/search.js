@@ -1,3 +1,11 @@
+/*
+ * Version: 0.2.1 (231018)
+ *
+ * Changes
+ * - 0.2.1 charts
+ * - 0.2.0 refactor new layout, wish vanilla js and jQuery select2
+ * - 0.1.7 React + Maturial UI
+ */
 import {
   fetchData,
   getE,
@@ -6,9 +14,6 @@ import {
   serialize,
   Paginator,
 } from './search_utils.js';
-import {
-  VERSION,
-} from './search_version.js';
 
 const domReady = () => {
   "use strict";
@@ -16,8 +21,6 @@ const domReady = () => {
   const projectMap = {};
   let projectSeq = 1;
 
-  const versionText = getE('version-text');
-  versionText.textContent = VERSION;
   /*
    * jQuery parts
    * from designer's layout
@@ -435,6 +438,71 @@ const domReady = () => {
         alert(`錯誤: ${error}`);
       })
   }
+
+  getEon('calc-submit-chart',  () => {
+    const calcChartType = getE('calc-chart-type');
+    if (calcChartType.value === '') {
+      return;
+    }
+
+    const cleanData = prepareFilterData();
+    if (cleanData.species && cleanData.species.length === 0) {
+      alert('必須至少選一個物種');
+      return;
+    }
+
+    const calcType = getE('calc-type');
+    const calcSession = getE('calc-session');
+    const calcImageInterval = getE('calc-image-interval');
+    const calcEventInterval = getE('calc-event-interval');
+
+    //const chartTitle = getE('chart-title');
+    //chartTitle.textContent = calcChartType.selectedOptions[0].textContent;
+
+    const calcData = {
+      calcType: 'chart',
+      session: calcSession.value,
+      imageInterval: calcImageInterval.value,
+      eventInterval: calcEventInterval.value,
+      chartType: calcChartType.value,
+    }
+
+    const filterDumps = JSON.stringify(cleanData);
+    const calcDumps = JSON.stringify(calcData);
+    let url = `/api/search?filter=${filterDumps}&calc=${calcDumps}`;
+    setLoading(true);
+    fetchData(url)
+      .then(results => {
+        console.log('calculated charts!', results);
+        setLoading(false);
+        const chartTitle = `${calcChartType.selectedOptions[0].textContent}`;
+        const chartSubTitle = `物種: ${cleanData.species}`;
+        goChart(results, chartTitle, chartSubTitle);
+      })
+      .catch((error) => {
+        setLoading(false);
+        alert(`錯誤: ${error}`);
+      })
+  });
+
+
+  const goChart = (chartData, title, subtitle) => {
+    //const chartTitle = getE('chart-title');
+    //chartTitle.textContent = calcChartType.selectedOptions[0].textContent;
+    chartData = {
+      ...chartData,
+      title: {
+        text: title,
+        align: 'left'
+      },
+      subtitle: {
+        text: subtitle,
+        align: 'left'
+      }
+    }
+    Highcharts.chart('calc-chart', chartData);
+  } // end of goChart
+
 }
 
 (function () {

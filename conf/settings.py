@@ -35,6 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Build .env to locate private settings
 # https://pypi.org/project/python-environ/
 env = environ.Env(DEBUG=(bool, False))
+
 config_dir = os.path.join(BASE_DIR, 'conf')
 environ.Env.read_env(os.path.join(config_dir, '.env'))
 
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
 ]
 
 MIDDLEWARE = [
@@ -155,8 +157,7 @@ USE_TZ = True
 default_static_dir = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
 STATIC_ROOT = env('STATIC_ROOT', default=default_static_dir)
-# STATICFILES_DIRS = [default_static_dir, ]
-STATICFILES_DIRS = [default_static_dir, '/build'] # for nodejs build static
+STATICFILES_DIRS = [default_static_dir, ]
 
 CACHES = {
     "default": {

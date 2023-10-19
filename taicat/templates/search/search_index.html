@@ -5,17 +5,15 @@
 
 {% block title %}資料篩選與計算 | {% endblock title %}
 
-{% block scriptx %}
-  {% if env == "dev" %}
-    <script src="{% static 'js/search.dev.js' %}"></script>
-  {% else %}
-    <script src="{% static 'js/search.min.js' %}"></script>
-  {% endif %}
-    <script src="{% static 'js/search-index.js' %}"></script>
-
-{% endblock %}
-
 {% block script %}
+<!-- plot -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+
     <script src="{% static 'js/select2.min.js' %}"></script>
     <script src="{% static 'js/air-datepicker.js' %}"></script>
     <script src="{% static 'js/search.js' %}" type="module"></script>
@@ -27,13 +25,7 @@
     <link rel="stylesheet" href="{% static 'css/air-datepicker.css' %}">
 {% endblock %}
 
-{% block stylex %}
-    <link href="{% static 'css/search_index.css' %}" rel="stylesheet">
-    {% comment %} <link rel=stylesheet type="text/css" href="{% static 'css/theme.css' %}"> {% endcomment %}
-{% endblock %}
-
-
-{% block body%}
+{% block body %}
     {% include "./_inc_image-modal.html" %}
     {% include "./_inc_download-modal.html" %}
     {% include "./_inc_calculation-description.html" %}
@@ -235,62 +227,45 @@
 	    <button class="btn-greeno note-btn" id="calc-description-button">計算項目說明</button>
 	    <button class="btn-green dow-btn" id="calc-submit-download">下載計算</button>
 	  </div>
-	  <span class="version" id="version-text"></span>
-	</div>
+        </div>
       </div>
-      <div class="chart-box2">
-	<ul>
-	  <li>
-	    <div class="chart-title">
-	      <h2>花蓮林管處已辨識物種<span>27</span>種</h2>
-	      <p class="date">最後更新時間：2023-05-07</p>
-	    </div>
-	    <div class="chart-area">
-	      <div class="left-pie">
-		<img src="image/chartw.png" alt="">
-	      </div>
-	      <div class="right-data">
-		<img src="image/chartw1.png" alt="">
-	      </div>
-	    </div>
-	  </li>
-	  <li>
-	    <div class="chart-title">
-							<h2>花蓮林管處已辨識物種<span>27</span>種</h2>
-							<p class="date">最後更新時間：2023-05-07</p>
-						</div>
-						<div class="chart-area">
-							<div class="left-pie">
-								<img src="image/chartw.png" alt="">
-							</div>
-							<div class="right-data">
-								<div class="dottarea">
-									<div class="species-percentage">
-								<span class="species-percentage-list" data-species="no">
-									<svg class="svg-inline--fa fa-circle chart-color-0 w-12" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg=""><path fill="currentColor" d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512z"></path></svg><!-- <i class="fa fa-circle chart-color-0 w-12"></i> Font Awesome fontawesome.com -->
-									no 28.1 %
-								</span>
+      <div class="wbg-box marb_40">
+	<div class="anc-area">
+	  <h3 class="light-green marb_20">計算圖表</h3>
+	  <div class="formbox page-flex-center">
+	    <div class="input-item">
+              <p>圖表類別</p>
+              <select name="calc_chart_type" id="calc-chart-type">
+                <option value="">--請選擇--</option>
+                <option value="fig1">年平均相對OI3變化</option>
+                <option value="fig2">3種海拔OI3之變化趨勢</option>
+                <option value="fig3">月平均OI3之變化趨勢</option>
+                <option value="fig4">年平均OI3之變化趨勢</option>
+                <option value="fig6">出現機率</option>
+                <option value="fig7">海拔</option>
+                <option value="fig8">貓狗關係</option>
+                <option value="fig9">歷年累計</option>
+              </select>
+            </div>
+          </div>
+	</div>
+        <div class="btn-center">
+          <button class="btn-greeno" id="calc-submit-chart">顯示圖表</button>
+        </div>
 
-										<span class="species-percentage-list" data-species="山羌">
-									<svg class="svg-inline--fa fa-circle chart-color-1 w-12" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg=""><path fill="currentColor" d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512z"></path></svg><!-- <i class="fa fa-circle chart-color-1 w-12"></i> Font Awesome fontawesome.com -->
-									山羌 17.49 %
-								</span>
-										<span class="species-percentage-list" data-species="山羌">
-									<svg class="svg-inline--fa fa-circle chart-color-1 w-12" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg=""><path fill="currentColor" d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512z"></path></svg><!-- <i class="fa fa-circle chart-color-1 w-12"></i> Font Awesome fontawesome.com -->
-									山羌 17.49 %
-								</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</div>    
+        <figure class="highcharts-figure">
+          <div id="calc-chart"></div>
+          <!--p class="highcharts-description">
+            Basic line chart showing trends in a dataset. This chart includes the
+            <code>series-label</code> module, which adds a label to each line for
+            enhanced readability.
+               </p>-->
+        </figure>
+      </div>
+      {#<div id="version-wrapper"><span class="version" id="version-text"></span></div>#}
+    </div><!-- end of main-box -->
 {% endblock %}
  
-
 {% block bodyx %}
 <div class="container content">
 
