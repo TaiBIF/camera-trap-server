@@ -38,7 +38,11 @@ services:
         max-size: "1m"
         max-file: "3"
   postgres:
-    image: postgres:13-alpine
+    #image: postgres:13-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    image: ct-postgres-image
     container_name: ct22-postgres-container
     restart: always
     volumes:
