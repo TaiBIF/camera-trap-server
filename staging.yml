@@ -7,7 +7,7 @@ services:
   django:
     build:
       context: .
-      dockerfile: Dockerfile-prod
+      dockerfile: Dockerfile
     container_name: ct22-django-prod-container
     image: ct22-django-prod-image
     expose:
