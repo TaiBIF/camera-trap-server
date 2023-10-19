@@ -187,11 +187,11 @@ def api_search(request):
         download = request.GET.get('download', '')
         calc_data = request.GET.get('calc', '')
         downloadData = request.GET.get('downloadData', '')
-
+        calc_dict = {}
         if calc_data:
             calc_dict = json.loads(calc_data)
 
-        if calc_dict['calcType'] == 'chart' and calc_dict.get('chartType'):
+        if calc_dict.get('calcType') == 'chart' and calc_dict.get('chartType'):
             results = calc_chart(
                 calc_dict,
                 filter_dict.get('species'),

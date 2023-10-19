@@ -25,4 +25,9 @@ DATABASE_URL 是在 `scripts/entrypoint` 定義的，不是.env
 - docker 要重新build
 - 進去 postgres 執行 `CREATE EXTENSION postgis;` (此時django會error, 找不到GEO相關套件)
 - 重開 docker compose 就好了
-- 手動 import `sql-files/taicat_namedareaborder.sql` (縣市範圍polygon資料) 
+- 手動 import `taicat_namedareaborder.sql` (縣市範圍polygon資料)
+- 檔案放在 `sql-files/taicat_namedareaborder.sql.gz` 要先解壓縮 (gzip -D)
+
+```
+psql -U postgres cameratrap < /path/to/taicat_namedareaborder.sql
+```

@@ -113,7 +113,8 @@ def chart_fig9(rows):
         year_map[r['year']]['count'] += 1
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
 
     #print(deployments)
     years = df_rows['year'].drop_duplicates().values
@@ -182,7 +183,6 @@ def chart_fig8(rows, rows_other):
         dt = timezone_utc_to_tw(r['datetime_from'])
         r['yearmonth'] = f'ym:{dt.year}.{dt.month}'
         r['year'] = dt.year
-
         did = exist_deployment_map.get(r['deployment_id'])
         if not did:
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
@@ -197,15 +197,18 @@ def chart_fig8(rows, rows_other):
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
+        pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
     df_rows_dog = pd.DataFrame(data=rows_other['dog'])
-    df_rows_dog.set_index('id')
+    if len(df_rows_dog):
+        df_rows_dog.set_index('id')
+        pivoted_dog = df_rows_dog.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
     df_rows_cat = pd.DataFrame(data=rows_other['cat'])
-    df_rows_cat.set_index('id')
+    if len(df_rows_cat):
+        df_rows_cat.set_index('id')
+        pivoted_cat = df_rows_cat.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
 
-    pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
-    pivoted_dog = df_rows_dog.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
-    pivoted_cat = df_rows_cat.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
     #print(pivoted, pivoted_dog)
     # 整理相機位置
     #df_deployments = df_rows[['deployment_id', 'deployment__name', 'studyarea__name', 'deployment__altitude']].drop_duplicates()
@@ -234,12 +237,15 @@ def chart_fig8(rows, rows_other):
         'data': [],
     }]
     #print(exist_deployment_map)
-    for index, oi3 in pivoted.mean(axis=1).items():
-        series[0]['data'].append([exist_deployment_map[index], oi3])
-    for index, oi3 in pivoted_dog.mean(axis=1).items():
-        series[1]['data'].append([exist_deployment_map[index], oi3])
-    for index, oi3 in pivoted_cat.mean(axis=1).items():
-        series[2]['data'].append([exist_deployment_map[index], oi3])
+    if len(df_rows):
+        for index, oi3 in pivoted.mean(axis=1).items():
+            series[0]['data'].append([exist_deployment_map[index], oi3])
+    if len(df_rows_dog):
+        for index, oi3 in pivoted_dog.mean(axis=1).items():
+            series[1]['data'].append([exist_deployment_map[index], oi3])
+    if len(df_rows_cat):
+        for index, oi3 in pivoted_cat.mean(axis=1).items():
+            series[2]['data'].append([exist_deployment_map[index], oi3])
 
     chart_data = {
         'chart': {
@@ -317,7 +323,8 @@ def chart_fig7(rows):
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
 
     pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
 
@@ -469,7 +476,8 @@ def chart_fig4(rows):
         r['year'] = dt.year
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
 
     pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
 
@@ -539,7 +547,8 @@ def chart_fig4(rows):
 def chart_fig3(rows):
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
 
     months = [m for m in range(1, 13)]
     data = {m: [] for m in months}
@@ -628,7 +637,8 @@ def chart_fig2(rows):
             exist_deployment_map[r['deployment_id']] = r['alt_type']
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
 
     pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
 
@@ -661,6 +671,7 @@ def chart_fig2(rows):
         for y in years:
             #print(y, dep_ids)
             oi3_mean = 0
+            oi3_sem = 0
             if not pivoted[pivoted.index.isin(dep_ids)].stack()[y].empty:
                 oi3_mean = pd.to_numeric(pivoted[pivoted.index.isin(dep_ids)].stack()[y], errors='coerce').mean()
                 if pd.isna(oi3_mean):
@@ -713,7 +724,7 @@ def chart_fig1(rows):
         dt = timezone_utc_to_tw(r['datetime_from'])
         r['yearmonth'] = f'ym:{dt.year}.{dt.month}'
         r['year'] = dt.year
-
+        r['taiwan_area'] = ''
         if area := exist_deployment_area.get(r['deployment_id']):
             r['taiwan_area'] = area
         else:
@@ -724,7 +735,8 @@ def chart_fig1(rows):
                     r['taiwan_area'] = area
 
     df_rows = pd.DataFrame(data=rows)
-    df_rows.set_index('id')
+    if len(df_rows):
+        df_rows.set_index('id')
 
     pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
 
