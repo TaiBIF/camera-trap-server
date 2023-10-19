@@ -68,3 +68,5 @@ Models: Deployment.calculate(year, month, species, image_interval, event_interva
 ```
 [working_days, image_count, event_count, None, None, oi3, pod, mdh]
 ```
+
+mdh: 這個月的每天，出現在幾點 => 活動機率(propability of activity, POA)

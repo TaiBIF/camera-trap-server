@@ -6,67 +6,267 @@
 {% block title %}資料篩選與計算 | {% endblock title %}
 
 {% block script %}
-  {% if env == "dev" %}
-    <script src="{% static 'js/search.dev.js' %}"></script>
-  {% else %}
-    <script src="{% static 'js/search.min.js' %}"></script>
-  {% endif %}
-    <script src="{% static 'js/search-index.js' %}"></script>
+<!-- plot -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+
+    <script src="{% static 'js/select2.min.js' %}"></script>
+    <script src="{% static 'js/air-datepicker.js' %}"></script>
+    <script src="{% static 'js/search.js' %}" type="module"></script>
+
 {% endblock %}
 
 {% block style %}
-    <link href="{% static 'css/search_index.css' %}" rel="stylesheet">
-    {% comment %} <link rel=stylesheet type="text/css" href="{% static 'css/theme.css' %}"> {% endcomment %}
-{% endblock %}
-
-{% block modal %}
-          	<!--下載跳匡-->
-	<div class="pop-box down-pop" id="downloadModal" style="display: none;">
-		{% csrf_token %}
-		<div class="center-box">
-			<div class="wbox">
-				<div class="xx">
-					<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-						<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-							<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
-								<circle cx="20" cy="20" r="20" stroke="none"/>
-								<circle cx="20" cy="20" r="19" fill="none"/>
-							</g>
-							<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-								<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
-								<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
-							</g>
-						</g>
-					</svg>
-				</div>
-				<div class="titlebox" id="downloadModal">
-					下載篩選資料
-				</div>
-				<div class="contentbox">
-					<p class="marb_20">
-						檔案為離線產生，處理完成後，系統會寄下載資訊到您輸入的電子郵件信箱。如未收到信件，請檢查您的郵件設定，如仍未收到信件，請聯絡我們。
-					</p>
-					<div class="input-item d-flex justify-content-start">
-						<input class="form-control w-80" type="text" name='email' id="download-email" placeholder="請輸入您的電子郵件"/>
-						<svg id="email-check" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="lightgrey" class="bi bi-check my-auto" viewBox="0 0 16 16">
-							<path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-						</svg>
-					</div>
-					<div class="btn-center">
-						<button class="btn-green" id="canceldownload">
-							取消
-						</button>
-						<button class="btn-green btn btn-outline-success download" id="download-submit" disabled>
-							確認送出
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <link rel=stylesheet type="text/css" href="{% static 'css/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/air-datepicker.css' %}">
 {% endblock %}
 
 {% block body %}
+    {% include "./_inc_image-modal.html" %}
+    {% include "./_inc_download-modal.html" %}
+    {% include "./_inc_calculation-description.html" %}
+    <div class="main-box">
+      <form id="filter-form">
+      <div class="main-title">
+	<h2>資料篩選與計算</h2>
+      </div>
+      <div class="wbg-box marb_40">
+	<h3 class="light-green marb_20">篩選條件</h3>
+	<ul class="inp4box">
+	  <li class="inpboxitem">
+	    <p>物種</p>
+	    <div class="input-item">
+	      <select name="species" id="filter-species" multiple="multiple" class="filter-items">
+	      </select>
+	    </div>
+	  </li>
+	  <li class="inpboxitem">
+	    <p>計畫關鍵字</p>
+	    <div class="input-item">
+	      <input type="text" placeholder="請輸入關鍵字" name="keyword" class="filter-items">
+	    </div>
+	  </li>
+	  <li class="inpboxitem">
+	    <p>資料啟始日期</p>
+	    <div class="input-item date-select">
+	      <input type="text" placeholder="2014-01-01" value="2014-01-01" name="start_date" id="start_date">
+	      <button class="date-cal">
+                {% include "../_inc_cal-svg.html" %}
+	      </button>
+	    </div>
+	  </li>
+	  <li class="inpboxitem">
+	    <p>資料結束日期</p>
+	    <div class="input-item date-select">
+	      <input type="text" placeholder="2023-01-01" name="end_date" id="end_date">
+	      <button class="date-cal">
+                {% include "../_inc_cal-svg.html" %}
+	      </button>
+	    </div>
+	  </li>
+	</ul>
+
+	<ul class="plan-screening" id="filter-project-container">
+	  <li id="filter-project1-item">
+            <div class="xx"> {% include "../_inc_xx-svg.html" %}</div>
+	    <div class="titlebox">
+	      <h3>計畫篩選</h3>
+	      <div class="cir-num">1</div>
+	    </div>
+	    <div class="input-item">
+	      <select name="box_1_project" id="filter-project1-project">
+	      </select>
+	    </div>
+	    <div class="inp2box">
+	      <div class="input-item">
+		<select name="box_1_studyareas" id="filter-project1-studyareas" multiple="multiple">
+		</select>
+	      </div>
+	      <div class="input-item">
+		<select name="box_1_deployments" id="filter-project1-deployments" multiple="multiple">
+		</select>
+	      </div>
+	    </div>
+	  </li>
+          {#<div class="xx"> {% include "../_inc_xx-svg.html" %}</div>#}
+	</ul>
+	<div class="btn-center">
+	  <button class="add-newbtn btn-greeno" id="filter-project-create-button">
+	    新增計畫篩選
+            {% include "../_inc_add-circle-svg.html" %}
+	  </button>
+	</div>
+	<div class="altitude-box">
+	  <div class="left-box">
+	    <div class="input-item ">
+	      <p>海拔</p>
+	      <select name="altitudeOperator" id="">
+		<option value="">比較</option>
+                <option value="eq">=</option>
+                <option value="gt">&gt;=</option>
+                <option value="lt">&lt;=</option>
+	      </select>
+	    </div>
+	    <div class="input-item ">
+	      <input type="text" name="altitude">
+	      <span>m</span>
+	    </div>
+	  </div>
+	  <div class="right-box">
+	    範圍的話用”-“，標示，例如: 600-1200
+	  </div>
+	</div>
+	<div class="inp2box">
+	  <div class="input-item ">
+	    <p>縣市</p>
+	    <select name="counties" id="filter-namedareas-county" multiple="multiple">
+	    </select>
+	  </div>
+	  <div class="input-item">
+	    <p>保護留區</p>
+	    <select name="protectedareas" id="filter-namedareas-protectedarea" multiple="multiple">
+
+	    </select>
+	  </div>
+        </div>
+	<div class="btn-center btn-search">
+	  <button class="btn-green" id="filter-submit">
+	    搜尋
+            {% include "../_inc_search-svg.html" %}
+	  </button>
+          </form>
+        </div>
+      </div>
+      <div class="wbg-box marb_40">
+	<div class="title-flex">
+	  <h3 class="light-green marb_20">搜尋結果</h3>
+	  <button class="btn-greeno">下載搜尋結果</button>
+	</div>
+	<div class="table-ov">
+	  <table class="search-result-table" cellpadding="0" cellspacing="0" border="0" id="search-result-table">
+	    <tr id="search-result-table-header">
+	      <td class="td1-num">#</td>
+	      <td class="td2-id">ID</td>
+	      <td class="td3-file">檔案名稱</td>
+	      <td class="td4-species">物種</td>
+	      <td class="td5-time">拍攝時間</td>
+	      <td class="td6-pjname">計畫名稱</td>
+	      <td class="td7-areaname">樣區名稱</td>
+	      <td class="td8-cameraaname"> 相機位置名稱</td>
+	      <td class="td9-hnum">海拔</td>
+	      <td class="td10-city">縣市</td>
+	      <td class="td11-area">保護留區</td>
+	      <td class="td12-photo">照片</td>
+	    </tr>
+	  </table>
+	</div>
+	<div class="page-flex-center">
+	  <p class="onepage">一頁幾筆</p>
+	  <div class="input-item">
+	    <select name="" id="filter-num-per-page">
+	      <option value="20" selected>20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+	    </select>
+	  </div>
+	  <p><span id="search-result-from"></span>–<span id="search-result-to"></span> of <span id="search-result-total"></span></p>
+	  <button class="arrl" id="filter-prev-page">
+            {% include "../_inc_prev-page-svg.html" %}
+	  </button>
+	  <button class="arrr" id="filter-next-page">
+            {% include "../_inc_next-page-svg.html" %}
+	  </button>
+	</div>
+
+	<div class="anc-area">
+	  <h3 class="light-green marb_20">分析與計算</h3>
+	  <div class="formbox">
+	    <div class="input-item">
+	      <p>計算項目</p>
+	      <select name="session" id="calc-type">
+                <option value="basic-oi">基本（相機工作時數, 有效照片數, 目擊事件數, OI）</option>
+                <option value="pod">捕獲回合比例、存缺</option>
+                <option value="apoa">活動機率(APOA)</option>
+	      </select>
+	    </div>
+	    <div class="input-item">
+	      <p>回合</p>
+	      <select name="session" id="calc-session">
+                <option value="month">月</option>
+	      </select>
+	    </div>
+	    <div class="input-item">
+	      <p>有效照片間隔</p>
+	      <select name="image_interval" id="calc-image-interval">
+                <option value="30">30 分鐘</option>
+                <option value="60">60 分鐘</option>
+	      </select>
+	    </div>
+	    <div class="input-item">
+	      <p>目擊事件間隔</p>
+	      <select name="event_interval" id="calc-event-interval">
+                <option value="2">2 分鐘</option>
+                <option value="5">5 分鐘</option>
+                <option value="10">10 分鐘</option>
+                <option value="30">30 分鐘</option>
+                <option value="60">60 分鐘</option>
+              </select>
+	    </div>
+	    <div class="input-item">
+	      <p>檔案格式</p>
+	      <select name="file_format" id="calc-file-format">
+                <option value="excel">Excel (xlsx)</option>
+	      </select>
+	    </div>
+	  </div>
+	  <div class="btn-center">
+	    <button class="btn-greeno note-btn" id="calc-description-button">計算項目說明</button>
+	    <button class="btn-green dow-btn" id="calc-submit-download">下載計算</button>
+	  </div>
+        </div>
+      </div>
+      <div class="wbg-box marb_40">
+	<div class="anc-area">
+	  <h3 class="light-green marb_20">計算圖表</h3>
+	  <div class="formbox page-flex-center">
+	    <div class="input-item">
+              <p>圖表類別</p>
+              <select name="calc_chart_type" id="calc-chart-type">
+                <option value="">--請選擇--</option>
+                <option value="fig1">年平均相對OI3變化</option>
+                <option value="fig2">3種海拔OI3之變化趨勢</option>
+                <option value="fig3">月平均OI3之變化趨勢</option>
+                <option value="fig4">年平均OI3之變化趨勢</option>
+                <option value="fig6">出現機率統計</option>
+                <option value="fig7">OI_3與樣點海拔關係</option>
+                <option value="fig8">歷年每月物種OI_3與犬、貓OI_3關係</option>
+                <option value="fig9">歷年累計出現樣點數</option>
+              </select>
+            </div>
+          </div>
+	</div>
+        <div class="btn-center">
+          <button class="btn-greeno" id="calc-submit-chart">顯示圖表</button>
+        </div>
+
+        <figure class="highcharts-figure">
+          <div id="calc-chart"></div>
+          <!--p class="highcharts-description">
+            Basic line chart showing trends in a dataset. This chart includes the
+            <code>series-label</code> module, which adds a label to each line for
+            enhanced readability.
+               </p>-->
+        </figure>
+      </div>
+      {#<div id="version-wrapper"><span class="version" id="version-text"></span></div>#}
+    </div><!-- end of main-box -->
+{% endblock %}
+ 
+{% block bodyx %}
 <div class="container content">
 
   {% comment %}

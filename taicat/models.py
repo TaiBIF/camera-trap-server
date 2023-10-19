@@ -10,6 +10,8 @@ from calendar import (
     monthcalendar
 )
 import json
+from functools import reduce
+import operator
 
 from django.db import models
 from django.db import connection  # for executing raw SQL
@@ -22,6 +24,11 @@ from django.db.models import (
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.contrib.postgres.indexes import GinIndex
+
+from django.contrib.gis.db import models as gis_models
+#from django.contrib.gis.gdal import SpatialReference, CoordTransform
+from django.contrib.gis.geos import Point
+
 from django.conf import settings
 from django.core.cache import cache, caches
 
@@ -1110,8 +1117,15 @@ class Calculation(models.Model):
     event_interval = models.PositiveSmallIntegerField('event interval')
     data = models.JSONField(default=dict, blank=True, null=True)
 
+
 class DownloadLog(models.Model):
-    
+
     user_role = models.CharField('使用者角色', max_length=1000, null=True, default='', blank=True)
     condition = models.CharField('篩選條件', max_length=1000, null=True, default='', blank=True)
     file_link = models.CharField('下載連結', max_length=1000, null=True, default='', blank=True)
+
+
+class NamedAreaBorder(models.Model):
+    name = models.CharField(max_length=500)
+    area_class = models.CharField(max_length=500)
+    mpoly = gis_models.MultiPolygonField()

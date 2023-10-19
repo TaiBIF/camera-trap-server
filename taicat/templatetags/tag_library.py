@@ -46,6 +46,7 @@ status_map = {
 
 @register.filter
 def get_notif(contact_id):
+    return 
     notifications = UploadNotification.objects.filter(contact_id=contact_id).order_by('-created')[:20]
     results = ""
     for n in notifications:

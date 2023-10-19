@@ -31,6 +31,7 @@ from taicat.models import (
     StudyArea,
     Species,
     ParameterCode,
+    Calculation,
 )
 from .utils import (
     get_species_list,
@@ -43,7 +44,9 @@ from .utils import (
     apply_search_filter,
     humen_readable_filter,
 )
-
+from .utils_calc import (
+    calc_chart,
+)
 # from .views import (
 #     check_if_authorized,
 #     check_if_authorized_create,
@@ -186,14 +189,23 @@ def api_search(request):
         downloadData = request.GET.get('downloadData', '')
 
         if calc_data:
-            calc_data = json.loads(calc_data)
+            calc_dict = json.loads(calc_data)
+
+        if calc_dict['calcType'] == 'chart' and calc_dict.get('chartType'):
+            results = calc_chart(
+                calc_dict,
+                filter_dict.get('species'),
+                filter_dict.get('projects'),
+            )
+            return JsonResponse(results)
 
         if download and calc_data:
             calc_dict = json.loads(request.GET['calc'])
             out_format = calc_dict['fileFormat']
             calc_type = calc_dict['calcType']
 
-            ''' direct download
+            # direct download
+            '''
             # results = calc(query, calc_data, query_start, query_end)
             results = calculated_data(filter_dict, calc_data)
             # print(results, out_format, calc_type)

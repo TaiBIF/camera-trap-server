@@ -28,6 +28,11 @@ from django.db.models.functions import (
     Trunc,
     ExtractDay,
 )
+
+from django.contrib.gis.db import models as gis_models
+#from django.contrib.gis.gdal import SpatialReference, CoordTransform
+from django.contrib.gis.geos import Point
+
 from django.db import connection
 from django.utils import timezone
 from django.utils.timezone import make_aware
@@ -53,6 +58,7 @@ from taicat.models import (
     Calculation,
     timezone_utc_to_tw,
     timezone_tw_to_utc,
+    NamedAreaBorder,
 )
 
 import geopandas as gpd
@@ -223,20 +229,9 @@ def calculated_data(filter_args, calc_args, available_project_ids):
 
     deployment_query = Deployment.objects
 
-    if projects := filter_args.get('projects'):
-        qlist = []
-        for proj in projects:
-            if deps := proj.get('deployments'):
-                deployment_ids = [x['id'] for x in deps]
-                qlist.append(Q(id__in=deployment_ids))
-            elif sa_s := proj.get('studyareas'):
-                studyarea_ids = [x['id'] for x in sa_s]
-                qlist.append(Q(study_area_id__in=studyarea_ids))
-            elif p := proj.get('project'):
-                qlist.append(Q(project_id=p['id']))
+    if projects := filter_dict.get('projects'):
+        deployment_query = apply_search_filter_projects(projects, deployment_query)
 
-        if len(qlist) > 0:
-            deployment_query = deployment_query.filter(reduce(operator.or_, qlist))
     deployment_list = deployment_query.values('id', 'name', 'project__name', 'study_area__name').all()
 
     for sp in species:
@@ -788,6 +783,25 @@ def save_calculation(species_list, year, month, deployment):
             for e_int in [2, 5, 10, 30, 60]:
                 result = deployment.calculate(year, month, species, img_int, e_int, to_save=True)
 
+def apply_search_filter_projects(projects, query):
+    qlist = []
+
+    for proj in projects:
+        if deps := proj.get('deployments'):
+            deployment_ids = [x['id'] for x in deps]
+            qlist.append(Q(deployment_id__in=deployment_ids))
+        if sa_s := proj.get('studyareas'):
+            studyarea_ids = [x['id'] for x in sa_s]
+            qlist.append(Q(studyarea_id__in=studyarea_ids))
+        if len(qlist) == 0:
+            if p := proj.get('project'):
+                qlist.append(Q(project_id=p['id']))
+
+    if len(qlist) > 0:
+        query = query.filter(reduce(operator.or_, qlist))
+
+    return query
+
 def apply_search_filter(filter_dict={}):
     query = Image.objects.filter()
     project_ids = []
@@ -824,20 +838,9 @@ def apply_search_filter(filter_dict={}):
         #    query = query.filter(deployment_id__in=values)
     #elif values := filter_dict.get('studyareas'):
     #    query = query.filter(studyarea_id__in=values)
-    if projects := filter_dict.get('projects'):
-        qlist = []
-        for proj in projects:
-            if deps := proj.get('deployments'):
-                deployment_ids = [x['id'] for x in deps]
-                qlist.append(Q(deployment_id__in=deployment_ids))
-            elif sa_s := proj.get('studyareas'):
-                studyarea_ids = [x['id'] for x in sa_s]
-                qlist.append(Q(studyarea_id__in=studyarea_ids))
-            elif p := proj.get('project'):
-                qlist.append(Q(project_id=p['id']))
 
-        if len(qlist) > 0:
-            query = query.filter(reduce(operator.or_, qlist))
+    if projects := filter_dict.get('projects'):
+        query = apply_search_filter_projects(projects, query)
 
     if value := filter_dict.get('altitude'):
         if op := filter_dict.get('altitudeOperator'):
@@ -905,7 +908,11 @@ def humen_readable_filter(filter_dict):
                     if proj_name := p['project']['name']:
                         if proj_name not in project_dict:
                             project_dict[proj_name] = []
-                        project_dict[proj_name].append(f"樣區：{d['studyarea_name']}/相機位置：{d['name']}")
+
+                        if sa_name := d.get('studyarea_name'):
+                            project_dict[proj_name].append(f"樣區：{sa_name}/相機位置：{d['name']}")
+                        else:
+                            project_dict[proj_name].append(f"相機位置：{d['name']}")
             if studyareas := p.get('studyareas'):
                 for sa in studyareas:
                     if proj_name := p['project']['name']:
@@ -1022,13 +1029,6 @@ def check_if_authorized_create(request):
     return is_authorized
 
 
-
-
-# def sortFunction(value):
-#     return value["id"]
-
-
-
 # 固定window = 3
 def get_page_list(current_page, total_page):
   page_range = range(1, total_page+1)
@@ -1045,3 +1045,52 @@ def get_page_list(current_page, total_page):
     # page_list = [pp for pp in p.page_range[current_index:current_index+window]]
   return page_list
 
+
+def find_taiwan_area(name):
+    key = ''
+    if name in ['台北市', '臺北市', '新北市', '桃園市', '新竹縣', '苗栗縣', '宜蘭縣']:
+        key = 'N'
+    elif name in ['南投縣', '彰化縣', '台中市', '臺中市', '雲林縣', '嘉義縣']:
+        key = 'C'
+    elif name in ['台南市','臺南市', '高雄市', '屏東縣']:
+        key = 'S'
+    elif name in ['花蓮縣', '臺東縣', '台東縣']:
+        key = 'E'
+
+    return key
+
+
+def find_named_area(x, y, datum):
+    name = ''
+    tw_part = ''
+    if datum == 'TWD97':
+        # EPSG:3824 => TWD97 (經緯度)
+        # EPSG:3826 => TWD97 / TM2 zone 121 (二度分帶)
+        # EPSG: 4326 => WGS84 (經緯度)
+        # 這邊填的TWD97是"TM2 zone 121"
+        pnt = Point(x=int(x), y=int(y), srid=3826)
+        pnt.transform(4326)
+    elif datum == 'WGS84':
+        pnt = Point(x=float(x), y=float(y), srid=4326)
+
+    if within := NamedAreaBorder.objects.filter(mpoly__contains=pnt).values('name').first():
+        name = within['name']
+
+    return name
+
+def find_year_month_range(items):
+    year_month_range = []
+    old_to_new = sorted(items)
+    datetime_from = timezone_utc_to_tw(min(old_to_new))
+    datetime_to = timezone_utc_to_tw(max(old_to_new))
+
+    for y in range(datetime_from.year, datetime_to.year+1):
+        month_range = [1, 13]
+        if y == datetime_from.year:
+            month_range[0] = datetime_from.month
+        if y == datetime_to.year:
+            month_range[1] = datetime_to.month + 1
+        for m in range(month_range[0], month_range[1]):
+            year_month_range.append([y, m])
+
+    return year_month_range

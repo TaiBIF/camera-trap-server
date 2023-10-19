@@ -2262,6 +2262,7 @@ def check_login(request):
     member_id = request.session.get('id', None)
     mem_obj = None
     response['redirect'] = True
+
     if member_id:
         response['redirect'] = False
         mem_obj = Contact.objects.filter(id=member_id).values_list('name','email','identity').first()
