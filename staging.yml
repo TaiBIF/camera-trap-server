@@ -94,7 +94,7 @@ services:
     restart: unless-stopped
     build:
       context: .
-      dockerfile: Dockerfile-prod
+      dockerfile: Dockerfile
     container_name: ct22-celery-prod-container
     image: ct22-django-prod-image
     command: /root/.local/bin/celery -A conf worker -l info
