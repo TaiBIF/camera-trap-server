@@ -7,36 +7,15 @@
 
 ## Development
 
-### Frontend (Search page)
+### PostgreSQL
 
-folder: `frontend-search`
-```bash
-$ cd frontend-search
-```
+sync staging/production server database data:
 
-Setting Environment
+1. Delete or backup `.//ct22-volumes/pgdata`
+2. Get dump gziped sql file from server
+3. put it in `initdb` folder
+4. docker compose up
 
-`.env` for local development: place in ./config
-
-`.env.prod` for production build
-
-local development setting:
-```
-MY_ENV=dev
-API_URL=http://127.0.0.1:8000/api/
-```
-
-Install packages
-
-```bash
-$ yarn install
-```
-
-Run for development
-
-```bash
-$ yarn start
-```
 
 ### Data Model
 

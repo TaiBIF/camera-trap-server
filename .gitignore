@@ -10,3 +10,4 @@ ct-mongo-to-postgres/
 
 
 cache-files/*.json
+initdb/*.sql.gz
