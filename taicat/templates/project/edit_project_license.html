@@ -13,7 +13,7 @@
     <div class="main-box">
         <div class="main-title">
             <div class="flex-boxleft">
-                <a href="{% url 'project_detail' pk %}" class="back-btn">
+                <a href="{% url 'project_info' pk %}" class="back-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="9.377" height="15.927" viewBox="0 0 9.377 15.927">
                         <g id="Group_736" data-name="Group 736" transform="translate(1.414 1.414)">
                             <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
@@ -313,7 +313,7 @@
   <div class="main-title">
     您的權限不足      
   </div>		
-  <a class="return-btn" href="javascript:;" id="goBack">  返回 </a>
+  <a class="return-btn" href="/"> < 返回 </a>
 </div>
   {% endif %} 
 {% endblock body %} {% block script %}
