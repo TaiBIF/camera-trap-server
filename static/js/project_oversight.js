@@ -1,4 +1,17 @@
 $(function () {
+  const absentModal = document.getElementById('absent-modal');
+  absentModal.style.display = 'none';
+  const calendarModal = document.getElementById('calendar-modal');
+  calendarModal.style.display = 'none';
+  const calendarHack1 = document.getElementById('calendar-hack1');
+  calendarHack1.style.margin = '4px 20px 10px 20px';
+  const calendarHack2 = document.getElementById('calendar-hack2');
+  calendarHack2.style.marginLeft = '20px';
+  const calendarHack3 = document.getElementById('calendar-hack3');
+  calendarHack3.style.margin = '20px 0px 20px 0px';
+  const calendarTripList = document.getElementById('calendar-trip-list');
+  calendarTripList.style.margin = '4px 0px 0px 30px';
+
     let gapChoices = [];
     if ($('input[name=get-year]').val()){
         $.ajax({
@@ -164,6 +177,8 @@ $(function () {
   $('.data-btn').on('click',function (event) {
     $('#calendar-trip-list').empty()
     $('.calendar-pop').fadeIn()
+    console.log('aeu');
+    calendarModal.style.display = 'block';
     const data = JSON.parse(event.target.dataset.detail)
     $('#calendar-working-days').html(data[3]);
     $('#calendar-num-days').html(data[4]);
@@ -188,8 +203,8 @@ $(function () {
     }
     for (let i=0; i<data[7].length; i++) {
       $('#calendar-trip-list').append(`<li class="list-group-item">${data[7][i][0]} ~ ${data[7][i][1]}</li>`);
-      }
-  })
+    }
+  });
   $('.calendar-pop .xx').on('click',function (event) {
     $('.calendar-pop').fadeOut();
   });
