@@ -1,3 +1,7 @@
+.absent-caused-btn {
+  background: #59AE68 !important;
+}
+
     /* datatable loader */
     .dataTables_wrapper .dataTables_processing {
         content: '';

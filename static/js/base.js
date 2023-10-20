@@ -57,7 +57,7 @@ $('.mbbtn-2').on('click',function (event) {
 $(function(){
 
   $('.xx').on('click',function (event) {
-    if (window.location.pathname !== '/search/') { // exclude search page
+    if (window.location.pathname !== '/search/' && window.location.pathname.indexOf('/project/oversight') < 0) { // exclude search/project_oversight page
       $('.pop-box').addClass('d-none');
       $('body').css("overflow", "initial");
     }

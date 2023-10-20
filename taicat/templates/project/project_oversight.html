@@ -16,40 +16,9 @@
 <script src="{% static 'js/project_oversight.js' %}"></script>
 
 {% endblock head %}
+{% block modal %}
 
-{% block modal  %}
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="detail-modal-title">--</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        綠底: 有運作、紅底: 無運作
-        <table class="table">
-          <thead>
-            <tr><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th><th>日</th></tr>
-          </thead>
-          <tbody id="detail-modal-tbody">
-          </tbody>
-        </table>
-        <div>
-          行程紀錄
-          <ul class="list-group" id="detail-modal-list">
-          </ul>
-        </div>
-        <div>相機運作比例 <span id="detail-modal-ratio"></span> (相機有運作天數 <span id="detail-modal-count"></span> / 當月天數 <span id="detail-modal-days"></span>)</div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!--缺值列表原因跳匡-->
-<div class="pop-box absent-pop" style="display: none;">
+<div class="pop-box calendar-pop" id="calendar-modal">
   <div class="center-box">
     <div class="wbox">
       <div class="xx">
@@ -66,10 +35,53 @@
 	  </g>
 	</svg>
       </div>
-      <div class="titlebox" id="absent-title">
+      <div class="titlebox" id="calendar-title">
         --
       </div>
       <div class="contentbox">
+	<h3>綠底: 有運作、紅底: 無運作</h3>
+	<table class="table-calendar" id="table-calendar" cellpadding="0" cellspacing="0" border="0">
+	</table>
+      </div>
+      <div id="calendar-hack1">
+        行程紀錄
+        <ul class="list-group" id="calendar-trip-list"></ul>
+          </ul>
+      </div>
+      <div id="calendar-hack2">
+        相機運作比例 <span id="calendar-working-ratio"></span> (相機有運作天數 <span id="calendar-working-days"></span> / 當月天數 <span id="calendar-num-days"></span>)
+      </div>
+      <div class="btn-center" id="calendar-hack3">
+	<button class="btn-green" id="hide-calendar">
+	  確認
+	</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+	<!--缺值列表原因跳匡-->
+	<div class="pop-box absent-pop" id="absent-modal">
+		<div class="center-box">
+			<div class="wbox">
+				<div class="xx">
+					<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+						<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+							<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+								<circle cx="20" cy="20" r="20" stroke="none"/>
+								<circle cx="20" cy="20" r="19" fill="none"/>
+							</g>
+							<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+								<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+								<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							</g>
+						</g>
+					</svg>
+				</div>
+                                <div class="titlebox" id="absent-title">
+                                  --
+                                </div>
+				<div class="contentbox">
 	<h3 id="absent-range-label">--</h3>
 	<div class="input-item">
 	  <p>缺失原因</p>
@@ -97,74 +109,31 @@
 	    確認儲存
 	  </button>
 	</div>
-      </div>
-    </div>
-  </div>
-</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-<!--calendar跳匡-->
-<div class="pop-box calendar-pop" style="display: none;">
-  <div class="center-box">
-    <div class="wbox">
-      <div class="xx">
-	<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-	  <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
-	    <g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
-	      <circle cx="20" cy="20" r="20" stroke="none"/>
-	      <circle cx="20" cy="20" r="19" fill="none"/>
-	    </g>
-	    <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
-	      <line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
-	      <line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
-	    </g>
-	  </g>
-	</svg>
-      </div>
-      <div class="titlebox" id="calendar-title">
-        --
-      </div>
-      <div class="contentbox">
-	<h3>綠底: 有運作、紅底: 無運作</h3>
-	<table class="table-calendar" id="table-calendar" cellpadding="0" cellspacing="0" border="0">
-	</table>
-      </div>
-      <div style="margin: 4px 20px 10px 20px;">
-        行程紀錄
-        <ul class="list-group" id="calendar-trip-list"></ul>
-          </ul>
-      </div>
-      <div style="margin-left: 20px">
-        相機運作比例 <span id="calendar-working-ratio"></span> (相機有運作天數 <span id="calendar-working-days"></span> / 當月天數 <span id="calendar-num-days"></span>)
-      </div>
-      <div class="btn-center" style="margin-top: 20px;margin-bottom: 20px">
-	<button class="btn-green" id="hide-calendar">
-	  確認
-	</button>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
 {% endblock %}
 
-{% block body %}
-<div class="innbox gray-bg" style="margin-top:-80px">{# CSSHACK #}
-  <div class="main-box">
-    <div class="main-title">
-      <a href="/project/info/{{ project.id }}" class="back-btn">
-	<svg xmlns="http://www.w3.org/2000/svg" width="9.377" height="15.927" viewBox="0 0 9.377 15.927">
-	  <g id="Group_736" data-name="Group 736" transform="translate(1.414 1.414)">
-	    <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
-	    <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
-	  </g>
-	</svg>
-	<p>返回</p>
-      </a>
-      <h2>相機樣點運作及缺失比例</h2>
-    </div>
 
-    <div class="wbg-box marb_40">
-      <form method="GET" action="/project/oversight/{{ project.id }}" id="filter-form">
+{% block body %}
+<div class="main-box">
+  <div class="main-title">
+    <a href="/project/info/{{ project.id }}" class="back-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="9.377" height="15.927" viewBox="0 0 9.377 15.927">
+	<g id="Group_736" data-name="Group 736" transform="translate(1.414 1.414)">
+	  <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+	  <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+	</g>
+      </svg>
+      <p>返回</p>
+    </a>
+    <h2>相機樣點運作及缺失比例</h2>
+  </div>
+  
+  <div class="wbg-box marb_40">
+    <form method="GET" action="/project/oversight/{{ project.id }}" id="filter-form">
       <div class="ovs-selectitem">
 	<div class="input-item">
 	  <p>年份</p>
@@ -172,7 +141,7 @@
 	    <option value="">行程年份篩選</option>
             {% for y in year_list %}
             <option value="{{y}}"{% if y|to_int == request.GET.year|to_int %} selected{% endif %}>{{ y }}</option>
-              {% endfor %}
+            {% endfor %}
 	  </select>
 	</div>
 	<div class="input-item">
@@ -202,48 +171,48 @@
 	</button>
       </div>
     </form>
-    </div>
+  </div>
+  
+  <div class="ovsshort-inf">
+    <h3 class="light-green">每月相機運作比例</h3>
+    <p>每一格數字代表: 每月相機運作天數(%) | 物種標記比例(%) (有標物種的照片/全部照片)</p>
+  </div>
 
-    <div class="ovsshort-inf">
-      <h3 class="light-green">每月相機運作比例</h3>
-      <p>每一格數字代表: 每月相機運作天數(%) | 物種標記比例(%) (有標物種的照片/全部照片)</p>
-    </div>
-
-    {% if result %}
-    {% for year, data in result.items %}
-    <h3>{{ year }}</h3>
-    {% for studyarea in data %}
-    <div class="area-itembox">
-      <div class="area-item1">
-	<h3 class="area-title">
-	  樣區: {{ studyarea.name }}
-	</h3>
-	<table class="ovstabel-style" cellspacing="0"  cellpadding="0" border="0">
-	  <tr>
-	    <td>相機<br>
-	      位置
-	    </td>
-            {% for m in month_label_list %}
-            <td>{{ m }}</td>
-            {% endfor %}
-	    <td>平均</td>
-	    <td>缺值列表原因</td>
-	  </tr>
-          {% for deployment in studyarea.items %}
-          <tr>
-            <td>{{ deployment.name }}</td>
-            {% for x in deployment.items %}
-            <td>{#<span data-toggle="tooltip" data-placement="bottom" title="{{ x.1.0 }}/{{ x.1.1 }} （相機有運作天數 / 當月天數）<br/>{{ x.1.2 }}" data-bs-html="true">{{ x.0|floatformat:2 }}%</span>#}<button class="data-btn" data-detail="{{ x.1 }}">{{ x.0|floatformat:2 }} <br /> {{ x.2.0|floatformat:2 }}{% if x.2.0 > 0 %}<br/><small>({{ x.2.1}} / {{ x.2.2 }})</small>{% endif %}</button></td>
-            {% endfor %}
-            <td>{{ deployment.ratio_year|floatformat:2  }}</td>
-            <td>
-              <div class="absent-box">
-                {% for gap in deployment.gaps %}
-                <div class="absent-btn"{%if gap.caused %} style="background: #59AE68"{% endif %} data-name="{{ deployment.name }}" data-deploymentid="{{ deployment.id}}" data-gapid="{{ gap.id }}" data-caused="{{ gap.caused }}" data-bs-toggle="modal" data-bs-target="#gap-modal" data-gaplabel="{{ gap.label }}" data-gapstart="{{ gap.range.0 }}" data-gapend="{{ gap.range.1 }}">{{ gap.label }}{% if gap.caused %}({{ gap.caused}}){% endif %}</div>{% endfor %}</td>
-	  </tr>
+  {% if result %}
+  {% for year, data in result.items %}
+  <h3>{{ year }}</h3>
+  {% for studyarea in data %}
+  <div class="area-itembox">
+    <div class="area-item1">
+      <h3 class="area-title">
+	樣區: {{ studyarea.name }}
+      </h3>
+      <table class="ovstabel-style" cellspacing="0"  cellpadding="0" border="0">
+	<tr>
+	  <td>相機<br>
+	    位置
+	  </td>
+          {% for m in month_label_list %}
+          <td>{{ m }}</td>
           {% endfor %}
-	</table>
-      </div>
+	  <td>平均</td>
+	  <td>缺值列表原因</td>
+	</tr>
+        {% for deployment in studyarea.items %}
+        <tr>
+          <td>{{ deployment.name }}</td>
+          {% for x in deployment.items %}
+          <td>{#<span data-toggle="tooltip" data-placement="bottom" title="{{ x.1.0 }}/{{ x.1.1 }} （相機有運作天數 / 當月天數）<br/>{{ x.1.2 }}" data-bs-html="true">{{ x.0|floatformat:2 }}%</span>#}<button class="data-btn" data-detail="{{ x.1 }}">{{ x.0|floatformat:2 }} <br /> {{ x.2.0|floatformat:2 }}{% if x.2.0 > 0 %}<br/><small>({{ x.2.1}} / {{ x.2.2 }})</small>{% endif %}</button></td>
+          {% endfor %}
+          <td>{{ deployment.ratio_year|floatformat:2  }}</td>
+          <td>
+            <div class="absent-box">
+              {% for gap in deployment.gaps %}
+              <div class="absent-btn{%if gap.caused %} absent-caused-btn{% endif %}" data-name="{{ deployment.name }}" data-deploymentid="{{ deployment.id}}" data-gapid="{{ gap.id }}" data-caused="{{ gap.caused }}" data-bs-toggle="modal" data-bs-target="#gap-modal" data-gaplabel="{{ gap.label }}" data-gapstart="{{ gap.range.0 }}" data-gapend="{{ gap.range.1 }}">{{ gap.label }}{% if gap.caused %}({{ gap.caused}}){% endif %}</div>{% endfor %}</td>
+	</tr>
+        {% endfor %}
+      </table>
+            </div>
     </div>
     {% endfor %}
     {% endfor %}
@@ -251,9 +220,10 @@
     <div class="btn-center">
       {% if request.GET.year %}
       <a href="{% url 'download_project_oversight' pk=project.id %}?year={{ request.GET.year }}&studyarea={{ request.GET.studyarea }}" class="btn-green"><p>管考表下載 ({{ request.GET.year }})</p></a>
-      </a>
-      {% endif %}
+    </a>
+    {% endif %}
     </div>
   </div>
 </div>
 {% endblock %}
+  
