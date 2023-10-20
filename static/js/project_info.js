@@ -40,6 +40,7 @@ $( document ).ready(function() {
 
     $('#updateSpeciesPie').on('click',function(){
         updateSpeciesPie()
+        updateImageLineChart()
     })
 
 
@@ -72,7 +73,7 @@ $( document ).ready(function() {
 
     $('.filter').on('change', function(){
         updateSpeciesPie();
-        updateImageLineChart()   
+        updateImageLineChart()  
     });
         
     
@@ -380,6 +381,8 @@ function setSpeciesPie(pie_data, other_data, deployment_points){
                                 alert('請由下方「其他物種」折疊選單選擇物種')
                             } else {
                                 updateSpeciesMap(this.name)
+                                console.log(this.name)
+                                updateImageLineChart(this.name);
                             }
                             // 修改右側統計圖
                         }
@@ -437,6 +440,7 @@ function setSpeciesPie(pie_data, other_data, deployment_points){
             $('#multiCollapseSpecies').toggleClass('d-none')
         } else {
             updateSpeciesMap($(this).data('species'))
+            updateImageLineChart($(this).data('species'));
         }
     })
 
@@ -700,7 +704,7 @@ function setImageLineChart(line_chart_data){
     });
 }
 
-function updateImageLineChart(){
+function updateImageLineChart(species){
     // 地圖相關的移除
     $('.species-map-legend').addClass('d-none')
     $('.speciesMapIcon').remove()
@@ -725,21 +729,28 @@ function updateImageLineChart(){
 
     let start_date = $('input[name="start_date"]').val()
     let end_date = $('input[name="end_date"]').val()
-    if ((!start_date) && (!end_date) && (title == '全部')){
+
+    // Reset the title of line chart
+    $('#species_name').text('');
+    if ((!start_date) && (!end_date) && (title == '全部') && (!species)){
+        // If there is no selected filter, show the overview line chart
         setImageLineChart(window.line_chart_data)
         $('#sa-title').text('全部樣區');
         $('#image_counts').text(window.image_counts);
     } else {
         $('.loading-pop').removeClass('d-none')
         $.ajax({
-            data: {'said': said, 'start_date': start_date, 'end_date': end_date},            
+            data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species},            
             url: "/update_line_chart",
             success: function(response){
-                // console.log(response);
                 setImageLineChart(response.line_chart_data);
                 var selectedSa = $('.sa-select').find("option:selected").text()
                 $('#sa-title').text(selectedSa);
                 $('#image_counts').text(response.image_counts);
+                $('#species_name').text(species);
+
+                // Reset species
+                species = undefined;
             },
             error: function(){
                 alert('未知錯誤，請聯繫管理員');
