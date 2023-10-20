@@ -1,3 +1,8 @@
+/* Prevent element.style add style */
+.message-box {
+    display: block !important;
+}
+
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto:wght@300;400;500;700&display=swap");
 
 .img_link img, .img_link>.show_box, .img_link .span {
