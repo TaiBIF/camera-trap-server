@@ -2412,6 +2412,7 @@ def update_line_chart(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     said = request.GET.get('said')
+    selected_species = request.GET.get('species')
 
     response = {}
 
@@ -2425,6 +2426,10 @@ def update_line_chart(request):
             image_data = image_data.filter(datetime__gte=start_date)
         if end_date:
             image_data = image_data.filter(datetime__lte=end_date)
+
+        # Deal with selected_species
+        if selected_species:
+            image_data = image_data.filter(species=selected_species)
         
         datetime_values = [str(item.datetime) for item in image_data]
         species = [str(item.species) for item in image_data]
