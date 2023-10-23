@@ -1,163 +1,25 @@
+/* Hack to prevent CSP and isolate with designer's theme.css
+ * moogoo, 2023-10-23
+ */
 .absent-caused-btn {
   background: #59AE68 !important;
 }
 
-    /* datatable loader */
-    .dataTables_wrapper .dataTables_processing {
-        content: '';
-        position: absolute;
-        width: 100%;
-        min-height: 150px;
-        height: 150px;
-        left: 0;
-        right: 0;
-        margin: auto;
-        background: url("/static/icon/Leaves-1.8s-200px.gif") no-repeat center;
-        background-size: 150px;
-        z-index: 1099;
-        border: 0
-    }
-
-    .dataTables_wrapper .dataTables_processing:after {
-        content:'處理中';
-        position: absolute;
-        top: 160px;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        color: rgb(37, 116, 85);
-        width: 100px;
-        height: 20px;
-        margin: auto;
-        z-index: 1199;
-        text-align: center;
-    }
-
-    /* datatable page button */
-    .page-item.active .page-link {
-        background-color: rgb(228, 224, 224) !important;
-        border: 1px solid rgb(228, 224, 224) ;
-    }
-    .page-link {
-        color: black !important;
-    }
-
-    .dataTables_wrapper {
-        background-color: white
-    }
-
-    #img-table {
-        margin: 0 auto
-    }
-
-    #img-table_wrapper {
-        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-    }
-
-    .oversight:hover {
-        color: lightgrey;
-    }
-
-    .back:hover {
-        color: lightgrey;
-    }
-
-    .btn-new {
-        background-color: white;
-        border: 1px solid #cccccc;
-        color: black !important;
-    }
-
-    .ui-autocomplete { 
-        z-index:2147483647; 
-        max-height: 200px;
-        overflow-y: auto;
-        /* prevent horizontal scrollbar */
-        overflow-x: hidden;
-        /* add padding to account for vertical scrollbar */
-        padding-right: 20px;
-    }
-
-    /* radio style */
-    input[type="radio"] {
-        display: none
-    }
-
-    label {
-        cursor: pointer
-    }
-
-    /* window size */
-
-    .header {
-        height: 70px
-    }
-
-    .remain.col-2{
-        overflow-y: scroll;
-        height:calc(100vh - 126px);
-        background-color: yellow;
-        }
-
-
-    .remain.col-10{
-        position: relative;
-        height:calc(100vh - 126px);
-    }
-
-    footer {
-        display: none
-    }
-    
-    /* studyarea */
-    .studyarea-list-area ul {
-        padding: 0;
-        list-style: none;
-    }
-
-   .studyarea-list-area li {
-        padding: 15px 0 ;
-        cursor: pointer
-    }
-
-    /* sub studyarea */
-    .collapse > li {
-        margin-left: 10%
-    }
-
-    .collapse-s > li {
-        margin-left: 20%
-    }
-
-    /* font small */
-    .font-sm {
-        font-size: 15px
-    }
-
-
-
-    .deployment-gap {
-        font-size:12px;
-        margin:2px;
-    }
-
-    .w-12 {
-        width: 12px;
-        margin-right: 5px;
-        margin-left: 5px;
-      }
-
-      /* TODO tmp css wait 2.0 0704  start*/
-      body{
-        font-size: 1rem !important;
-        font-family: var(--bs-font-sans-serif) !important;
-        line-height: normal !important;
-        letter-spacing: 0.05em !important;
-        /* TODO tmp css wait 2.0 0704  end*/
-        }
-    /* TODO tmp css wait 2.0 0704  start*/
-    #alert-content > a{
-        color: #0d6efd !important;
-        text-decoration: underline !important;
-    }
-    /* TODO tmp css wait 2.0 0704  end*/
+#absent-modal {
+  display: none;
+}
+#calendar-modal {
+  display: none;
+}
+#calendar-hack1 {
+  margin: 4px 20px 10px 20px;
+}
+#calendar-hack2 {
+  margin: 20px;
+}
+#calendar-hack3 {
+  margin: 20px 0px 20px 0px;
+}
+#calendar-trip-list {
+  margin: 4px 0px 0px 30px;
+}

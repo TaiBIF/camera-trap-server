@@ -1,5 +1,8 @@
 $(function () {
   const absentModal = document.getElementById('absent-modal');
+  const calendarModal = document.getElementById('calendar-modal');
+  /*
+  const absentModal = document.getElementById('absent-modal');
   absentModal.style.display = 'none';
   const calendarModal = document.getElementById('calendar-modal');
   calendarModal.style.display = 'none';
@@ -11,7 +14,7 @@ $(function () {
   calendarHack3.style.margin = '20px 0px 20px 0px';
   const calendarTripList = document.getElementById('calendar-trip-list');
   calendarTripList.style.margin = '4px 0px 0px 30px';
-
+*/
     let gapChoices = [];
     if ($('input[name=get-year]').val()){
         $.ajax({
