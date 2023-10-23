@@ -124,128 +124,116 @@
     <div class="header">    
 
 
-      <a href="/" class="logo">
-        <img src="/static/image/logo@2x.png" alt="">
-      </a>
-
-      {% if request.session|check_is_login %}
-      <div class="message-btn">
-        <div class="ringarea">
-          {% if request.session.id|has_unread_notif %}
-          <div class="has-unread"></div>
-          {% endif %}
-
-          <svg class="ring" xmlns="http://www.w3.org/2000/svg" width="20" height="21.948" viewBox="0 0 20 21.948">
-            <g id="Group_2" data-name="Group 2" transform="translate(0 0)">
-              <g id="Group_869" data-name="Group 869">
-                <path id="Path_1" data-name="Path 1" d="M6.528,18.965H6.236c-1.445,0-2.89,0-4.335,0A1.811,1.811,0,0,1,.047,17.522a1.76,1.76,0,0,1,.678-1.846c.268-.214.548-.413.822-.62A1.458,1.458,0,0,0,2.13,14.1c.326-1.966.679-3.929.97-5.9A6.963,6.963,0,0,1,6.393,3.02a9.5,9.5,0,0,1,1.372-.644C7.935,2.3,8,2.238,8,2.049a2,2,0,1,1,3.991-.064c.007.255.1.33.316.413a6.8,6.8,0,0,1,4.531,5.516c.356,2.064.687,4.132,1.03,6.2a1.438,1.438,0,0,0,.57.934c.26.2.525.392.786.591a1.832,1.832,0,0,1-1.112,3.326c-1.445.006-2.89,0-4.335,0H13.5a3.512,3.512,0,0,1-3.584,2.982,3.232,3.232,0,0,1-2.238-.878,3.54,3.54,0,0,1-1.146-2.1m3.466-1.005v-.008q1.523,0,3.046,0,2.531,0,5.062.006a.832.832,0,0,0,.515-1.528c-.271-.21-.551-.41-.821-.622a2.383,2.383,0,0,1-.908-1.506c-.146-.836-.281-1.674-.42-2.511-.226-1.36-.416-2.726-.683-4.077a5.851,5.851,0,0,0-7.147-4.55A5.562,5.562,0,0,0,4.249,7.616c-.44,2.037-.731,4.108-1.038,6.172A3.057,3.057,0,0,1,1.821,16.1a4.255,4.255,0,0,0-.539.411.814.814,0,0,0-.066,1.171.945.945,0,0,0,.765.275q4.007-.005,8.014,0M7.567,18.977a2.481,2.481,0,0,0,4.857,0ZM10.991,2.023a.938.938,0,0,0-.514-.9A.948.948,0,0,0,9.4,1.2a.905.905,0,0,0-.392.821Z" transform="translate(0 0.001)" fill="#fff"/>
-              </g>
-            </g>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
-            <path id="Polygon_2" data-name="Polygon 2" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
-          </svg>
-        </div>
-        <div class="message-box">
-          <div class="titlearea">
-            <p>最近 20 筆通知</p>
-            <button id="updateIsRead">全部已讀</button>
-          </div>
-          <ul>
-            {{ request.session.id|get_notif }}
-          </ul>
-        </div>
-      </div>
-      {% endif %}
+        <a href="/" class="logo">
+            <img src="/static/image/logo@2x.png" alt="">
+        </a>
 
 
-
-      <div class="header-cont">
-        <div class="left-box">
-          <ul class="pc_menu">
-            {% if not request.session|check_is_login %}
-            <li>
-              <a class="item login-item">登入</a>
-            </li>
-            {% else %}
-            <div class="mb_namebox">
-              <p>Hello, {{ request.session.name }}</p>
-            </div>    
-            {% endif %}
-            <li>
-              <a href="{% url 'project_overview' %}" class="item">計畫總覽</a>
-            </li>
-            <li>
-              <a href="{% url 'search' %}" class="item">資料篩選與計算</a>
-            </li>
-            {% if request.session|check_is_login %}
-            <li>
-              <a href="{% url 'upload-history' %}" class="item">上傳紀錄</a>
-            </li>
-            {% endif %}
-            <li>
-              <p class="item mbbtn-1">
-                幫助
-                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
-                  <path id="Polygon_1" data-name="Polygon 1" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
-                </svg>
-              </p>
-              <div class="menu-2">
-                <div class="wbox">
-                  <a href="{% url 'faq' %}">常見問題</a>
-                  <a href="{% url 'contact-us' %}">聯絡我們</a>
-                  <a href="{% url 'policy' %}">隱私權政策</a>
+        <div class="header-cont">
+            <div class="left-box pad-menu">
+                <div class="mb_namebox">
+                    <p>Hello, {{ request.session.name }}</p>
                 </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-        {% if not request.session|check_is_login %}{# HACK session storage warning #}
-        <!--<a class="btn btn-orange" data-bs-toggle="modal" data-bs-target="#loginModal">登入</a>-->
-        <a class="start-btn login-item">
-					登入
-				</a>
-        {% else %}
-          <div class="right-box">
-            <div class="member-btn">
-              <div class="itembtn mbbtn-2">
-                <p>{{ request.session.name }}</p>
-                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
-                  <path id="Polygon_2" data-name="Polygon 2" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
-                </svg>
-              </div>
-              <div class="menu-2">
-                <div class="wbox">
-                  <a href="{% url 'personal_info' %}">帳號設定</a>
-                  {% if request.session.id|if_permission %}
-                  <a href="{% url 'set_permission' %}">權限管理</a>
-                  <a href="{% url 'announcement'  %}">公告寄信</a>
-                  {% endif %}
-                  {% if request.session.id|if_desktop %}
-                  <a href="{% url 'desktop'  %}">單機版下載</a>
-                  {% endif %}
-                  <a href="{% url 'logout' %}">登出</a>
-                </div>
-              </div>
+                <ul class="pc_menu">
+                    <li>
+                        <a href="{% url 'project_overview' %}" class="item">計畫總覽</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'search' %}" class="item">資料篩選與計算</a>
+                    </li>
+                    {% if request.session|check_is_login %}
+                    <li>
+                        <a href="{% url 'upload-history' %}" class="item">上傳紀錄</a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <p class="item mbbtn-1">
+                            幫助
+                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
+                                <path id="Polygon_1" data-name="Polygon 1" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
+                            </svg>
+        
+                        </p>
+                        <div class="menu-2">
+                            <div class="wbox">
+                                <a href="{% url 'faq' %}">常見問題</a>
+                                <a href="{% url 'contact-us' %}">聯絡我們</a>
+                                <a href="{% url 'policy' %}">隱私權政策</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
             </div>
-          </div>
-        {% endif %}
-      </div>
+            {% if not request.session|check_is_login %}{# HACK session storage warning #}
+            <a class="start-btn login-item">
+                登入
+            </a>
+            {% else %}
+            <div class="right-box">
+                <div class="flex-right">
+                    <div class="message-btn">
+                        <div class="ringarea">
+                            <svg class="ring" xmlns="http://www.w3.org/2000/svg" width="20" height="21.948" viewBox="0 0 20 21.948">
+                                <g id="Group_2" data-name="Group 2" transform="translate(0 0)">
+                                    <g id="Group_869" data-name="Group 869">
+                                        <path id="Path_1" data-name="Path 1" d="M6.528,18.965H6.236c-1.445,0-2.89,0-4.335,0A1.811,1.811,0,0,1,.047,17.522a1.76,1.76,0,0,1,.678-1.846c.268-.214.548-.413.822-.62A1.458,1.458,0,0,0,2.13,14.1c.326-1.966.679-3.929.97-5.9A6.963,6.963,0,0,1,6.393,3.02a9.5,9.5,0,0,1,1.372-.644C7.935,2.3,8,2.238,8,2.049a2,2,0,1,1,3.991-.064c.007.255.1.33.316.413a6.8,6.8,0,0,1,4.531,5.516c.356,2.064.687,4.132,1.03,6.2a1.438,1.438,0,0,0,.57.934c.26.2.525.392.786.591a1.832,1.832,0,0,1-1.112,3.326c-1.445.006-2.89,0-4.335,0H13.5a3.512,3.512,0,0,1-3.584,2.982,3.232,3.232,0,0,1-2.238-.878,3.54,3.54,0,0,1-1.146-2.1m3.466-1.005v-.008q1.523,0,3.046,0,2.531,0,5.062.006a.832.832,0,0,0,.515-1.528c-.271-.21-.551-.41-.821-.622a2.383,2.383,0,0,1-.908-1.506c-.146-.836-.281-1.674-.42-2.511-.226-1.36-.416-2.726-.683-4.077a5.851,5.851,0,0,0-7.147-4.55A5.562,5.562,0,0,0,4.249,7.616c-.44,2.037-.731,4.108-1.038,6.172A3.057,3.057,0,0,1,1.821,16.1a4.255,4.255,0,0,0-.539.411.814.814,0,0,0-.066,1.171.945.945,0,0,0,.765.275q4.007-.005,8.014,0M7.567,18.977a2.481,2.481,0,0,0,4.857,0ZM10.991,2.023a.938.938,0,0,0-.514-.9A.948.948,0,0,0,9.4,1.2a.905.905,0,0,0-.392.821Z" transform="translate(0 0.001)" fill="#fff"/>
+                                    </g>
+                                </g>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
+                                <path id="Polygon_2" data-name="Polygon 2" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div class="message-box">
+                            <div class="titlearea">
+                                <p>最近 20 筆通知</p>
+                                <button id="updateIsRead">全部已讀</button>
+                            </div>
+                            <ul>
+                                {{ request.session.id|get_notif }}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="member-btn pad-menu">
+                        <div class="itembtn mbbtn-2">
+                            <p>{{ request.session.name }}</p>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
+                                <path id="Polygon_2" data-name="Polygon 2" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div class="menu-2">
+                            <div class="wbox">
+                                <a href="{% url 'personal_info' %}">帳號設定</a>
+                                {% if request.session.id|if_permission %}
+                                <a href="{% url 'set_permission' %}">權限管理</a>
+                                <a href="{% url 'announcement'  %}">公告寄信</a>
+                                {% endif %}
+                                {% if request.session.id|if_desktop %}
+                                <a href="member_desktop_download.html">單機版下載</a>
+                                {% endif %}
+                                <a href="{% url 'logout' %}">登出</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
 
-      
-      <div class="mb-hambruger">
-        <svg class="ham hamRotate ham4" viewBox="0 0 100 100" width="60">
-          <path
-              class="line top"
-              d="m 70,33 h -40 c 0,0 -8.5,-0.149796 -8.5,8.5 0,8.649796 8.5,8.5 8.5,8.5 h 20 v -20" />
-          <path
-              class="line middle"
-              d="m 70,50 h -40" />
-          <path
-              class="line bottom"
-              d="m 30,67 h 40 c 0,0 8.5,0.149796 8.5,-8.5 0,-8.649796 -8.5,-8.5 -8.5,-8.5 h -20 v 20" />
-        </svg>
-      </div>
+        
+        <div class="mb-hambruger">
+            <svg class="ham hamRotate ham4" viewBox="0 0 100 100" width="60">
+            <path
+                class="line top"
+                d="m 70,33 h -40 c 0,0 -8.5,-0.149796 -8.5,8.5 0,8.649796 8.5,8.5 8.5,8.5 h 20 v -20" />
+            <path
+                class="line middle"
+                d="m 70,50 h -40" />
+            <path
+                class="line bottom"
+                d="m 30,67 h 40 c 0,0 8.5,0.149796 8.5,-8.5 0,-8.649796 -8.5,-8.5 -8.5,-8.5 h -20 v 20" />
+            </svg>
+        </div>
     </div>
 
 <!-- 以上header  -->
