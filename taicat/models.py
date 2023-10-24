@@ -735,6 +735,7 @@ class Deployment(models.Model):
 
             last_datetime = image_dt
 
+        # TODO-mg: utc & tw timezone?
         by_day = query_ym_sp.values('datetime__day').annotate(count=Count('datetime__day')).order_by('datetime__day')
         by_hour = query_ym_sp.values('datetime__day', 'datetime__hour').annotate(count=Count('*')).order_by('datetime__day', 'datetime__hour')
         oi3 = (image_count * 1.0 / sum_working_hours) * 1000 if sum_working_hours > 0 else 'N/A'

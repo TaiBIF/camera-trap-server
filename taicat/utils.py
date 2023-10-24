@@ -1067,9 +1067,10 @@ def find_named_area(x, y, datum):
         # EPSG:3824 => TWD97 (經緯度)
         # EPSG:3826 => TWD97 / TM2 zone 121 (二度分帶)
         # EPSG: 4326 => WGS84 (經緯度)
-        # 這邊填的TWD97是"TM2 zone 121"
-        pnt = Point(x=int(x), y=int(y), srid=3826)
-        pnt.transform(4326)
+        # 這邊填的TWD97是"TM2 zone 121" (誤) => 新資料? 是經緯度
+        #pnt = Point(x=float(x), y=float(y), srid=3826)
+        #pnt.transform(4326)
+        pnt = Point(x=float(x), y=float(y), srid=4326)
     elif datum == 'WGS84':
         pnt = Point(x=float(x), y=float(y), srid=4326)
 

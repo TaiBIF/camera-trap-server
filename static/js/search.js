@@ -2,6 +2,7 @@
  * Version: 0.2.1 (231018)
  *
  * Changes
+ * - 0 2.2 fix: download button bugs
  * - 0.2.1 charts
  * - 0.2.0 refactor new layout, wish vanilla js and jQuery select2
  * - 0.1.7 React + Maturial UI
@@ -20,6 +21,7 @@ const domReady = () => {
   const projectOptions = [];
   const projectMap = {};
   let projectSeq = 1;
+  let myChart = null;
 
   /*
    * jQuery parts
@@ -28,13 +30,13 @@ const domReady = () => {
 
   // for csp: style-src
   const modal = getE('calc-description-modal');
-  modal.style.display = 'none';
+  //modal.style.display = 'none';
   const downloadModal = getE('download-modal');
-  downloadModal.style.display = 'none';
+  //downloadModal.style.display = 'none';
   const firstProjectItem = getE('filter-project1-item');
-  firstProjectItem.children[0].style.display = 'none';
+  //firstProjectItem.children[0].style.display = 'none';
   const imageModal = getE('result-image-modal');
-  imageModal.style.display = 'none';
+  //imageModal.style.display = 'none';
 
   $('.note-btn').on('click',function (event) {
     $('.note-pop').fadeIn();
@@ -50,7 +52,21 @@ const domReady = () => {
     //$('body').css("overflow", "initial");
   });
 
+//https://emailregex.com
+function ValidateEmail(inputText){
+    let mailformat = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+    if(inputText.match(mailformat)){
+        $('#email-check').attr('fill', 'green');
+        $('button.download').prop('disabled', false);
+    } else {
+        $('#email-check').attr('fill', 'lightgrey');
+        $('button.download').prop('disabled', true);
+    }
+  }
 
+  $("#download-email").keyup(function () {
+    ValidateEmail($(this).val())
+  });
   /*
    * init form widget settings
    */
@@ -64,6 +80,14 @@ const domReady = () => {
       }
     }
   };
+
+  const downloadEmail = getE('download-email');
+  const downloadSubmit = getE('download-submit');
+  downloadSubmit.onclick = (e) => {
+    if (downloadEmail.value) {
+      goResultDownload(downloadEmail.value);
+    }
+  }
 
   const page = new Paginator(0, 20);
 
@@ -128,7 +152,7 @@ const domReady = () => {
         });
     }
   });
-  const downloadEmail = getE('download-email');
+
   /*
    * fetch init options
    * species/projects/named_areas (county, protectedarea)
@@ -392,6 +416,7 @@ const domReady = () => {
       return;
     }
 
+    // TODO-mg
     let emailVal = downloadEmail.value;
     if (emailVal === '') {
       downloadModal.style.display = 'block';
@@ -438,6 +463,36 @@ const domReady = () => {
         alert(`錯誤: ${error}`);
       })
   }
+  getEon('result-download-btn', () => {
+    // check login first
+    fetchData('/api/check_login')
+      .then(results => {
+        if (results.messages) {
+            alert(results.messages);
+            if (results.redirect && results.redirect === true) {
+              window.location.replace(window.location.origin+ "/personal_info");
+            }
+        } else {
+          downloadModal.style.display = 'block';
+        }
+      });
+  });
+  const goResultDownload = (email) => {
+    const filterDumps = JSON.stringify(prepareFilterData());
+    const url = `/api/search?filter=${filterDumps}&email=${email}&downloadData=1`;
+    console.log(url);
+    setLoading(true);
+    fetchData(url)
+      .then(results => {
+        console.log('download results!', results);
+        setLoading(false);
+      })
+      .catch( error => {
+        alert(`錯誤: ${error}`);
+        setLoading(false);
+      })
+    alert('請求已送出');
+  }
 
   getEon('calc-submit-chart',  () => {
     const calcChartType = getE('calc-chart-type');
@@ -477,7 +532,16 @@ const domReady = () => {
         setLoading(false);
         const chartTitle = `${calcChartType.selectedOptions[0].textContent}`;
         const chartSubTitle = `物種: ${cleanData.species}`;
-        goChart(results, chartTitle, chartSubTitle);
+        if ('error' in results) {
+          alert(results['error']['message']);
+          // empty chart
+          while( myChart.series.length > 0 ) {
+            myChart.series[0].remove( false );
+          }
+          myChart.redraw();
+         } else {
+           goChart(results, chartTitle, chartSubTitle);
+         }
       })
       .catch((error) => {
         setLoading(false);
@@ -500,7 +564,7 @@ const domReady = () => {
         align: 'left'
       }
     }
-    Highcharts.chart('calc-chart', chartData);
+    myChart = Highcharts.chart('calc-chart', chartData);
   } // end of goChart
 
 }
