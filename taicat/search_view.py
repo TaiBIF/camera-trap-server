@@ -196,7 +196,15 @@ def api_search(request):
                 filter_dict.get('species'),
                 filter_dict.get('projects'),
             )
-            return JsonResponse(results)
+            if results == None:
+                return JsonResponse({
+                    'error': {
+                        'message': 'no data',
+                        'code': '__NO_DATA__'
+                    }
+                })
+            else:
+                return JsonResponse(results)
 
         if download and calc_data:
             calc_dict = json.loads(request.GET['calc'])

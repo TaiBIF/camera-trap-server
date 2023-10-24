@@ -21,6 +21,7 @@ const domReady = () => {
   const projectOptions = [];
   const projectMap = {};
   let projectSeq = 1;
+  let myChart = null;
 
   /*
    * jQuery parts
@@ -531,7 +532,16 @@ function ValidateEmail(inputText){
         setLoading(false);
         const chartTitle = `${calcChartType.selectedOptions[0].textContent}`;
         const chartSubTitle = `物種: ${cleanData.species}`;
-        goChart(results, chartTitle, chartSubTitle);
+        if ('error' in results) {
+          alert(results['error']['message']);
+          // empty chart
+          while( myChart.series.length > 0 ) {
+            myChart.series[0].remove( false );
+          }
+          myChart.redraw();
+         } else {
+           goChart(results, chartTitle, chartSubTitle);
+         }
       })
       .catch((error) => {
         setLoading(false);
@@ -554,7 +564,7 @@ function ValidateEmail(inputText){
         align: 'left'
       }
     }
-    Highcharts.chart('calc-chart', chartData);
+    myChart = Highcharts.chart('calc-chart', chartData);
   } // end of goChart
 
 }

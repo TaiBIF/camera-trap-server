@@ -55,7 +55,8 @@ def calc_chart(calc_dict, species_list, project_filters):
     query = apply_search_filter_projects(project_filters, query)
     #print(query.query)
     rows = query.all()
-
+    if len(rows) == 0:
+        return None
 
     if calc_dict.get('chartType') == 'fig1':
         return chart_fig1(rows)
@@ -128,11 +129,15 @@ def chart_fig9(rows):
         'data': [],
     }]
 
+    sum_acc = 0
     for y in years:
-        year_map[y]['acc'] += year_map[y]['count']
+        sum_acc += year_map[y]['count']
+        year_map[y]['acc'] = sum_acc
         series[0]['data'].append(year_map[y]['count'])
         series[1]['data'].append(year_map[y]['acc'])
 
+    #print(series)
+    #print(year_map)
     chart_data = {
         'chart': {
             'type': 'column',
@@ -167,7 +172,13 @@ def chart_fig9(rows):
 def chart_fig8(rows, rows_other):
     exist_deployment_map = {}
     sp_name = ''
+    data = []
+    data_dog = []
+    data_cat = []
     for r in rows:
+        if r['data__5'] == 'N/A':
+            continue
+
         if sp_name == '':
             sp_name = r['species']
 
@@ -179,15 +190,25 @@ def chart_fig8(rows, rows_other):
         if not did:
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
 
+        data.append(r)
+
     for r in rows_other['dog']:
+        if r['data__5'] == 'N/A':
+            continue
+
         dt = timezone_utc_to_tw(r['datetime_from'])
         r['yearmonth'] = f'ym:{dt.year}.{dt.month}'
         r['year'] = dt.year
         did = exist_deployment_map.get(r['deployment_id'])
         if not did:
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
+
+        data_dog.append(r)
 
     for r in rows_other['cat']:
+        if r['data__5'] == 'N/A':
+            continue
+
         dt = timezone_utc_to_tw(r['datetime_from'])
         r['yearmonth'] = f'ym:{dt.year}.{dt.month}'
         r['year'] = dt.year
@@ -196,15 +217,17 @@ def chart_fig8(rows, rows_other):
         if not did:
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
 
-    df_rows = pd.DataFrame(data=rows)
+        data_cat.append(r)
+
+    df_rows = pd.DataFrame(data=data)
     if len(df_rows):
         df_rows.set_index('id')
         pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
-    df_rows_dog = pd.DataFrame(data=rows_other['dog'])
+    df_rows_dog = pd.DataFrame(data=data_dog)
     if len(df_rows_dog):
         df_rows_dog.set_index('id')
         pivoted_dog = df_rows_dog.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
-    df_rows_cat = pd.DataFrame(data=rows_other['cat'])
+    df_rows_cat = pd.DataFrame(data=data_cat)
     if len(df_rows_cat):
         df_rows_cat.set_index('id')
         pivoted_cat = df_rows_cat.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
@@ -313,7 +336,11 @@ def chart_fig8(rows, rows_other):
 
 def chart_fig7(rows):
     exist_deployment_map = {}
+    data = []
     for r in rows:
+        if r['data__5'] == 'N/A':
+            continue
+
         dt = timezone_utc_to_tw(r['datetime_from'])
         r['yearmonth'] = f'ym:{dt.year}.{dt.month}'
         r['year'] = dt.year
@@ -322,7 +349,10 @@ def chart_fig7(rows):
         if not did:
             exist_deployment_map[r['deployment_id']] = r['deployment__altitude']
 
-    df_rows = pd.DataFrame(data=rows)
+    if len(data) == 0:
+        return None
+
+    df_rows = pd.DataFrame(data=data)
     if len(df_rows):
         df_rows.set_index('id')
 
@@ -431,10 +461,20 @@ def chart_fig6(rows):
         'name': 'poa',
         'data': [],
     }]
-    for h in by_hour:
+
+    by_hour2 = {}
+    for i in range(16, 24):
+        by_hour2[16-i] = by_hour[i]
+    for i in range(0, 16):
+        by_hour2[i+8] = by_hour[i]
+    #print(by_hour, by_hour2)
+    for h in by_hour2:
         #by_hour[h]['poa'] = float(by_hour[h]['count'] / total)
-        poa = float(by_hour[h]['count'] / total)
-        series[0]['data'].append(poa)
+        if total > 0:
+            poa = float(by_hour2[h]['count'] / total)
+            series[0]['data'].append([f"計算: {by_hour2[h]['count']} / {total}", poa])
+        else:
+            series[0]['data'].append([f"計算: 0", 0])
 
     chart_data = {
         'chart': {
@@ -545,7 +585,6 @@ def chart_fig4(rows):
 
 
 def chart_fig3(rows):
-
     df_rows = pd.DataFrame(data=rows)
     if len(df_rows):
         df_rows.set_index('id')
@@ -554,7 +593,8 @@ def chart_fig3(rows):
     data = {m: [] for m in months}
     for i in df_rows.itertuples():
         if m := timezone_utc_to_tw(i.datetime_from):
-            data[m.month].append(i.data__5)
+            if i.data__5 != 'N/A':
+                data[m.month].append(i.data__5)
 
     series = []
     by_month = {
@@ -572,6 +612,7 @@ def chart_fig3(rows):
     for m in months:
         oi3_mean = 0
         oi3_sem = 0
+
         if len(data[m]):
             oi3_mean = statistics.mean(data[m])
             oi3_sem = np.std(data[m], ddof=1) / np.sqrt(np.size(data[m]))
@@ -613,6 +654,8 @@ def chart_fig3(rows):
 def chart_fig2(rows):
     altitude_limiter = [0, 1000, 2000]
     exist_deployment_map = {}
+    data = []
+
     def find_alt_type(alt):
         if alt:
             alt = int(alt)
@@ -720,7 +763,11 @@ def chart_fig1(rows):
     # 年月欄位
     #year_month_range = find_year_month_range([r['datetime_from'] for r in rows])
     exist_deployment_area = {}
+    data = []
     for r in rows:
+        if r['data__5'] == 'N/A':
+            continue
+
         dt = timezone_utc_to_tw(r['datetime_from'])
         r['yearmonth'] = f'ym:{dt.year}.{dt.month}'
         r['year'] = dt.year
@@ -734,16 +781,18 @@ def chart_fig1(rows):
                     exist_deployment_area[r['deployment_id']] = area
                     r['taiwan_area'] = area
 
-    df_rows = pd.DataFrame(data=rows)
+        data.append(r)
+
+    df_rows = pd.DataFrame(data=data)
     if len(df_rows):
         df_rows.set_index('id')
 
     pivoted = df_rows.pivot(index='deployment_id', columns=['year', 'yearmonth'], values='data__5')
+    #print(pivoted)
 
     # 整理相機位置
     df_deployments = df_rows[['deployment_id', 'deployment__name', 'studyarea__name', 'taiwan_area']].drop_duplicates()
     df_deployments.index = df_deployments['deployment_id']
-
     # 算月平均, pivoted 不要用multi-index
     #df_data = pivoted.join(df_deployments, on='deployment_id')
 

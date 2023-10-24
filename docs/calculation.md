@@ -70,3 +70,6 @@ Models: Deployment.calculate(year, month, species, image_interval, event_interva
 ```
 
 mdh: 這個月的每天，出現在幾點 => 活動機率(propability of activity, POA)
+
+
+OI1/2/3 如果沒有工作時數會用 "N/A" 表示
