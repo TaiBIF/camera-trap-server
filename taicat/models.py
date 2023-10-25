@@ -650,7 +650,7 @@ class Deployment(models.Model):
         day_start = make_aware(day_start)
         day_end = day_start + timedelta(days=days_in_month) # ex: 12/1 - 12/31 => 11/30 16:00 => 12/31 16:00
         day_end = day_end
-        #print(day_start, day_end)
+        #print('cal se', day_start, day_end)
         query_ym_sp = Image.objects.filter(
             deployment_id=self.id,
             #datetime__year=year,

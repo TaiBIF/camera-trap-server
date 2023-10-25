@@ -202,7 +202,7 @@ def calc_from_cache(filter_args, calc_args):
     return results
 
 def calculated_data(filter_args, calc_args, available_project_ids):
-    # print (filter_args, calc_args)
+    #print (filter_args, calc_args)
     deps = filter_args.get('deployments')
     species = filter_args.get('species')
     start_dt = None
@@ -216,7 +216,7 @@ def calculated_data(filter_args, calc_args, available_project_ids):
     if end_date := filter_args.get('endDate', ''):
         end_dt = timezone_tw_to_utc(datetime.strptime(end_date, '%Y-%m-%d')+timedelta(days=1))
         # ex: 2022-12-31 16:00:00:00
-        end_dt = make_aware(end_dt) 
+        end_dt = make_aware(end_dt)
 
     image_interval = calc_args.get('imageInterval')
     event_interval = calc_args.get('eventInterval')
@@ -229,7 +229,7 @@ def calculated_data(filter_args, calc_args, available_project_ids):
 
     deployment_query = Deployment.objects
 
-    if projects := filter_dict.get('projects'):
+    if projects := filter_args.get('projects'):
         deployment_query = apply_search_filter_projects(projects, deployment_query)
 
     deployment_list = deployment_query.values('id', 'name', 'project__name', 'study_area__name').all()
@@ -792,7 +792,10 @@ def apply_search_filter_projects(projects, query):
             qlist.append(Q(deployment_id__in=deployment_ids))
         if sa_s := proj.get('studyareas'):
             studyarea_ids = [x['id'] for x in sa_s]
-            qlist.append(Q(studyarea_id__in=studyarea_ids))
+            # HACK: studyarea, study_area_id ... strange join error
+            #qlist.append(Q(study_area__in=studyarea_ids))
+            sa_dids = Deployment.objects.values_list('id', flat=True).filter(study_area_id__in=studyarea_ids).all()
+            qlist.append(Q(deployment_id__in=sa_dids))
         if len(qlist) == 0:
             if p := proj.get('project'):
                 qlist.append(Q(project_id=p['id']))
