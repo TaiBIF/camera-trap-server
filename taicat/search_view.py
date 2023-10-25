@@ -130,6 +130,8 @@ def api_get_projects(request):
     if member_id := request.session.get('id', None):
         if my_project_list := get_my_project_list(member_id,[]):
             # my_project, my_species_data = get_project_info(my_project_list)
+            # exclude exist in public_project
+            my_project_list = list(set(my_project_list) - set(public_project_list))
             for p in Project.objects.filter(id__in=my_project_list).all():
                 x = p.to_dict()
                 x['group_by'] = '我的計畫'

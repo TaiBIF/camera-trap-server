@@ -22,6 +22,7 @@ def calc_by_detail(did, year, month, working_days, deployment):
     for sp in by_species:
         if sp := sp['species'].strip():
             sp_list.append(sp)
+
     if sp_list:
         save_calculation(
             sp_list,
@@ -31,13 +32,14 @@ def calc_by_detail(did, year, month, working_days, deployment):
             month,
             deployment)
         #print(did, year, month, deployment)
+
     return rows
 
 dep_count = 0
 proj_count = 0
-for project in Project.objects.all():
-#for project in Project.objects.filter(id=329).all():
-    #print(project.id, project, '=================')
+#for project in Project.objects.all():
+for project in Project.objects.filter(id=329).all():
+    print(project.id, project, '=================')
     if stats := project.count_stats():
         proj_count += 1
         begin = time.time()

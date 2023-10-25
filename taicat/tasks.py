@@ -210,14 +210,13 @@ def process_download_data_task(email, filter_dict, member_id, host, verbose):
 
 @shared_task
 def process_download_calculated_data_task(email, filter_dict, calc_dict, calc_type, out_format, calc_data, host, member_id, verbose, available_project_ids):
-    #print(email, filter_dict, calc_dict, calc_type, out_format, calc_data, host)
-    results = calculated_data(filter_dict, calc_data, available_project_ids)
+    results = calculated_data(filter_dict, calc_dict, available_project_ids)
 
     download_dir = Path(settings.MEDIA_ROOT, 'download')
     ext = 'csv' if out_format == 'csv' else 'xlsx'
     filename = f'download_calculated_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}.{ext}'
     target_file = Path(download_dir, filename)
-    content = calc_output_file(results, out_format, json.dumps(filter_dict), json.dumps(calc_data), target_file)
+    content = calc_output_file(results, out_format, json.dumps(filter_dict), json.dumps(calc_dict), target_file)
 
     #with open(Path(download_dir, filename), 'wb') as outfile:
     #    outfile.write(content)

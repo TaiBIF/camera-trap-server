@@ -64,7 +64,7 @@ function ValidateEmail(inputText){
     }
   }
 
-  $("#download-email").keyup(function () {
+  $("#download-modal-email").keyup(function () {
     ValidateEmail($(this).val())
   });
   /*
@@ -81,11 +81,17 @@ function ValidateEmail(inputText){
     }
   };
 
-  const downloadEmail = getE('download-email');
-  const downloadSubmit = getE('download-submit');
-  downloadSubmit.onclick = (e) => {
-    if (downloadEmail.value) {
-      goResultDownload(downloadEmail.value);
+  const downloadModalEmail = getE('download-modal-email');
+  const downloadModalTitle = getE('download-modal-title');
+  const downloadModalSubmit = getE('download-modal-submit');
+  downloadModalSubmit.onclick = (e) => {
+    if (downloadModalEmail.value) {
+      if (downloadModalTitle === '下載篩選資料') {
+        goResultDownload(downloadModalEmail.value);
+      } else {
+        const cleanData = prepareFilterData();
+        goCalcDownload(cleanData, downloadModalEmail.value)
+      }
     }
   }
 
@@ -128,8 +134,9 @@ function ValidateEmail(inputText){
   });
 
   // default first project click
-  getEon('filter-project1-project', (e) => {
-    if (e.target.value && projectOptions.length > 0) {
+  const projectSelect = getE('filter-project1-project');
+  projectSelect.onchange = (e) => {
+    if (e.currentTarget.value && projectOptions.length > 0) {
       const selectedProjectId = e.target.value;
       fetchData(`/api/deployments?project_id=${selectedProjectId}`)
         .then(results => {
@@ -151,7 +158,7 @@ function ValidateEmail(inputText){
           });
         });
     }
-  });
+  };
 
   /*
    * fetch init options
@@ -415,14 +422,6 @@ function ValidateEmail(inputText){
       alert('必須至少選一個物種');
       return;
     }
-
-    // TODO-mg
-    let emailVal = downloadEmail.value;
-    if (emailVal === '') {
-      downloadModal.style.display = 'block';
-      return;
-    }
-
     // check login first
     fetchData('/api/check_login')
       .then(results => {
@@ -432,7 +431,24 @@ function ValidateEmail(inputText){
               window.location.replace(window.location.origin+ "/personal_info");
             }
         } else {
-          goCalcDownload(cleanData, emailVal);
+          downloadModalTitle.textContent = '下載計算資料';
+          downloadModal.style.display = 'block';
+        }
+      });
+  });
+
+  getEon('result-download-btn', () => {
+    // check login first
+    fetchData('/api/check_login')
+      .then(results => {
+        if (results.messages) {
+            alert(results.messages);
+            if (results.redirect && results.redirect === true) {
+              window.location.replace(window.location.origin+ "/personal_info");
+            }
+        } else {
+          downloadModalTitle.textContent = '下載篩選資料';
+          downloadModal.style.display = 'block';
         }
       });
   });
@@ -462,25 +478,12 @@ function ValidateEmail(inputText){
       .catch((error) => {
         alert(`錯誤: ${error}`);
       })
-  }
-  getEon('result-download-btn', () => {
-    // check login first
-    fetchData('/api/check_login')
-      .then(results => {
-        if (results.messages) {
-            alert(results.messages);
-            if (results.redirect && results.redirect === true) {
-              window.location.replace(window.location.origin+ "/personal_info");
-            }
-        } else {
-          downloadModal.style.display = 'block';
-        }
-      });
-  });
+  };
+
+
   const goResultDownload = (email) => {
     const filterDumps = JSON.stringify(prepareFilterData());
     const url = `/api/search?filter=${filterDumps}&email=${email}&downloadData=1`;
-    console.log(url);
     setLoading(true);
     fetchData(url)
       .then(results => {
