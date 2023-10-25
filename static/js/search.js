@@ -128,8 +128,9 @@ function ValidateEmail(inputText){
   });
 
   // default first project click
-  getEon('filter-project1-project', (e) => {
-    if (e.target.value && projectOptions.length > 0) {
+  const projectSelect = getE('filter-project1-project');
+  projectSelect.onchange = (e) => {
+    if (e.currentTarget.value && projectOptions.length > 0) {
       const selectedProjectId = e.target.value;
       fetchData(`/api/deployments?project_id=${selectedProjectId}`)
         .then(results => {
@@ -151,7 +152,7 @@ function ValidateEmail(inputText){
           });
         });
     }
-  });
+  };
 
   /*
    * fetch init options
