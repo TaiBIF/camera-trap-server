@@ -132,9 +132,18 @@
         <div class="header-cont">
             <div class="left-box pad-menu">
                 <div class="mb_namebox">
-                    <p>Hello, {{ request.session.name }}</p>
+                    {% if request.session.name != None %}
+                        <p>Hello, {{ request.session.name }}</p>
+                    {% else %}
+                        <p>Hello, 請先登入</p>
+                    {% endif %}
                 </div>
                 <ul class="pc_menu">
+                    {% if not request.session|check_is_login %}{# HACK session storage warning #}
+                    <li>
+                        <a class="mobile-login item login-item">登入</a>
+                    </li>
+                    {% endif %}
                     <li>
                         <a href="{% url 'project_overview' %}" class="item">計畫總覽</a>
                     </li>
