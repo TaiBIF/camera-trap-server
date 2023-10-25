@@ -535,6 +535,9 @@ small {
 
 
 /* 以下因應新切版 */
+.mobile-login  {
+  display: none;
+}
 
 .header-cont .start-btn {
   width: 60px;
@@ -574,9 +577,19 @@ small {
   align-items: center
 }
 
+/* Mobile login */
 @media only screen and (max-width: 999px) {
   .header-cont .start-btn {
     display: none;
+  }
+  .mobile-login  {
+    display: block;
+  }
+  .login-pop {
+    z-index:9999 !important;
+  }
+  .login-pop .text-center {
+    flex-wrap: wrap;
   }
 }
 
