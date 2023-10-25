@@ -462,17 +462,11 @@ def chart_fig6(rows):
         'data': [],
     }]
 
-    by_hour2 = {}
-    for i in range(16, 24):
-        by_hour2[16-i] = by_hour[i]
-    for i in range(0, 16):
-        by_hour2[i+8] = by_hour[i]
-    #print(by_hour, by_hour2)
-    for h in by_hour2:
+    for h in by_hour:
         #by_hour[h]['poa'] = float(by_hour[h]['count'] / total)
         if total > 0:
-            poa = float(by_hour2[h]['count'] / total)
-            series[0]['data'].append([f"計算: {by_hour2[h]['count']} / {total}", poa])
+            poa = float(by_hour[h]['count'] / total)
+            series[0]['data'].append([f"計算: {by_hour[h]['count']} / {total}", poa])
         else:
             series[0]['data'].append([f"計算: 0", 0])
 

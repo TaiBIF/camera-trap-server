@@ -650,7 +650,7 @@ class Deployment(models.Model):
         day_start = make_aware(day_start)
         day_end = day_start + timedelta(days=days_in_month) # ex: 12/1 - 12/31 => 11/30 16:00 => 12/31 16:00
         day_end = day_end
-        #print('cal se', day_start, day_end)
+        #print(day_start, day_end)
         query_ym_sp = Image.objects.filter(
             deployment_id=self.id,
             #datetime__year=year,
@@ -735,7 +735,6 @@ class Deployment(models.Model):
 
             last_datetime = image_dt
 
-        # TODO-mg: utc & tw timezone?
         by_day = query_ym_sp.values('datetime__day').annotate(count=Count('datetime__day')).order_by('datetime__day')
         by_hour = query_ym_sp.values('datetime__day', 'datetime__hour').annotate(count=Count('*')).order_by('datetime__day', 'datetime__hour')
         oi3 = (image_count * 1.0 / sum_working_hours) * 1000 if sum_working_hours > 0 else 'N/A'
@@ -752,7 +751,15 @@ class Deployment(models.Model):
                 mdh[day['datetime__day']-1][0] = 1
         for hour in by_hour:
             if len(mdh) > hour['datetime__day']-1:
-                mdh[hour['datetime__day']-1][1][hour['datetime__hour']] = 1
+                #mdh[hour['datetime__day']-1][1][hour['datetime__hour']] = 1
+                # shift poa timezone
+                utc_hour = hour['datetime__hour']
+                tw_hour = None
+                if utc_hour < 16:
+                    tw_hour = utc_hour + 8
+                elif utc_hour > 15:
+                    tw_hour = utc_hour - 16
+                mdh[hour['datetime__day']-1][1][tw_hour] = 1
 
         #print (i['species'], image_count, event_count, oi3, pod, by_day.count(), mdh)
         # print(year, month, species, working_days)
