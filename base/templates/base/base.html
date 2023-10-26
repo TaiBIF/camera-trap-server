@@ -1,528 +1,353 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>
-      {% block title %}自動相機監測影像及資料管理系統{% endblock title %}
-    </title>
+    <title>{% block title %}{% endblock title %}自動相機監測影像及資料管理系統</title>
     {% load static %}
-    <link rel="icon" style="background-size: cover;" href="{% static 'icon/logo@leaf.png' %}">
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script> 
-    <link rel="stylesheet" href="{% static 'jquery-ui-1.12.1/jquery-ui.css' %}">
-    <script src="{% static 'jquery-ui-1.12.1/jquery-ui.js' %}"></script>
-    <link href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css" />
-    <script type="text/javascript" src="https://cdn.datatables.net/1.11.0/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.11.0/js/dataTables.bootstrap5.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous"/>
-    <link href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css"  rel="stylesheet"/>
-    <script src="https://kit.fontawesome.com/b8e586964f.js" crossorigin="anonymous"></script>
+    {% load tag_library %}
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'/>
+    <meta name="viewport" content="width=device-width"/>
+    <link class="icon" rel="icon" href="{% static 'icon/logo@leaf.png' %}" />
+    <script src="https://code.jquery.com/jquery-3.6.1.js"></script>
+    <link rel="stylesheet" href="{% static 'jquery-ui-1.13.2/jquery-ui.css' %}" />
+    <script src="{% static 'jquery-ui-1.13.2/jquery-ui.js' %}"></script>
+    <link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous" />-->
+   <!-- <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" crossorigin="anonymous" />-->
+    <link href="{% static 'css/dataTables.bootstrap5.min.css' %}" rel="stylesheet" />
+
+    <link href="/static/fontawesome-free-6.2.1/css/brands.min.css" rel="stylesheet" />
+    <link href="/static/fontawesome-free-6.2.1/css/solid.min.css" rel="stylesheet" />
+    <link href="/static/fontawesome-free-6.2.1/css/v5-font-face.min.css" rel="stylesheet" />
+    <script src="/static/fontawesome-free-6.2.1/js/fontawesome.min.js" data-auto-add-css="false"></script>
+    <script src="/static/fontawesome-free-6.2.1/js/brands.min.js" data-auto-add-css="false"></script>
+    <script src="/static/fontawesome-free-6.2.1/js/solid.min.js" data-auto-add-css="false"></script>
+
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet">
+    <script src="{% static 'js/gsap.min.js' %}" ></script>
+    <script src="{% static 'js/ScrollTrigger.min.js' %}" ></script>
+
     {% block head %}{% endblock head %}
-    <style type="text/css">
-
-    /* loader */
-  .loading{
-    min-height: 400px}
-
-  .loading:before{
-    content: '';
-    position: absolute;
-    top: -110px;
-    bottom: 0;
-    width: 100%;
-    height: 400px;
-    left: 0;
-    right: 0;
-    margin: auto;
-    background: url("{% static  'icon/Leaves-1.8s-200px.gif' %}") no-repeat center;
-    background-size: 150px;
-    z-index: 1099
-    }
-
-  .loading:after {
-    content: "資料讀取中";
-    position: absolute;
-    top: 70px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    color: gray;
-    width: 100px;
-    height: 20px;
-    margin: auto;
-    z-index: 1199;
-    text-align: center;
-  }
-
-      html, body {
-        height: 100%;
-        background: #f7f7f7;
-      }
-
-    .nav-link:focus {
-      outline: 0
-    }
-
-    .bg-gray {
-      background: #f7f7f7;
-    }
-
-      .content {
-        margin: 40px auto;
-        min-height: -o-calc(100vh - 400px); /* opera */
-        min-height: -webkit-calc(100vh - 400px); /* google, safari */
-        min-height: -moz-calc(100vh - 400px); /* firefox */
-      }
-
-      .image {
-        text-align: center
-      }
-
-      img.image {
-        width: 222px;
-        margin: 0 auto;
-      }
-
-      .text-green {
-        color: rgb(37, 116, 85);
-      }
-
-      .btn-orange {
-        background-color: darkorange; 
-        color: white
-      }
-
-      .btn-orange:hover {
-        background-color: rgb(255, 111, 0); 
-        color: white
-      }
-
-      .title-dark {
-        /*color: #198754;*/
-        color: rgb(37, 116, 85);
-      }
-
-      .title-light {
-        color: #7C9C2D
-      }
-
-      .backgroud-dark {
-        background-color: rgb(37, 116, 85);
-      }
-
-      .description {
-        font-size: 24px;
-        margin: 0;
-        color: gray;
-        font-weight: 400;
-      }
-
-      hr.home-hr {
-        border: 0;
-        border-top: 3px solid green;
-        width: 170px;
-        margin: 5px auto;
-      }
-
-      .required {
-        display: inline-block;
-        margin-right: 5px;
-        color: #dc3545;
-      }
-
-      /* tooltip */
-      .tooltip {
-        font-size: 16px;
-        width: 400px;
-      }
-
-      .tooltip-inner {
-        max-width: 100% !important;
-        text-align: left;
-        text-align: start;
-
-    }
-    
-      
-      /* footer */
-      footer .container{
-        padding: 40px 0;
-      }
-
-      .gov-item img {
-        height: 27px;
-        width: auto;
-        margin-right: 5px;
-      }
-
-      .text-gray {
-        color: gray
-      }
-
-      span.gov-item{
-        margin-left: 15px;
-        display: inline-block;
-        vertical-align: middle;
-        margin-bottom: 15px;
-        color: #FFF
-      }
-
-      img.gov-logo {
-        vertical-align: middle;
-      }
-
-      span.text {
-        vertical-align: middle;
-        text-align: left;
-        display: inline-block;
-        font-size: 14px;
-        font-weight: 300;}
-
-      small{
-        display: block;
-        font-size: 11px;
-      }
-
-      .sitemap {
-        display: flex;
-        flex-direction: row;
-      }
-
-      .item {
-        flex: 1;
-        font-size: 14px;
-      }
-
-      .item label {
-        height: 40px;
-        line-height: 40px;
-      }
-
-     .item ul {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .item li a {
-        color: #FFF;
-        font-weight: 300;
-        line-height: 30px;
-        height: 30px;
-        text-decoration: none;
-      }
-
-    .icon {
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    .icon-phone-gray {
-      background-image: url("{% static 'icon/icons-sa4ae1ae68a.png' %}");
-      background-position: 0 -878px;
-      background-repeat: no-repeat;
-      overflow: hidden;
-      display: inline-block;
-      height: 18px;
-      width: 18px;
-    }
-    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
-      .icon-phone-gray {
-        background-repeat: no-repeat;
-        background-image: url("{% static 'icon/icons-2x-sb27373e813.png' %}");
-        background-size: 53px 1401px;
-        background-position: 0 -823px;
-        height: 19px;
-        width: 19px;
-      }
-    }
-
-    .icon-mail-gray {
-      background-image: url("{% static 'icon/icons-sa4ae1ae68a.png' %}");
-      background-position: 0 -774px;
-      background-repeat: no-repeat;
-      overflow: hidden;
-      display: inline-block;
-      height: 18px;
-      width: 18px;
-    }
-    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
-      .icon-mail-gray {
-        background-repeat: no-repeat;
-        background-image: url("{% static 'icon/icons-2x-sb27373e813.png' %}");
-        background-size: 53px 1401px;
-        background-position: 0 -725px;
-        height: 19px;
-        width: 19px;
-      }
-    }
-
-    </style>
     {% block style %}{% endblock style %}
   </head>
 
   <body>
-      <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(to right, #006A58, #9ccc65);">
-        <div class="container">
-          <a class="navbar-brand" href="{% url 'home' %}"> 
-            <img src="{% static 'icon/logo@2x.png' %}" width="200" height="auto" alt="">
-          </a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-                  data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
-                  aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav">
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'project_overview' %}">計畫總覽</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'search' %}">資料篩選計算</a>
-              </li>
-              <!-- <li class="nav-item">
-                <a class="nav-link" href="#">上傳紀錄</a>
-              </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#"
-                   id="navbarDropdownMenuLink" role="button"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                  幫助
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                  <li><a class="dropdown-item" href="#">常見問題</a></li>
-                  <li><a class="dropdown-item" href="#">聯絡我們</a></li>
-                  <li><a class="dropdown-item" href="#">隱私權政策</a></li>
-                </ul>
-              </li> -->
-            </ul>
+
+{% block pop %}{% endblock pop %}
+
+    <!-- Loading icon -->
+    <div class="loading-pop d-none">
+      <p class="txt">Loading</p>
+      <div class="loading">
+        <div class="color1"></div>
+        <div class="color1"></div>
+        <div class="color1"></div>
+        <div class="color1"></div>
+        <div class="color1"></div>
+        <div class="color2"></div>
+        <div class="color2"></div>
+        <div class="color2"></div>
+        <div class="color2"></div>
+        <div class="color2"></div>
+      </div>
+    </div>
+
+
+    <!-- 登入pop -->
+    <div class="pop-box login-pop d-none">
+      <div class="center-box">
+        <div class="wbox">
+          <div class="xx">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+              <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                <g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+                  <circle cx="20" cy="20" r="20" stroke="none"/>
+                  <circle cx="20" cy="20" r="19" fill="none"/>
+                </g>
+                <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                  <line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </g>
+            </svg>
           </div>
-          <div class="navbar-nav">
-            <div class="nav-item">
-              <!-- Button trigger modal -->
-              {% if not request.session.is_login %}
-              <a class="btn btn-orange" data-bs-toggle="modal" data-bs-target="#loginModal">登入</a>
-              {% else %}
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  {{ request.session.name }}
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="{% url 'personal_info' %}">帳號設定</a></li>
-                  {% comment %} {% if request.session.name in '系統管理員,計畫總管理人'  %} {% endcomment %}
-                  {% if request.session.name == '系統管理員'  %}
-                  <li><a class="dropdown-item" href="{% url 'set_permission' %}">權限管理</a></li>
-                  {% endif %}
-                  <li><a class="dropdown-item" href="{% url 'logout' %}">登出</a></li>
-                </ul>
-              </li>
+          <div class="titlebox">
+            登入
+          </div>
+          <div class="contentbox">
+            <p class="marb_20">
+              請使用您的 ORCID 帳號登入：
+              <a class="start-btn" id="getAuth"> 登入</a>
+            </p>
+            <div class="inp-flex">
+              {% get_env as current_env %}
+              {% if current_env == "dev" %}
+              ＊測試用登入＊<br />
+              <a href="{% url 'login_for_test' %}?role=計畫總管理人&next={{ request.path }}"> 計畫總管理人 </a>
+              <a href="{% url 'login_for_test' %}?role=個別計畫承辦人&next={{ request.path }}"> 計畫承辦人 </a>
+              <a href="{% url 'login_for_test' %}?role=資料上傳者&next={{ request.path }}"> 資料上傳者 </a>
+              <a href="{% url 'login_for_test' %}?role=系統管理員&next={{ request.path }}"> 系統管理員 </a>
               {% endif %}
+            </div>         
+            <hr class="mt-5" />
+   
+            <div class="inp-flex">
+              <div class="input-item">
+                <div class="text-gray">
+                  還沒有帳號？
+                  <a href="https://orcid.org/register" class="text-green" target="_blank">
+                    前往
+                    <i class="icon align-baseline icon-orcid-text"></i> 網頁註冊
+                  </a>
+                </div>
+                <hr class="mt-5" />
+                <div class="text-center">
+                  當您登入系統，即代表您同意我們的
+                  <a href="{% url 'policy' %}" class="text-green">隱私權政策</a>
+                </div>    
+              </div>
             </div>
-          </div>
-        </div>
-      </nav>
-      {% for message in messages %}
-      <div class="container" style="margin-top: 30px">
-        <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      </div>
-      {% endfor %}
 
-
-      {% block body %} {% endblock body %}
-
-      <!-- Modal -->
-      <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title title-dark" id="loginModalLabel">登入
-              </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-          <p>請使用您的 ORCID 帳號登入：</p>
-          <div class="my-3">
-            <a class="btn btn-light w-100" onClick="getAuth()">
-                使用 ORCID 帳號登入
-            </a>
-            ＊測試用登入＊<br>
-            <a class="btn btn-light" href="{% url 'login_for_test' %}?role=計畫總管理人&next={{ request.path }}">
-                計畫總管理人
-            </a>
-            <a class="btn btn-light" href="{% url 'login_for_test' %}?role=個別計畫承辦人&next={{ request.path }}">
-                計畫承辦人
-            </a>
-            <a class="btn btn-light" href="{% url 'login_for_test' %}?role=資料上傳者&next={{ request.path }}">
-                資料上傳者
-            </a>
-            <a class="btn btn-light" href="{% url 'login_for_test' %}?role=系統管理員&next={{ request.path }}">
-                系統管理員
-            </a>
-          </div>
-          <div class="text-gray">
-            還沒有帳號？
-            <a href="https://orcid.org/register" class="text-green" target="_blank" >
-              前往
-              <i class="icon align-baseline icon-orcid-text"></i> 網頁註冊
-            </a>
-          </div>
-          <hr class="mt-5" />
-          <div class="text-center">
-            當您登入系統，即代表您同意我們的
-            <a href="/help/privacy" class="text-green">隱私權保護政策</a>
-          </div>
-            </div>
           </div>
         </div>
       </div>
+    </div>
+  
 
-    <footer class="text-center text-lg-start mt-auto " style="background: #2E432B;">
-        <div class="container">
-          <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-4 text-center pt-4">
-              <img
-                src="{% static 'icon/logo@2x.png' %}" style="width: 70%;"
-              />
-              <div class="mt-2">
-                <small class="text-gray">
-                  Copyright © 2021 Forestry Bureau<br />
-                  行政院農業委員會林務局 版權所有
-                </small>
-              </div>
-            </div>
-            <div class="col-xs-12 col-sm-12 col-md-8">
-              <div class="sitemap">
-                <div class="item">
-                  <label class="text-gray">相關連結</label>
-                  <ul>
-                    <li>
-                      <a href="https://www.forest.gov.tw" target="_blank">
-                        林務局網站
-                      </a>
-                    </li>
-                    <li>
-                      <a href="https://www.tesri.gov.tw" target="_blank">
-                        特有生物研究保育中心
-                      </a>
-                    </li>
-                    <li>
-                      <a href="https://portal.taibif.tw" target="_blank">
-                        台灣生物多樣性資訊入口網
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="https://wp.npust.edu.tw"
-                        target="_blank"
-                      >
-                        國立屏東科技大學
-                      </a>
-                    </li>
-                  </ul>
+
+    {% block modal %}{% endblock %}
+
+
+
+    <div class="header">    
+
+
+        <a href="/" class="logo">
+            <img src="/static/image/logo@2x.png" alt="">
+        </a>
+
+
+        <div class="header-cont">
+            <div class="left-box pad-menu">
+                <div class="mb_namebox">
+                    {% if request.session.name != None %}
+                        <p>Hello, {{ request.session.name }}</p>
+                    {% else %}
+                        <p>Hello, 請先登入</p>
+                    {% endif %}
                 </div>
-                <div class="item">
-                  <label class="text-gray">幫助</label>
-                  <ul>
+                <ul class="pc_menu">
+                    {% if not request.session|check_is_login %}{# HACK session storage warning #}
                     <li>
-                      <a href="/article.html#/faq" target="_blank">
-                        常見問題
-                      </a>
+                        <a class="mobile-login item login-item">登入</a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{% url 'project_overview' %}" class="item">計畫總覽</a>
                     </li>
                     <li>
-                      <a href="/article.html#/privacy-policy" target="_blank">
-                        隱私權聲明及使用條款
-                      </a>
+                        <a href="{% url 'search' %}" class="item">資料篩選與計算</a>
                     </li>
-                  </ul>
-                </div>
-                <div class="item">
-                  <label class="text-gray">聯絡我們</label>
-                  <ul>
+                    {% if request.session|check_is_login %}
                     <li>
-                      <a href="mailto:cameratrap.taibif@gmail.com" target="_blank">
-                        <i class="icon icon-mail-gray"></i>
-                        <span class="text">cameratrap.taibif@gmail.com</span>
-                      </a>
+                        <a href="{% url 'upload-history' %}" class="item">上傳紀錄</a>
                     </li>
+                    {% endif %}
                     <li>
-                      <a href="tel:+886227899621" target="_blank">
-                        <i class="icon icon-phone-gray"></i>
-                        <span class="text">02-27899621</span>
-                      </a>
+                        <p class="item mbbtn-1">
+                            幫助
+                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
+                                <path id="Polygon_1" data-name="Polygon 1" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
+                            </svg>
+        
+                        </p>
+                        <div class="menu-2">
+                            <div class="wbox">
+                                <a href="{% url 'faq' %}">常見問題</a>
+                                <a href="{% url 'contact-us' %}">聯絡我們</a>
+                                <a href="{% url 'policy' %}">隱私權政策</a>
+                            </div>
+                        </div>
                     </li>
-                  </ul>
-                </div>
-              </div>
+                </ul>
             </div>
-            <div class="col-12">
-              <hr />
-              <small class="text-center d-block">
-                <span class="text-gray">主辦機關：</span>
-                <span class="gov-item">
-                  <img
-                    class="gov-logo"
-                    src="{% static 'icon/logo-forest@2x.png' %}"
-                  />
-                  <span class="text">
-                    <small>行政院農委會</small>
-                    林 務 局
-                  </span>
-                </span>
-                <span class="gov-item">
-                  <img
-                    class="gov-logo"
-                    src="{% static 'icon/logo-tesri@2x.png' %}"
-                  />
-                  <span class="text">
-                    <small>行政院農委會</small>
-                    特有生物研究保育中心
-                  </span>
-                </span>
-                <span class="gov-item">
-                  <img
-                    class="gov-logo"
-                    src="{% static 'icon/logo-taibif.png' %}"
-                  />
-                  <span class="text">
-                    台灣生物多樣性資訊入口網
-                  </span>
-                </span>
-                <span class="gov-item">
-                  <img
-                    class="gov-logo"
-                    src="{% static 'icon/logo-npust.png' %}"
-                  />
-                  <span class="text">
-                    國立屏東科技大學
-                  </span>
-                </span>
-              </small>
+            {% if not request.session|check_is_login %}{# HACK session storage warning #}
+            <a class="start-btn login-item">
+                登入
+            </a>
+            {% else %}
+            <div class="right-box">
+                <div class="flex-right">
+                    <div class="message-btn">
+                        <div class="ringarea">
+                            <svg class="ring" xmlns="http://www.w3.org/2000/svg" width="20" height="21.948" viewBox="0 0 20 21.948">
+                                <g id="Group_2" data-name="Group 2" transform="translate(0 0)">
+                                    <g id="Group_869" data-name="Group 869">
+                                        <path id="Path_1" data-name="Path 1" d="M6.528,18.965H6.236c-1.445,0-2.89,0-4.335,0A1.811,1.811,0,0,1,.047,17.522a1.76,1.76,0,0,1,.678-1.846c.268-.214.548-.413.822-.62A1.458,1.458,0,0,0,2.13,14.1c.326-1.966.679-3.929.97-5.9A6.963,6.963,0,0,1,6.393,3.02a9.5,9.5,0,0,1,1.372-.644C7.935,2.3,8,2.238,8,2.049a2,2,0,1,1,3.991-.064c.007.255.1.33.316.413a6.8,6.8,0,0,1,4.531,5.516c.356,2.064.687,4.132,1.03,6.2a1.438,1.438,0,0,0,.57.934c.26.2.525.392.786.591a1.832,1.832,0,0,1-1.112,3.326c-1.445.006-2.89,0-4.335,0H13.5a3.512,3.512,0,0,1-3.584,2.982,3.232,3.232,0,0,1-2.238-.878,3.54,3.54,0,0,1-1.146-2.1m3.466-1.005v-.008q1.523,0,3.046,0,2.531,0,5.062.006a.832.832,0,0,0,.515-1.528c-.271-.21-.551-.41-.821-.622a2.383,2.383,0,0,1-.908-1.506c-.146-.836-.281-1.674-.42-2.511-.226-1.36-.416-2.726-.683-4.077a5.851,5.851,0,0,0-7.147-4.55A5.562,5.562,0,0,0,4.249,7.616c-.44,2.037-.731,4.108-1.038,6.172A3.057,3.057,0,0,1,1.821,16.1a4.255,4.255,0,0,0-.539.411.814.814,0,0,0-.066,1.171.945.945,0,0,0,.765.275q4.007-.005,8.014,0M7.567,18.977a2.481,2.481,0,0,0,4.857,0ZM10.991,2.023a.938.938,0,0,0-.514-.9A.948.948,0,0,0,9.4,1.2a.905.905,0,0,0-.392.821Z" transform="translate(0 0.001)" fill="#fff"/>
+                                    </g>
+                                </g>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
+                                <path id="Polygon_2" data-name="Polygon 2" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div class="message-box">
+                            <div class="titlearea">
+                                <p>最近 20 筆通知</p>
+                                <button id="updateIsRead">全部已讀</button>
+                            </div>
+                            <ul>
+                                {{ request.session.id|get_notif }}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="member-btn pad-menu">
+                        <div class="itembtn mbbtn-2">
+                            <p>{{ request.session.name }}</p>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="7" viewBox="0 0 9 7">
+                                <path id="Polygon_2" data-name="Polygon 2" d="M3.659,1.308a1,1,0,0,1,1.682,0L8.01,5.459A1,1,0,0,1,7.168,7H1.832A1,1,0,0,1,.99,5.459Z" transform="translate(9 7) rotate(180)" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div class="menu-2">
+                            <div class="wbox">
+                                <a href="{% url 'personal_info' %}">帳號設定</a>
+                                {% if request.session.id|if_permission %}
+                                <a href="{% url 'set_permission' %}">權限管理</a>
+                                <a href="{% url 'announcement'  %}">公告寄信</a>
+                                {% endif %}
+                                {% if request.session.id|if_desktop %}
+                                <a href="member_desktop_download.html">單機版下載</a>
+                                {% endif %}
+                                <a href="{% url 'logout' %}">登出</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+            {% endif %}
         </div>
-    </footer>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8"
-            crossorigin="anonymous"></script>
 
-    <script>
-      $(document).ready(function() {
-        $('li.active').removeClass('active');
-        $('a[href="' + location.pathname + '"]').closest('.nav-link').addClass('active'); 
-      });
+        
+        <div class="mb-hambruger">
+            <svg class="ham hamRotate ham4" viewBox="0 0 100 100" width="60">
+            <path
+                class="line top"
+                d="m 70,33 h -40 c 0,0 -8.5,-0.149796 -8.5,8.5 0,8.649796 8.5,8.5 8.5,8.5 h 20 v -20" />
+            <path
+                class="line middle"
+                d="m 70,50 h -40" />
+            <path
+                class="line bottom"
+                d="m 30,67 h 40 c 0,0 8.5,0.149796 8.5,-8.5 0,-8.649796 -8.5,-8.5 -8.5,-8.5 h -20 v 20" />
+            </svg>
+        </div>
+    </div>
 
-      // tooltip
-      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-      })
+<!-- 以上header  -->
+    
+    <div class="innbox gray-bg">
 
-      function getAuth(){
-        let url = "https://orcid.org/oauth/authorize?client_id=APP-F6POVPAP5L1JOUN1&response_type=code&scope=/authenticate&redirect_uri=" + location.protocol + '//' + location.host +"/callback/orcid/auth?next={{ request.path }}"
-        window.location.href = url;
-      }
-    </script>
+
+      {% if request.session|check_is_login and request.COOKIES and request.session.id %}
+        {% if "announcementread" in request.COOKIES %}
+          {% if request.COOKIES.announcementread  != request.session.id|announcement_expire_time %}
+            {% if request.session.id|announcement_content != None %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" id="alert-content">
+              <strong class="badge">公告!</strong>
+              <a href="{% url 'desktop'%}"> {{ request.session.id|announcement_content }} </a>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" id="alert-box"></button>
+            </div>
+            {% endif %}
+          {% endif %}
+        {% else %}
+          {% if request.session.id|announcement_content != None %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" id="alert-content">
+              <strong class="badge">公告!</strong>
+              <a href="{% url 'desktop'%}"> {{ request.session.id|announcement_content }} </a>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" id="alert-box"></button>
+            </div>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+  
+    {% block body %} 
+    {% endblock body %}
+    </div>
+
+
+    <div class="footer">
+      <div class="main-box">
+        <div class="top-area">
+          <div class="logobox">
+            <img src="/static/image/logo@2x.png" alt="">
+          </div>
+          <a href="mailto:cameratrap.taibif@gmail.com" class="cir">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28.776" height="20.149" viewBox="0 0 28.776 20.149">
+              <g id="email" transform="translate(-14.274 -18.588)">
+                <path id="Path_23" data-name="Path 23" d="M53.717,38.52H30.279a2.672,2.672,0,0,0-2.669,2.669V56a2.676,2.676,0,0,0,2.669,2.669H53.717A2.676,2.676,0,0,0,56.386,56V41.189A2.672,2.672,0,0,0,53.717,38.52Zm1.235,17.818L47.627,49.5,55,43.756C54.981,56.721,55.049,55.982,54.952,56.338ZM42,52.138,29,42V41.19a1.286,1.286,0,0,1,1.285-1.285H53.716A1.286,1.286,0,0,1,55,41.19V42Zm-13-8.382L36.369,49.5l-7.325,6.834c-.1-.356-.029.374-.05-12.582Zm1.084,13.51,7.4-6.9,4.1,3.195a.693.693,0,0,0,.851,0l4.1-3.195,7.4,6.9c-.191.03-23.676.027-23.84,0Z" transform="translate(-13.336 -19.932)" fill="#fff"/>
+              </g>
+            </svg>
+  
+          </a>
+          <a href="https://www.biodiv.tw/zh_topic-Systematics_and_Biodiversity_Informatics_Center" target="_blank" class="cir">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24.064" height="24.155" viewBox="0 0 24.064 24.155">
+              <path id="Path_10144" data-name="Path 10144" d="M5.143,0A3.577,3.577,0,0,1,7,1.177c.932.957,1.9,1.883,2.807,2.862a2.2,2.2,0,0,1,.009,3.095C9.228,7.781,8.6,8.383,7.974,9a.274.274,0,0,0-.075.377,13.931,13.931,0,0,0,2.493,3.442,17.2,17.2,0,0,0,3.321,2.811c.337.215.7.39,1.045.592a.194.194,0,0,0,.281-.046c.523-.533,1.039-1.075,1.588-1.58a3.758,3.758,0,0,1,.99-.7,2.156,2.156,0,0,1,2.512.513c1.039,1.006,2.045,2.046,3.077,3.06a2.384,2.384,0,0,1,.167,3.509c-.731.789-1.477,1.57-2.273,2.291a3.861,3.861,0,0,1-3.039.873,13.475,13.475,0,0,1-4.936-1.543,24.622,24.622,0,0,1-6.271-4.429,24.415,24.415,0,0,1-6.3-9.522A9.091,9.091,0,0,1,0,5.431,3.874,3.874,0,0,1,1.1,2.725Q2.054,1.745,3.031.788A2.95,2.95,0,0,1,4.53,0ZM18.477,22.939a2.6,2.6,0,0,0,1.95-.687q1.058-1.025,2.056-2.111a1.1,1.1,0,0,0-.014-1.646c-1.063-1.094-2.145-2.169-3.234-3.237a1.04,1.04,0,0,0-1.419-.08,2.9,2.9,0,0,0-.353.311c-.586.582-1.167,1.168-1.753,1.749a1,1,0,0,1-1.289.2c-.349-.179-.7-.356-1.036-.559a18.212,18.212,0,0,1-3.91-3.238A14.654,14.654,0,0,1,6.7,9.714,1.083,1.083,0,0,1,6.991,8.24c.572-.551,1.141-1.1,1.7-1.67a1.176,1.176,0,0,0,0-1.936Q7.233,3.155,5.753,1.7a1.823,1.823,0,0,0-.511-.37,1.186,1.186,0,0,0-1.4.38C3.254,2.288,2.656,2.859,2.1,3.467a3.608,3.608,0,0,0-.668,1.01A4.036,4.036,0,0,0,1.355,6.89a14.677,14.677,0,0,0,1.673,4.333A24.781,24.781,0,0,0,14.753,22.007a10.021,10.021,0,0,0,3.723.932" transform="translate(0)" fill="#fff"/>
+            </svg>
+          </a>
+        </div>
+        <div class="relative-link">
+          <a href="https://www.forest.gov.tw/" target="_blank">
+            <div class="logoimg">
+              <img src="/static/image/ftlogo1.png" alt="">
+            </div>
+            <p>
+              行政院農業部<br>
+              林業及自然保育署
+            </p>
+          </a>
+          <a href="https://www.tbri.gov.tw/" target="_blank">
+            <div class="logoimg">
+              <img src="/static/image/ftlogo2.png" alt="">
+            </div>
+            <p>
+              行政院農業部<br>
+              生物多樣性研究所
+            </p>
+          </a>
+  
+          <a href="https://portal.taibif.tw/" target="_blank">
+            <div class="logoimg">
+              <img src="/static/image/ftlogo3.png" alt="">
+            </div>
+            <p>
+              台灣生物多樣性<br>
+              資訊入口網
+            </p>
+          </a>
+  
+          <a href="http://wildmic.npust.edu.tw/bin/home.php" target="_blank">
+            <div class="logoimg">
+              <img src="/static/image/ftlogo4.png" alt="">
+            </div>
+            <p>
+              國立屏東科技大學
+            </p>
+          </a>
+        </div>
+      </div>
+      <div class="bottom-area">
+        <a href="/policy">隱私權政策</a><span> | </span><h6>Copyright © 2023 Forestry and Nature Conservation Agency 行政院行政院農業部林業及自然保育署 版權所有</h6>
+      </div>
+    </div>
+  
+
+
+    <!-- script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8" crossorigin="anonymous"></script-->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+
     {% block script %} {% endblock script %}
   </body>
 </html>

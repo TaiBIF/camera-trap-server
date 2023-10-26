@@ -1,0 +1,53 @@
+/* New version UI */
+input[type="radio"] {
+  display: none;
+}
+
+.create-newpj .ccbox li .select-box .item label{
+  cursor: pointer;
+}
+/* New version UI end */
+
+    textarea,
+    input {
+      border: 1px solid #cccccc;
+    }
+  
+    .form-control {
+      border-color: #cccccc;
+    }
+  
+    .btn-new {
+      background-color: white;
+      border: 1px solid #cccccc;
+    }
+  
+    .btn-new[title="請選擇計畫地區"] {
+      color: #6c757d !important;
+    }
+  
+    /* color for select */
+    .check-mark {
+      color: rgb(37, 116, 85) !important;
+    }
+  
+    .text-end {
+      margin: auto 0;
+    }
+  
+    .list-unstyled img {
+      padding: 0 10px;
+    }
+  
+    #second-page {
+      display: none;
+    }
+  
+
+    .w-45 {
+        width: 45%
+    }
+
+    .f-14 {
+        width: 1.4em
+    }

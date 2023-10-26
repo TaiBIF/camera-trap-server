@@ -1,15 +1,17 @@
 {% extends 'base/base.html' %}
 {% load static %}
 {% block style %}
-<style>
-    input {
-            border: 1px solid #cccccc 
-        }
-</style>
+<link rel="stylesheet" href="{% static 'css/personal_info.css' %}">
 {% endblock %}
+
+{% block title %}帳號設定 | {% endblock title %}
+
+
 {% block body %}
+<input type="hidden" name="return_message" value="{{ return_message }}"></input>
+
 {% if first_login == True %}
-    <div class="container" style="margin-top: 30px">
+    <div class="container mt-30">
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         首次登入請填寫完整資訊
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -19,7 +21,73 @@
 <div class="container content">
 
 {% if request.session.is_login == True %}
-    <div class="row" style="margin-bottom: 10px">
+    <div class="main-box">
+        <div class="main-title">
+            <h2>帳號設定</h2>
+        </div>
+
+        <form action="{% url 'personal_info' %}" class="needs-validation" novalidate method="post">
+            {% csrf_token %}
+            <div class="member-fucbox marb_50">
+                <div class="titlebox">
+                    <div class="line-g"></div>
+                    <h2>個人資訊</h2>
+                </div>
+                <div class="cont-area">
+                    <div class="inp2box">
+                        <div class="input-item">
+                            <p><span class="red">*</span>帳號連結</p>
+                            <div class="btn-area">
+                                <a href="https://orcid.org/my-orcid" target="_blank" class="btn-link">
+                                    <p>已連結至ORCID 帳號</p>
+                                    <img src="{% static 'icon/orcid.png' %}" alt="">
+                                </a>
+                            </div>
+                        </div>
+                        <div class="input-item">
+                            <p>使用者名稱</p>
+                            <input type="text" value="{{ info.name }}" name="name" required>
+                        </div>
+                    </div>
+                    <div class="inp2box">
+                        <div class="input-item">
+							<p>電子郵件</p>
+                            {% if info.email == None %}
+							    <input type="text">
+                            {% else %}
+                                <input type="text" value="{{ info.email }}" name="email" required>
+                            {% endif %}
+						</div>
+                        <div class="input-item">
+                            <p>身份種類</p>
+                            <select data-width="100%" data-style="btn-new" name="identity">
+                                <option value="">身份種類</option>
+                                {% for i in identities %}
+                                    {% if info.identity == i.parametername  %}
+                                        <option value="{{ i.parametername }}" selected>{{ i.name }}</option>
+                                    {% else %}
+                                        <option value="{{ i.parametername }}">{{ i.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn2-area">
+                <button class="btn-greeno">
+                    取消
+                </button>
+                <button class="btn-green" type="submit">
+                    確認儲存
+                </button>
+            </div>
+        </form>
+    </div>
+
+    
+    <!-- <div class="row mb-10">
         <h4 class="title-dark">帳號設定</h4>     
     </div>
     <form action="{% url 'personal_info' %}" class="needs-validation" novalidate method="post">
@@ -31,13 +99,13 @@
                     <div class="col-2 my-auto text-end"><span class="required">*</span>帳號連結：</div>
                     <div class="col-4">
                             <a class="btn btn-light" href="https://orcid.org/my-orcid">
-                                已連結至ORCID 帳號 <img class="m-auto" style="height: 20px" src="{% static 'icon/orcid.png' %}">
+                                已連結至ORCID 帳號 <img class="m-auto h-20" src="{% static 'icon/orcid.png' %}">
                             </a>
                     </div>
                 </div>
                 <div class="row py-3">
                     <div class="col-2 my-auto text-end">使用者名稱：</div>
-                    <div class="col-4"><input class="form-control" type="text" style="width: 100%;" value="{{ info.name }}" name="name" required>
+                    <div class="col-4"><input class="form-control w-100" type="text" value="{{ info.name }}" name="name" required>
                     <div class="invalid-feedback">
                     請填寫此欄位
                     </div>
@@ -46,52 +114,54 @@
                 <div class="row py-3">
                     <div class="col-2 my-auto text-end">電子郵件：</div>
                     {% if info.email == None %}
-                    <div class="col-4"><input class="form-control" type="text" style="width: 100%;" name="email" required>
+                    <div class="col-4"><input class="form-control w-100" type="text" name="email" required>
                     <div class="invalid-feedback">
                     請填寫此欄位
                     </div>
                     </div>
                     {% else %}
-                    <div class="col-4"><input class="form-control" type="text" style="width: 100%;" value="{{ info.email }}" name="email" required>
+                    <div class="col-4"><input class="form-control w-100" type="text" value="{{ info.email }}" name="email" required>
                     <div class="invalid-feedback">
                     請填寫此欄位
                     </div>
                     </div>
                     {% endif %}
                 </div>
+                <div class="row py-3">
+                    <div class="col-2 my-auto text-end">身份種類：</div>
+                        <div class="col-4">
+                            <select class="selectpicker form-control" data-width="100%" data-style="btn-new" name="identity">
+                                <option value=""></option>
+                                {% for i in identities %}
+                                    {% if info.identity == i.parametername  %}
+                                        <option value="{{ i.parametername }}" selected>{{ i.name }}</option>
+                                    {% else %}
+                                        <option value="{{ i.parametername }}">{{ i.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
         <div class="row mt-3 px-0">
             <div class="text-end px-0">
                 <input class="btn btn-success" type="submit" value="儲存">
             </div>
         </div>
+    </div>
     </form>
-    {% endif %}
+{% else %}
+<div class="main-box">
+	<div class="main-title">
+		請先登入
+	</div>		
+</div>
+
+{% endif %} -->
 
 </div>
 {% block script %}
-<script>
-// Example starter JavaScript for disabling form submissions if there are invalid fields
-(function () {
-  'use strict'
-
-  // Fetch all the forms we want to apply custom Bootstrap validation styles to
-  var forms = document.querySelectorAll('.needs-validation')
-
-  // Loop over them and prevent submission
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
-</script>
+<script src="{% static 'js/personal_info.js' %}"></script>
 {% endblock script %}
 {% endblock body %}

@@ -14,18 +14,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from django.conf.urls import url
+from django.urls import path, include, re_path
+#from django.conf.urls import url
 from conf import settings
 from django.views.static import serve
-
+from taicat.client_views import post_image_annotation1_1
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('base.urls')),
     path('', include('taicat.urls')),
     path('api/client/v1/', include('taicat.client_urls')),
-    url(r'^media/(?P<path>.*)$', serve, {
+    #path('api/client/v1.1/', include('taicat.client_urls1_1,')),
+    path('api/client/v1.1/image/annotation/', post_image_annotation1_1, name='post-image-annotation1-1'),
+    re_path(r'^media/(?P<path>.*)$', serve, {
         'document_root': settings.MEDIA_ROOT,
     }),
 ]

@@ -1,0 +1,87 @@
+.leaflet-pane .leaflet-tooltip-pane .leaflet-tooltip {
+  background: none !important;
+  border: 0;
+  box-shadow: none;
+  color: #FFF;
+}
+
+.leaflet-pane .leaflet-tooltip-pane .leaflet-tooltip.leaflet-tooltip-top {
+  color: black;
+  margin-top: -35px;
+  font-size: 11px;
+}
+
+.leaflet-pane .leaflet-tooltip-pane .leaflet-tooltip.leaflet-tooltip-top:before {
+  display: none;
+}
+
+.myStudyAreaIcon small {
+  color: grey
+}
+
+#map {
+  height: 100%;
+}
+
+/*
+.banner {
+  background-image: url('/static/image/banner.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  min-height: 590px;
+  align-items: baseline;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.desp {
+  color: #8B8B8B;
+  font-size: 18px;
+  line-height: 30px;
+}
+
+.banner-div {
+  padding-left: 15%
+}
+
+.banner-1,   .banner-2 {
+  color: white
+}
+
+.banner-a {
+  font-size: 24px; 
+  width: 20%
+}
+
+.banner-1 {
+  font-size: 60px
+}
+
+#default-info h1.title-light{
+  font-size: 54px
+}
+
+.start-btn {
+  width: 50%; 
+  font-size: 28px
+}
+
+
+#click-county {
+  font-size: 54px
+}
+
+
+.county-title {
+  color: gray
+}
+
+.d-sa-icon {
+  width: 16px; 
+  height: auto
+}*/
+
+
+

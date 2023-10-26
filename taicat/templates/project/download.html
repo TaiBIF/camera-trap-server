@@ -1,9 +1,5 @@
-{% autoescape off %}
+您好： 
 
-您好：
+您在臺灣自動相機資訊系統所篩選的資料已處理完成，請點擊下方連結下載： 
 
-您在臺灣自動相機資訊系統所篩選的資料已處理完成，請點擊下方連結下載：
-
-{{ download_url }}
-
-{% endautoescape %}
+{{ download_url|safe }}

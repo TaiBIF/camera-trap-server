@@ -1,0 +1,5 @@
+/* 以下因應新切版 */
+
+.select2-container {
+  width: 100% !important;
+}

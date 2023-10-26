@@ -3,17 +3,18 @@ version: '3.7'
 services:
   django:
     build: .
-    container_name: ct21-django-dev-container
-    image: ct21-django-dev-image
+    container_name: ct22-django-dev-container
+    image: ct22-django-dev-image
     ports:
       - 8000:8000
     depends_on:
       - postgres
     volumes:
       - .:/code
-      - ../ct21-volumes/static:/ct21-volumes/static
-      - ../ct21-volumes/media:/ct21-volumes/media
-      - ../ct21-volumes/bucket:/bucket
+      - ../ct22-volumes/static:/ct22-volumes/static
+      - ../ct22-volumes/media:/ct22-volumes/media
+      - ../ct22-volumes/bucket:/bucket
+      - ../ct22-volumes/logs/ct-web:/var/log/ct-web
     command: /srv/start
     restart: always
     #env_file:
@@ -25,17 +26,24 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
       - POSTGRES_DB=cameratrap
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
   postgres:
-    image: postgres:13-alpine
-    #build:
-    #  context: .
-    #  dockerfile: ./compose/production/postgres/Dockerfile
-    #image: ct-postgres-image
-    container_name: ct21-postgres-container
+    #image: postgres:13-alpine
+    shm_size: '1g'
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    image: ct-postgres-image
+    container_name: ct22-postgres-container
     restart: always
     volumes:
-      - ../ct21-volumes/pgdata:/var/lib/postgresql/data/pgdata
-      - ../ct21-volumes/bucket:/bucket
+      - ../ct22-volumes/pgdata:/var/lib/postgresql/data/pgdata
+      - ../ct22-volumes/bucket:/bucket
+      - ./initdb:/docker-entrypoint-initdb.d
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
@@ -43,6 +51,11 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     #env_file:
     #  - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
   redis:
     image: redis:6-alpine
     restart: always
@@ -51,3 +64,58 @@ services:
     restart: always
     ports:
       - 8080:8080
+  celery:
+    restart: unless-stopped
+    build:
+      context: .
+    container_name: ct22-celery-dev-container
+    image: ct22-django-dev-image
+    command: /root/.local/bin/celery -A conf worker -l info
+    volumes:
+      - .:/code
+      - ../ct22-volumes/media:/ct22-volumes/media
+      - ../ct22-volumes/logs/ct-web:/var/log/ct-web
+    depends_on:
+      - redis
+      - django
+    environment:
+      - WEB_ENV=dev
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=cameratrap
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+  flower:
+    restart: unless-stopped
+    build:
+      context: .
+    container_name: ct22-flower-dev-container
+    image: ct22-django-dev-image
+    ports:
+      - 5555:5555
+    command: /root/.local/bin/celery flower -persisten=True --port=5555
+    volumes:
+      - .:/code
+      - ../ct22-volumes/media:/ct22-volumes/media
+      - ../ct22-volumes/logs/ct-web:/var/log/ct-web
+    depends_on:
+      - redis
+      - django
+    environment:
+      - WEB_ENV=dev
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=cameratrap
+      - CELERY_BROKER_URL=redis://redis:6379/3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"

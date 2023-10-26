@@ -1,22 +1,208 @@
 {% extends 'base/base.html' %}
 {% block head %}
 {% load static %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/css/bootstrap-select.min.css">
+<link rel="stylesheet" href="{% static 'css/bootstrap-select.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/permission.css' %}">
+
+<link rel=stylesheet type="text/css" href="/static/css/select2.min.css">
+{% comment %} <script src="/static/js/select2.min.js"></script> {% endcomment %}
+<script src="/static/js/select2/select2.min.js"></script>
+<script src="/static/js/select2/i18n/zh-TW.js"></script>
 {% endblock head %}
 {% block style %}
-<style>
-    input {
-            border: 1px solid #cccccc 
-        }
-</style>
 {% endblock %}
-{% block body %}
-{% if is_authorized %}
-<div class="container content">
-    <div class="row" style="margin-bottom: 10px">
-        <h4 class="title-dark">權限管理</h4>     
+
+{% block title %}權限管理 | {% endblock title %}
+
+
+{% block pop %}
+<div class="pop-box error-pop d-none">
+    <div class="center-box">
+        <div class="wbox">
+            <div class="xx">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                        <g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+                            <circle cx="20" cy="20" r="20" stroke="none"/>
+                            <circle cx="20" cy="20" r="19" fill="none"/>
+                        </g>
+                        <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                            <line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                            <line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+            <div class="modal-body">
+                <div class="titlebox">
+                    確定刪除？ 
+                </div>
+                <form id="removeBtn" novalidate action="{% url 'set_permission' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" id="id" value="">
+                    <input type="hidden" name="type" id="type" value="">
+                </form>
+            </div>
+            <div class="contentbox">
+                <a class="list-dow" id="remove-click">
+					刪除
+				</a>             
+            </div>
+        </div>
     </div>
-        <div class="row">
+</div>
+{% endblock pop %}
+
+{% block body %}
+
+{% if is_authorized %} 
+<input type="hidden" name="return_message" value="{{ return_message }}"></input>
+<div class="container content">
+    <div class="main-box">
+        <div class="main-title">
+            <h2>權限管理</h2>
+        </div>
+
+        <!-- 單位計畫總管理人 section -->
+        <div class="member-fucbox marb_30">
+            <div class="titlebox">
+                <div class="line-g"></div>
+                <h2>單位計畫總管理人</h2>
+            </div>
+            <div class="cont-area">
+                <h3 class="light-green marb_10">加入成員</h3>
+
+                <form id="addOrgAdmin" action="{% url 'set_permission' %}" method="post">
+                    {% csrf_token %}
+                    <div class="member-addbox">
+                        <div class="input-item">
+                            <select id="select-member" name="user">
+                                <option value="" selected>請輸入成員ORCiD或電子郵件</option>
+                                {% for i in member_list %}
+                                    {% if i.email == None %}
+                                        <option value="{{ i.id }}">{{ i.name }}</option>
+                                    {% else %}
+                                        <option value="{{ i.id }}">{{ i.name }}({{ i.email }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-item">
+                            <select id="select-member-org" name="organization" autocomplete="false">
+                                <option value="" selected>單位</option>
+                                {% for i in org_list %}
+                                    <option value="{{ i.id }}">{{ i.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button class="add-btn" id="submitAddForm">
+                            加入成員
+                        </button>
+                    </div>
+                    <input type="hidden" name="type" id="type" value="add_admin">
+                </form>
+
+                <form id="editProjectMember" novalidate action="" method="post">
+                    {% csrf_token %}
+                    <div class="member-table">
+                        <table class="memtable-style" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td class="td10">計畫成員</td>
+                                <td class="td25">電子郵件</td>
+                                <td class="td10">單位</td>
+                                <td class="td5">刪除</td>
+                            </tr>
+                            {% for i in org_admin_list %}
+                            <tr class="align-middle">
+                                <td>{{ i.name }}</td>
+                                <td>{{ i.email }}</td>
+                                <td>{{ i.organization__name }}</td>
+                                <td>
+                                    <a class="remove" data-id="{{ i.id }}"  data-type="remove_admin">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20.828" height="20.828" viewBox="0 0 20.828 20.828">
+                                                <g data-name="Group 689" transform="translate(-1823.086 -445.086)">
+                                                    <line data-name="Line 1" x1="18" y2="18" transform="translate(1824.5 446.5)" fill="none" stroke="#cb5757" stroke-linecap="round" stroke-width="2"/>
+                                                    <line data-name="Line 2" x2="18" y2="18" transform="translate(1824.5 446.5)" fill="none" stroke="#cb5757" stroke-linecap="round" stroke-width="2"/>
+                                                </g>
+                                            </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </form>              
+            </div>
+        </div>
+        
+        <!-- 單位計畫 section -->
+        <div class="member-fucbox ">
+            <div class="titlebox">
+                <div class="line-g"></div>
+                <h2>單位計畫</h2>
+            </div>
+            <div class="cont-area">
+                <h3 class="light-green marb_10">加入計畫</h3>
+                <form id="addOrgProject" novalidate action="{% url 'set_permission' %}" method="post">
+                    {% csrf_token %}
+                    <div class="member-addbox">
+                        <div class="input-item">
+                            <select id="select-project" data-width="100%" data-style="btn-new" data-live-search="true" name="project">
+                                <option value="" selected>請輸入計畫名稱</option>
+                                {% for i in project_list %}
+                                    <option value="{{ i.id }}">{{ i.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-item">
+                            <select id="select-project-org" name="organization" autocomplete="false">
+                                <option value="" selected>單位</option>
+                                {% for i in org_list %}
+                                <option value="{{ i.id }}">{{ i.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button class="add-btn" id="addOrgProjectClick">
+                            加入計畫
+                        </button>
+                    </div>
+                </form>
+
+                <form id="editProjectMember" novalidate action="" method="post">
+                    {% csrf_token %}
+                    <div class="member-table">
+                        <table class="memtable-style" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td >單位</td>
+                                <td class="td50">計畫名稱</td>
+                                <td class="td5">刪除</td>
+                            </tr>
+                            {% for i in org_project_list %}
+                            <tr>
+                                <td>{{ i.organization_name }}</td>
+                                <td>{{ i.project_name }}</td>
+                                <td>
+									<a class="remove" data-id="{{ i.relation_id }}" data-type="remove_project">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20.828" height="20.828" viewBox="0 0 20.828 20.828">
+                                                <g data-name="Group 689" transform="translate(-1823.086 -445.086)">
+                                                    <line data-name="Line 1" x1="18" y2="18" transform="translate(1824.5 446.5)" fill="none" stroke="#cb5757" stroke-linecap="round" stroke-width="2"/>
+                                                    <line data-name="Line 2" x2="18" y2="18" transform="translate(1824.5 446.5)" fill="none" stroke="#cb5757" stroke-linecap="round" stroke-width="2"/>
+                                                </g>
+                                            </svg>
+                                    </a>
+								</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Old version UI -->
+        <!-- <div class="row">
             <div class="bg-white shadow px-0 pb-5 mx-2">
                 <p class="backgroud-dark text-white fw-bold px-3 py-2">單位計畫總管理人</p>        
                 <form id="addOrgAdmin" action="{% url 'set_permission' %}" method="post">
@@ -47,20 +233,21 @@
                             </select>
                         </div>
                         <div class="col-2 my-auto">
-                            <a class="btn btn-orange" onClick="submitAddForm()">加入</a>
+                            <a class="btn btn-orange" id="submitAddForm">加入</a>
                         </div>
                     </div>
                     <input type="hidden" name="type" id="type" value="add_admin">
                 </form>
+
                 <form id="editProjectMember" novalidate action="" method="post">
                     <div class="row my-2 mt-4">
-                        <table class="table table-striped mx-auto" style="width: 90%;">
+                        <table class="table table-striped mx-auto w-90">
                             <thead>
                                 <tr>
-                                    <td style="width: 20%">計畫成員</td>
-                                    <td style="width: 35%">電子郵件</td>
-                                    <td style="width: 35%">單位</td>
-                                    <td style="width: 10%"></td>
+                                    <td class="w-20">計畫成員</td>
+                                    <td class="w-35">電子郵件</td>
+                                    <td class="w-35">單位</td>
+                                    <td class="w-10"></td>
                                 </tr>
                             </thead>
                             <tbody>
@@ -79,9 +266,9 @@
                     </div>
                 </form>
             </div>
-        </div>
+        </div> -->
 
-        <div class="row mt-3">
+        <!-- <div class="row mt-3">
             <div class="bg-white shadow px-0 pb-5 mx-2">
                 <p class="backgroud-dark text-white fw-bold px-3 py-2">單位計畫</p>
                 <form id="addOrgProject" novalidate action="{% url 'set_permission' %}" method="post">
@@ -103,30 +290,31 @@
                         <div class="col-3 my-auto">
                             <select class="selectpicker form-control" data-width="100%" data-style="btn-new" name="organization">
                                 {% for i in org_list %}
-                                    <option value="{{ i.id }}">{{ i.name }}</option>
+                                <option value="{{ i.id }}">{{ i.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-2 my-auto">
-                            <a class="btn btn-orange" onClick="$('#addOrgProject').submit();">加入</a>
+                            <a class="btn btn-orange" id="addOrgProjectClick">加入</a>
                         </div>
                     </div>
                 </form>
+
                 <form id="editProjectMember" novalidate action="" method="post">
                     <div class="row my-2 mt-4">
-                        <table class="table table-striped mx-auto" style="width: 90%;">
+                        <table class="table table-striped mx-auto w-90">
                             <thead>
                                 <tr>
-                                    <td style="width: 30%">單位</td>
-                                    <td style="width: 50%">計畫名稱</td>
+                                    <td class="w-30">單位</td>
+                                    <td class="w-50">計畫名稱</td>
                                     <td></td>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for i in org_project_list %}
                                     <tr class="align-middle">
-                                        <td style="width: 30%">{{ i.organization_name }}</td>
-                                        <td style="width: 50%">{{ i.project_name }}</td>
+                                        <td class="w-30">{{ i.organization_name }}</td>
+                                        <td class="w-50">{{ i.project_name }}</td>
                                         <td class="text-end">
                                             <a class="btn btn-outline-secondary remove" data-id="{{ i.relation_id }}" data-type="remove_project" data-bs-toggle="modal" data-bs-target="#removeModal">移除</a>
                                         </td>
@@ -137,56 +325,21 @@
                     </div>
                 </form>
             </div>
-        </div>
-</div>
+        </div> -->
 
-<!-- Modal -->
-<div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <h4>確定移除？</h4>
-                <form id="removeBtn" novalidate action="{% url 'set_permission' %}" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="id" id="id" value="">
-                <input type="hidden" name="type" id="type" value="">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
-                <a class="btn btn-danger" onClick="$('#removeBtn').submit()">移除</a>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 {% else %}
-<div class="container">
-<a class="btn btn-outline-success" onClick="goBack()">回上一頁</a></div>
+<div class="main-box">
+	<div class="main-title">
+		您的權限不足      
+	</div>		
+	<a class="return-btn" href="/"> < 返回</a>
+</div>
 {% endif %}
 {% endblock body %}
 
 {% block script %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
-<script>
-function goBack() {
-  window.history.back();
-}
-
-// pass variable to modal
-$(document).on("click", ".remove", function () {
-    var id = $(this).data('id');
-    var type = $(this).data('type');
-    $(".modal-body #id").val( id );
-    $(".modal-body #type").val( type );
-});
-
-function submitAddForm(){
-    console.log('hi');
-    $('#addOrgAdmin').submit();
-}
-
-
-</script>
+<script src="{% static 'js/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'js/permission.js' %}"></script>
 {% endblock script %}

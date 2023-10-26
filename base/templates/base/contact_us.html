@@ -1,0 +1,200 @@
+{% extends 'base/base.html' %} {% block head %} {% load static %} {% endblock head %} {% block style %}
+<link href="{% static 'css/theme.css' %}" rel="stylesheet">
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %} 
+
+{% block title %}聯絡我們 | {% endblock title %}
+
+{% block pop %}
+
+<!-- Input error pop 2 -->
+<div class="pop-box info-pop-2 d-none">
+	<div class="center-box">
+		<div class="wbox">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+			<div class="titlebox">
+				請填入必要資訊
+			</div>
+			<div class="contentbox">
+				<div class="flex-box">
+					<img class="icon-1 description-error-icon" src="{% static 'image/misxx.svg' %}" alt="">
+					<p class="description-error">請填入問題描述</p>
+					<img class="icon-1 mail-error-icon" src="{% static 'image/misxx.svg' %}" alt="">
+					<p class="mail-error">請填入正確電子郵件</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock pop %}
+
+{% block body %}
+<div class="main-box-1240">
+  <div class="contactbox">
+    <div class="main-title">
+      <h2>聯絡我們</h2>
+    </div>
+    <p class="short-inf">對於 Camera Trap 的使用有任何問題或回饋嗎？請描述您遇到的狀況，我們會盡快與您聯絡！</p>
+    
+    <form id="submitForm" name="submitForm" action="{% url 'feedback_request' %}" enctype="multipart/form-data" method="POST">
+      {% csrf_token %}
+      <div class="w-100box marb_50">
+        <div class="ct-item" name="q-detail-type" class="is-invalid">
+          <div class="cttitle">
+            <span class="red">*</span>
+            問題類型
+          </div>
+          <ul class="check-list">
+            <!---點選給li now-->
+            <li>
+              <div class="cir-checkbox">
+                <img class="coricon" src="static/image/correct.svg" alt="">
+              </div>
+              <p>系統操作
+              </p>
+            </li>
+            <li class="now">
+              <div class="cir-checkbox">
+                <img class="coricon" src="static/image/correct.svg" alt="">
+              </div>
+              <p>
+                帳號相關
+              </p>
+            </li>
+            <li>
+              <div class="cir-checkbox">
+                <img class="coricon" src="static/image/correct.svg" alt="">
+              </div>
+              <p>
+                單機版軟體使用
+              </p>
+            </li>
+            <li>
+              <div class="cir-checkbox">
+                <img class="coricon" src="static/image/correct.svg" alt="">
+              </div>
+              <p>
+                篩選與計算
+              </p>
+            </li>
+            <li>
+              <div class="cir-checkbox">
+                <img class="coricon" src="static/image/correct.svg" alt="">
+              </div>
+              <p>
+                其他
+              </p>
+            </li>
+          </ul>
+        </div>
+        <div class="ct-item">
+          <div class="cttitle">
+            <span class="red">*</span>
+            問題描述
+          </div>
+          <div class="texttbox">
+            <textarea name=description class="is-invalid"></textarea>
+            <div class="gray-note">
+              <p>建議您在問題回報中提供以下資訊，讓我們能更精確的為您提供幫助。</p>
+              <ul>
+                <li>
+                  明確且詳細的問題說明
+                </li>
+                <li>重現問題狀況的確切步驟
+                </li>
+                <li>出現問題的螢幕截圖或影片連結 (建議)</li>
+                <li>您認為可能對找出和解決問題有幫助的所有其他資訊</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="ct-item">
+          <div class="cttitle">
+            <span class="red">*</span>
+            您的電子郵件
+          </div>
+          <div class="input-item">
+            <input type="text" name="email" class="is-invalid" required>
+          </div>
+          <span class="gray">我們將透過電子郵件與您聯繫此問題的相關事宜，您的電子郵件不會被分享，或用於任何其他用途。</span>
+        </div>
+        <div class="ct-item">
+          <div class="cttitle">
+            附件
+          </div>
+          <div class="upload-box">
+            <label class="btn">
+              <input type="file" name="uploaded_file" class="d-none" multiple="" id="f-upload" accept=".csv, .tsv, .tab, .txt, .xls, .xlsx, .jpg, .png, .mp4, .avi,.mov, .mpg, .mpeg">
+              添加附加檔案
+            </label>
+            <span class="gray">
+              附加螢幕截圖、資料、圖片或影片檔案 (.csv, .tsv, .tab, .txt, .xls, .xlsx, .jpg, .png, .mp4, .avi, .mov, .mpg, .mpeg) ， <br>
+              附件容量總上限為 20 MB。
+            </span>
+
+          </div>
+          <ul class="file-area" id="f-list">
+
+            <!-- Examples from desinger -->
+             
+            <!-- <li>
+              <p>S123456789.jpg</p>
+              <button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 18.828 18.828">
+                  <g data-name="Group 688" transform="translate(-1823.086 -445.086)">
+                    <line data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                    <line data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  </g>
+                </svg>
+              </button>
+            </li>
+            <li>
+              <p>S123456789.jpg</p>
+              <button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 18.828 18.828">
+                  <g data-name="Group 688" transform="translate(-1823.086 -445.086)">
+                    <line data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                    <line data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  </g>
+                </svg>
+              </button>
+            </li>  -->
+            
+
+
+          </ul>
+        </div>
+
+        <p class="loading-pop d-none"></p>
+        <!--新版recaptcha好像不一定要放出來點了-->
+        <!-- <div class="recaptcha-area" style="display: none;"></div>  -->
+      </div>
+    </form>
+  </div>
+  <div class="btn2-area">
+
+    <button class="btn-green submit">
+      確認送出
+    </button>
+  </div>
+
+</div>
+
+  {% endblock body %} {% block script %}
+  <script src="{% static 'js/contact_us.js' %}"></script>
+  {% endblock script %}
+</div>

@@ -1,0 +1,50 @@
+textarea,
+input {
+  border: 1px solid #cccccc;
+}
+
+/* color for select */
+.check-mark {
+  color: rgb(37, 116, 85) !important;
+}
+
+.form-control {
+  border-color: #cccccc;
+}
+
+.btn-new {
+  background-color: white;
+  border: 1px solid #cccccc;
+}
+
+.btn-new[title="請選擇計畫地區"] {
+  color: #6c757d !important;
+}
+
+/* sidebar */
+.nav-link {
+  color: gray;
+}
+
+.nav-link:hover {
+  color: lightgrey;
+}
+
+.back:hover {
+  color: lightgrey;
+}
+
+.w-12 {
+  width: 12px;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+
+.w-45 {
+  width: 45%
+}
+
+.f-14 {
+  width: 1.4em
+}

@@ -1,0 +1,318 @@
+{% extends 'base/base.html' %}
+{% load static %} 
+{% block head %}
+{% comment %} <link rel="stylesheet" href="{% static 'css/theme.css' %}"> {% endcomment %}
+<link rel="stylesheet" href="{% static 'css/project_info.css' %}">
+<link rel="stylesheet" href="{% static 'css/air-datepicker.css' %}">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+<!-- plot -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+{% endblock head %}
+
+{% block title %}{{ project.name }} | {% endblock title %} 
+
+
+{% block body %} {% csrf_token %}
+<input type="hidden" name="pk" value="{{ pk }}"></input>
+
+
+{% csrf_token %}
+	<!--下載跳匡-->
+	<div class="pop-box down-pop d-none" id="downloadModal">
+		<div class="center-box">
+			<div class="wbox">
+				<div class="xx">
+					<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+						<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+							<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+								<circle cx="20" cy="20" r="20" stroke="none"/>
+								<circle cx="20" cy="20" r="19" fill="none"/>
+							</g>
+							<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+								<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+								<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							</g>
+						</g>
+					</svg>
+				</div>
+				<div class="titlebox">
+					下載篩選資料
+				</div>
+				<div class="contentbox">
+					<p class="marb_20">
+						檔案為離線產生，處理完成後，系統會寄下載資訊到您輸入的電子郵件信箱。如未收到信件，請檢查您的郵件設定，如仍未收到信件，請聯絡我們。
+					</p>
+					<div class="input-item d-flex jc-start-ai-center">
+						<input class="w-80" type="text" id="download-email" placeholder="請輸入您的電子郵件"/>
+						<svg id="email-check" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="lightgrey" class="bi bi-check my-auto" viewBox="0 0 16 16">
+							<path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+						</svg>
+					</div>
+					<div class="btn-center">
+						<button class="btn-green" id="canceldownload">
+							取消
+						</button>
+						<button class="btn-green download" disabled>
+							確認送出
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{% comment %} <div class="container content"> {% endcomment %}
+		{% if is_project_authorized or is_project_public %}
+		<div class="main-box">
+			<div class="main-title">
+				<h2>{{ project.name }}</h2>
+			</div>
+			<div class="project-topflex">
+				<div class="left-box">
+					<h3 class="light-green marb_10">已辨識物種</h3>
+					<ul class="form-area">
+						<li class="w-100">
+							<p>樣區</p>
+							<div class="input-item">
+								<select class="form-control sa-select filter">
+									<option value="all">全部</option>
+									{% for s in sa %}
+									<option value="{{ s.id }}">{{ s.name }}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</li>
+						{% comment %} <li>
+							<p>子樣區</p>
+							<div class="input-item">
+								<select class="form-control subsa-select filter">
+                                    <option value="all">全部</option>
+                                </select>
+							</div>
+						</li> {% endcomment %}
+						<li>
+							<p>起始日期</p>
+							<div class="input-item date-select">
+								<input name="start_date" class="form-control filter" id="start_date" type="text" placeholder="YYYY-MM-DD">
+								 <button class="date-cal show_start">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+										<g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+											<g id="Group_686" data-name="Group 686">
+												<path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"/>
+												<path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"/>
+												<path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"/>
+												<path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"/>
+												<path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"/>
+												<path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"/>
+												<path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"/>
+											</g>
+										</g>
+									</svg>
+								</button>
+							</div>
+						</li>
+						<li>
+							<p>結束日期</p>
+							<div class="input-item date-select">
+								<input name="end_date" class="form-control filter" id="end_date" type="text" placeholder="YYYY-MM-DD" />
+								<button class="date-cal show_end">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+										<g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+											<g id="Group_686" data-name="Group 686">
+												<path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"/>
+												<path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"/>
+												<path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"/>
+												<path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"/>
+												<path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"/>
+												<path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"/>
+												<path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"/>
+											</g>
+										</g>
+									</svg>
+								</button>
+							</div>
+						</li>
+					</ul>
+					<button class="clear-up">清除條件</button>
+				</div>
+				<div class="right-box">
+					<div class="wbgbox">
+						<div class="left-inf">
+							<ul>
+								<li>
+									<h4>委辦單位</h4>
+									<p>{{ project.funding_agency|default_if_none:"" }}</p>
+								</li>
+								<li>
+									<h4>計畫編號</h4>
+									<p>{{ project.code|default_if_none:"" }}</p>
+								</li>
+								<li>
+									<h4>計畫主持人</h4>
+									<p>{{ project.principal_investigator|default_if_none:"" }}</p>
+								</li>
+								<li>
+									<h4>計畫時間</h4>
+									<p>{{ project.start_date|date:'o-m-d' }} 至  <br>
+										{{ project.end_date|date:'o-m-d' }}</p>
+								</li>
+							</ul>
+						</div>
+						<div class="rightlink-area">
+							<a id="downloadButton">
+								<div class="center-box">
+									<svg class="icon01" xmlns="http://www.w3.org/2000/svg" width="25.289" height="23.23" viewBox="0 0 25.289 23.23">
+										<g id="Group_791" data-name="Group 791" transform="translate(0 0)">
+											<g id="Group_752" data-name="Group 752" transform="translate(0 0)">
+												<path id="Path_10218" data-name="Path 10218" d="M12.621,176.606H3.369A3.193,3.193,0,0,1,0,173.205c0-1.358-.005-2.716,0-4.074a1.056,1.056,0,0,1,.939-1.068,1.053,1.053,0,0,1,1.131.814,1.88,1.88,0,0,1,.033.43c0,1.325,0,2.649,0,3.974a1.071,1.071,0,0,0,1.159,1.188q9.383,0,18.766,0a1.063,1.063,0,0,0,1.145-1.168c0-1.347,0-2.694,0-4.04a1.061,1.061,0,1,1,2.106-.015c0,1.358.005,2.716,0,4.074a3.176,3.176,0,0,1-3.248,3.286q-4.708.008-9.416,0" transform="translate(0.001 -153.378)" fill="#257455"/>
+												<path id="Path_10219" data-name="Path 10219" d="M77.93,15.928v-.471q0-7.093,0-14.187a1.869,1.869,0,0,1,.058-.526,1.044,1.044,0,0,1,1.13-.736,1.082,1.082,0,0,1,.934.947,3.792,3.792,0,0,1,.007.4q0,7.077,0,14.154v.43c.517-.411.983-.779,1.446-1.15q1.08-.864,2.158-1.731a1.067,1.067,0,1,1,1.346,1.648q-2.635,2.122-5.279,4.232a1.061,1.061,0,0,1-1.483-.009Q75.672,16.87,73.1,14.8a1.062,1.062,0,1,1,1.313-1.669c1.072.847,2.136,1.7,3.2,2.558.084.067.172.13.313.237" transform="translate(-66.353 -0.001)" fill="#257455"/>
+											</g>
+										</g>
+									</svg>
+									<p>資料下載</p>
+								</div>
+							</a>
+							<a href="{% url 'project_detail' pk %}">
+								<div class="center-box">
+									<svg class="icon02" xmlns="http://www.w3.org/2000/svg" width="26.414" height="26.414" viewBox="0 0 26.414 26.414">
+										<g id="Group_771" data-name="Group 771" transform="translate(-966.586 -1128.083)">
+											<g id="Group_719" data-name="Group 719" transform="translate(968 1128.083)">
+												<g class="cir" id="Ellipse_5" data-name="Ellipse 5" transform="translate(3 0)" fill="none" stroke="#257455" stroke-width="2">
+													<ellipse cx="11" cy="11" rx="11" ry="11" stroke="none"/>
+													<ellipse cx="11" cy="11" rx="10" ry="10" fill="none"/>
+												</g>
+												<line id="Line_5" data-name="Line 5" x1="6" y2="6" transform="translate(0 19)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+											</g>
+										</g>
+									</svg>
+									<p>查看影像</p>
+								</div>
+							</a>
+							<a href="{% url 'project_oversight' pk %}">
+								<div  class="center-box">
+									<svg class="icon03" xmlns="http://www.w3.org/2000/svg" width="25.5" height="20.864" viewBox="0 0 25.5 20.864">
+										<g id="Group_774" data-name="Group 774" transform="translate(0.25 0.248)">
+											<g id="Group_775" data-name="Group 775">
+												<path id="Path_10221" data-name="Path 10221" d="M0,4.879A6.727,6.727,0,0,1,.373,3.821,2.715,2.715,0,0,1,2.9,2.311H6.668a6.337,6.337,0,0,1,.273-.993A2.135,2.135,0,0,1,9.021.006c2.318-.005,4.637-.012,6.955,0a2.17,2.17,0,0,1,2.2,1.736,5.722,5.722,0,0,1,.084.566h.272c1.2,0,2.392-.007,3.587,0a2.836,2.836,0,0,1,2.794,2.25,3.574,3.574,0,0,1,.074.775c0,4-.014,8,.012,12a2.941,2.941,0,0,1-2.907,3.029c-.862-.015-1.724,0-2.587,0q-8.261,0-16.521,0a2.811,2.811,0,0,1-2.6-1.475A6.08,6.08,0,0,1,0,17.811V4.879M12.495,19.063q4.733,0,9.467,0a2.291,2.291,0,0,0,.627-.068,1.641,1.641,0,0,0,1.168-1.765q.01-5.934,0-11.868a2.278,2.278,0,0,0-.061-.549,1.541,1.541,0,0,0-1.584-1.192c-1.464,0-2.928,0-4.392,0a.676.676,0,0,1-.735-.766c0-.143,0-.286,0-.429,0-.8-.323-1.135-1.1-1.135H9.181c-.106,0-.212,0-.317.006a.871.871,0,0,0-.817.82c-.021.234-.014.471-.018.706-.007.545-.252.8-.779.8-1.456,0-2.912,0-4.367,0A1.552,1.552,0,0,0,1.265,5.253q-.01,6.086,0,12.171a1.825,1.825,0,0,0,.166.751,1.549,1.549,0,0,0,1.544.889q4.758,0,9.515,0" transform="translate(0 0)" fill="#257455" stroke="#257455" stroke-width="0.5"/>
+												<path id="Path_10222" data-name="Path 10222" d="M101.617,75.026a5.842,5.842,0,1,1-5.813-5.86,5.852,5.852,0,0,1,5.813,5.86m-1.289.014a4.556,4.556,0,1,0-4.541,4.552,4.542,4.542,0,0,0,4.541-4.552" transform="translate(-83.275 -64.046)" fill="#257455" stroke="#257455" stroke-width="0.5"/>
+											</g>
+										</g>
+									</svg>
+
+									<p>相機樣點運作及缺失比例</p>
+								</div>
+							</a>
+							{% if is_authorized %}
+							<a href="{% url 'edit_project_basic' pk %}">
+								<div  class="center-box">
+									<svg class="icon04" xmlns="http://www.w3.org/2000/svg" width="25.303" height="25.471" viewBox="0 0 25.303 25.471">
+										<g id="Group_749" data-name="Group 749" transform="translate(0.153 0.324)">
+											<g id="Group_772" data-name="Group 772">
+												<path id="Path_10217" data-name="Path 10217" d="M25,5.3a3.522,3.522,0,0,1-1.069,2.5q-4.755,4.747-9.5,9.5Q12.172,19.549,9.911,21.8a1.519,1.519,0,0,1-.563.349Q5.236,23.536,1.115,24.9a1.352,1.352,0,0,1-.5.1.682.682,0,0,1-.558-.983Q.969,21.25,1.89,18.49c.32-.962.636-1.925.968-2.882a1.3,1.3,0,0,1,.289-.48Q10.166,8.1,17.2,1.076a3.431,3.431,0,0,1,4.981-.01q.918.905,1.825,1.821A3.434,3.434,0,0,1,25,5.3M9.308,20.4,21.249,8.459,16.541,3.746,4.6,15.686,9.308,20.4M22.3,7.459c.25-.24.517-.475.759-.733a2.027,2.027,0,0,0,.037-2.787c-.654-.706-1.339-1.385-2.043-2.042a1.973,1.973,0,0,0-2.5-.16,12.05,12.05,0,0,0-1.036.942L22.3,7.459M8,21.156,3.841,17,1.757,23.234,8,21.156" transform="translate(0 0)" fill="#257455" stroke="#257455" stroke-width="0.3"/>
+											</g>
+										</g>
+									</svg>
+									<p>計畫管理</p>
+								</div>
+							</a>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+
+			</div>
+			<div class="prjchart-area">
+				<ul class="charbg-box">
+					<li>
+						<div class="map-area">
+							<div id="map" class="mapbox">
+							</div>
+						</div>
+						<div class="cheitem">
+							<div class="left-box">
+								<input type="checkbox" class="form-check-input" name="show-woods" id="show-woods">
+								在地圖顯示林班地範圍
+								</input>
+							</div>
+							
+							<div class="right-box">
+								<img src="{% static 'image/marker-icon-error.png' %}"></script>
+								<p>樣區</p>
+								<img src="{% static 'image/marker-icon.png' %}"></script>
+								<p>相機位置</p>
+							</div>
+						</div>
+						{% comment %} 這塊不確定 {% endcomment %}
+						<div class="species-map-legend mx-3 mt-1 mb-2 text-end d-none">
+							<i class="fa fa-xs fa-circle species-color-1"></i> < 500
+							<i class="fa fa-xs fa-circle species-color-2"></i>  >= 500
+							<i class="fa fa-xs fa-circle species-color-3"></i>  >= 1000
+							<i class="fa fa-xs fa-circle species-color-4"></i>  >= 5000
+							<i class="fa fa-xs fa-circle species-color-5"></i>  >= 10000
+						</div>
+						{% comment %} 這塊不確定 {% endcomment %}
+
+					</li>
+					<li>
+						<div class="chart-title">
+
+							<h2 class="species-pie"><sapn id="pie-sa-title">全部樣區</sapn>已辨識物種<span id="species-count-title" class="title-dark">{{ species_count }}</span>種</h2>
+							<p class="date species-pie">最後更新時間：<span id="species_last_updated">{{ species_last_updated|date:'o-m-d' }}</span></p>
+
+							<h2 class="m-0 species-map d-none">
+                                <span id="species-map-title"></span>共有<span id="species-map-count-title" class="title-dark"></span>筆辨識紀錄
+                            </h2>
+							<p class="date species-map d-none">最後更新時間：<span id="species_last_updated">{{ species_last_updated|date:'o-m-d' }}</span></p>
+
+                            <button class="species-map d-none return-btn" id="updateSpeciesPie">
+								< 返回
+							</button>
+							<p class="species-map d-none reminder">點擊以下連結轉跳至「查看影像」頁面</p>
+						</div>
+						<div class="chart-are">
+							<div id="species-pie"></div>
+						</div>
+						<div class="dottarea">
+							<div class="species-percentage" id="species-percentage"></div>
+							<div class="col-12 d-none species-map mt-3" id="species-map-stat"></div>
+						</div>
+					</li>
+					<li>
+						<div class="chart-title">
+							<h2 class="line-chart-title"><sapn id="sa-title">全部樣區</sapn>已上傳<span id="species_name"></span>照片<span class="title-dark" id="image_counts">{{ image_count }}</span>張</h2>
+						</div>
+						<div class="chart-are">
+							<div id="line-chart"></div>
+						</div>
+						<div class="dottarea">
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+{% else %}
+<div class="main-box">
+	<div class="main-title">
+		您的權限不足      
+	</div>		
+	<a class="return-btn" href="/"> < 返回 </a>
+</div>
+{% endif %}
+
+
+{% endblock body %} {% block script %}
+	<script src="{% static 'js/air-datepicker.js' %}"></script>
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+	<script src="{% static 'js/gsap.min.js' %}"></script>
+	<script src="{% static 'js/ScrollTrigger.min.js' %}"></script>
+	<script src="{% static 'js/project_info.js' %}"></script>
+
+{% endblock script %}

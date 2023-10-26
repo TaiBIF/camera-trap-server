@@ -1,0 +1,74 @@
+/* 以下因應新切版 */
+
+.invalid-feedback {
+    color: #CB5757;
+    font-size: 16px;
+}
+
+.input-item .select2-container--default .select2-selection--single {
+    width: 100%;
+    border: 1px solid #ddd;
+    min-height: 50px;
+    border-radius: 5px;
+    font-size: 16px;
+    display: flex
+}
+
+
+.input-item .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 50px;
+}
+
+.input-item .select2-container--default .select2-selection--single .select2-selection__choice {
+    background: #59AE68;
+    color: #FFF;
+    border: 0;
+    padding: 5px 25px 5px 15px;
+    border-radius: 20px;
+    margin-bottom: 0
+}
+
+.input-item .select2-container--default .select2-selection--single .select2-selection__choice__remove {
+    border: 0;
+    right: 5px;
+    left: inherit;
+    color: #FFF;
+    top: 50%;
+    margin-top: -13px
+}
+
+.input-item .select2-container--default .select2-selection--single .select2-selection__choice__remove:hover {
+    background: none;
+    color: #FFF
+}
+
+.input-item .select2-container--default .select2-selection--single .select2-selection__choice__display {
+    padding: 0;
+    line-height: 25px
+}
+
+
+
+@media only screen and (max-width: 1279px) {
+
+    .management-box .right-cont .area-table .area-table-style td .input-item input, .management-box .right-cont .area-table .area-table-style td .input-item select, .faq-box .right-cont .area-table .area-table-style td .input-item input, .faq-box .right-cont .area-table .area-table-style td .input-item select {
+        height: 40px;
+    }
+
+}
+
+@media only screen and (max-width: 1279px) {
+
+    .input-item .select2-container--default .select2-selection--single {
+        min-height: 40px;
+    }
+
+
+    .input-item .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 40px;
+    }
+}
+
+.is-invalid {
+    border-color: #CB5757 !important;
+}

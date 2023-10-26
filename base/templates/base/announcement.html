@@ -1,0 +1,105 @@
+{% extends 'base/base.html' %} 
+
+{% block head %} {% load static %} {% endblock head %} 
+
+{% block style %}
+<link href="{% static 'css/theme.css' %}" rel="stylesheet">
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %} 
+
+{% block title %}公告 | {% endblock title %}
+
+{% block pop %}
+
+<!-- Input error pop -->
+<div class="pop-box info-pop d-none">
+	<div class="center-box">
+		<div class="wbox">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+			<div class="titlebox">
+				請填入必要資訊
+			</div>
+			<div class="contentbox">
+				<div class="flex-box">
+					<img class="icon-1 title-error-icon" src="{% static 'image/misxx.svg' %}" alt="">
+					<p class="title-error">請填入公告標題</p>
+					<img class="icon-1 content-error-icon" src="{% static 'image/misxx.svg' %}" alt="">
+					<p class="content-error">請填入公告內容</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock pop %}
+
+
+{% block body %}
+<div class="main-box">
+  <div class="main-title">
+    <h2>公告</h2>
+  </div>
+
+
+  <div class="member-fucbox marb_50">
+    <div class="titlebox">
+        <div class="line-g"></div>
+        <h2>公告寄信</h2>
+    </div>
+
+    <form id="submitForm" name="submitForm" action="{% url 'announcement_request' %}" enctype="multipart/form-data" method="POST">
+      {% csrf_token %}
+      <div class="cont-area">
+            <div class="inp2box">
+              <div class="input-item">
+                <p><span class="red">*</span>公告標題</p>
+                <input type="text" name="announcement-title" class="is-invalid" required />
+              </div>
+              <div class="input-item">
+                <p><span class="red">*</span>收件人</p>
+                <select name="" id="">
+                  <option value="">所有人</option>
+                  <option value="">計畫總管理人</option>
+                  <option value="">計畫承辦人</option>
+                  <option value="">資料上傳者</option>
+                </select>
+              </div>
+            </div>
+            <div class="text-areabox">
+              <p><span class="red">*</span>公告內容</p>
+              <textarea name="description" class="is-invalid" cols="30" rows="10"></textarea>
+            </div>
+
+            <p class="loading-pop d-none"></p>
+
+            <!--新版recaptcha好像不一定要放出來點了-->
+            {% comment %} <div class="recaptcha-area" style="display: none;"></div> {% endcomment %}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="btn2-area">
+				<button class="btn-green submit">
+					確認送出
+				</button>
+  </div>
+
+
+  <script src="{% static 'js/announcetment.js' %}"></script>
+  {% endblock body %} 
+
+</div>

@@ -1,0 +1,79 @@
+.flex-center{
+    display: flex;
+    align-items: center;
+  }
+
+  .up-icon {
+    width: 18px;
+    height: 18px
+  }
+
+  .link {
+    color: gray;
+    cursor: pointer;
+  }
+
+  .link:hover {
+    color: lightgrey;
+  }
+
+  table.t{
+  width: 100%;
+  border-collapse: collapse;
+  border: 0
+}
+
+  thead{
+    background: #E1E3E5;
+  }
+
+  thead tr th{
+    padding: 8px 20px;
+    font-size: 14px;
+  }
+
+  tr>td,
+  tr>th {
+    font-size: 14px;
+    padding: 10px 20px;
+    vertical-align: middle;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+
+  .pr-10 {
+    padding-right: 10px
+  }
+
+  .pr-0 {
+    padding-right: 0
+  }
+
+  .pl-10 {
+    padding-left: 10px
+  }
+
+  body{
+    background: #f7f7f7 !important;
+    /* TODO tmp css wait 2.0 0704  start*/
+    font-size: 1rem !important;
+    line-height: normal !important;
+    letter-spacing: 0.05em !important;
+    /* TODO tmp css wait 2.0 0704  end*/
+  }
+  /* TODO tmp css wait 2.0 0704  start*/
+  #alert-content > a{
+    color: #0d6efd !important;
+    text-decoration: underline !important;
+  }
+  /* TODO tmp css wait 2.0 0704  end*/
+
+  .innbox {
+    padding-top: 0px;
+    }
+    

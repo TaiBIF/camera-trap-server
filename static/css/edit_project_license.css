@@ -1,0 +1,35 @@
+/* New version UI */
+input[type="radio"] {
+    display: none;
+}
+
+.create-newpj .ccbox li .select-box .item label{
+    cursor: pointer;
+}
+/* New version UI end */
+
+.nav-link {
+    color: gray;
+  }
+
+  .nav-link:hover {
+    color: lightgrey;
+  }
+
+  .list-unstyled img {
+    padding: 0 10px;
+  }
+  .back:hover {
+    color: lightgrey;
+  }
+
+  .w-12 {
+    width: 12px;
+    margin-right: 5px;
+    margin-left: 5px;
+  }
+
+  .check-mark {
+    color: rgb(37, 116, 85) !important;
+  }
+  

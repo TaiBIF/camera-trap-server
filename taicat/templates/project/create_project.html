@@ -1,330 +1,589 @@
-{% extends 'base/base.html' %}
-{% block head %}
-{% load static %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/css/bootstrap-select.min.css">
+{% extends 'base/base.html' %} {% block head %} {% load static %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-select.min.css' %}" />
+<link rel="stylesheet" href="{% static 'css/create_project.css' %}" />
 
-{% endblock head %}
-{% block style %}
-<style>
 
-    textarea, input {
-        border: 1px solid #cccccc 
-    }
+<link rel=stylesheet type="text/css" href="/static/css/select2.min.css">
+<script src="/static/js/select2/select2.min.js"></script>
+<script src="/static/js/select2/i18n/zh-TW.js"></script>
 
-    .form-control {
-        border-color: #cccccc 
-    }
+{% endblock head %} {% block style %}
+{% endblock %} 
 
-    .btn-new {
-        background-color: white;
-        border: 1px solid #cccccc;
-    }
+{% block title %}新增計畫 | {% endblock title %}
 
-    .btn-new[title='請選擇計畫地區']{
-        color: #6c757d !important;  
-    }
+{% block pop %}
 
-    /* color for select */
-    .check-mark{
-        color: rgb(37, 116, 85);
-    }
+<!-- Input error pop -->
+<div class="pop-box input-pop-3 d-none">
+	<div class="center-box">
+		<div class="wbox">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+			<div class="titlebox">
+				請填入必要資訊
+			</div>
+			<div class="contentbox">
+				<div class="flex-box">
+					<img class="icon-1 name-error-icon" src="{% static 'image/misxx.svg' %}" alt="">
+					<p class="name-error">請填入計畫名稱</p>
+          <img class="icon-1 principal-error-icon" src="{% static 'image/misxx.svg' %}" alt="">
+					<p class="principal-error">請填入計畫主持人</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
-    .text-end {
-        margin: auto 0
-    }
 
-    .list-unstyled img {
-        padding: 0 10px
-    }
+{% endblock pop %}
 
-    #second-page {
-        display: none
-    }
+{% block body %} {% if is_authorized_create %}
+<div class="main-box">
+    <form id="createProjectForm" novalidate action="{% url 'create_project' %}" method="post">
+        {% csrf_token %}
+        <div class="main-title flex-spb">
+            <h2>新增計畫</h2>
+        </div>
 
-</style>
-{% endblock %}
-{% block body %}
-{% if is_authorized_create %}
-<div class="container content">
-<form id="createProjectForm" novalidate action="{% url 'create_project' %}" method="post">
-{% csrf_token %}
-    <div class="row" style="margin-bottom: 10px">
-        <h4 class="title-dark">新增計畫</h4>     
-    </div>
-    <div id="first-page">
-        <div class="row">
-            <div class="bg-white shadow px-0 pb-5 mx-2">
-                <p class="backgroud-dark text-white fw-bold px-3 py-2">計畫基本資訊</p>        
-                <div class="row p-3">
-                    <div class="col-2 text-end"><span class="required">*</span>計畫名稱：</div>
-                    <div class="col-sm-8 col-lg-4">
-                        <input type="text" style="width: 100%;" class="form-control" name="name" placeholder="請輸入計畫名稱" required>
+        <div id="first-page">
+            <div class="wbg-box marb_50">
+                <div class="create-newpj">
+                    <h3 class="light-green">計畫基本資訊</h3>
+    
+                    <!-- 計畫名稱 ＆ 計畫簡稱 section -->
+                    <div class="inp2box">
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <span class="redmark">*</span>
+                                <p>計畫名稱</p>
+                            </div>
+                            <input type="text" name="name" placeholder="請輸入計畫名稱" required>
+                        </div>
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>計畫簡稱</p>
+                                <div class="inf-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="2" height="12" viewBox="0 0 2 12">
+                                        <g id="Group_821" data-name="Group 821" transform="translate(-1059 -266)">
+                                            <circle id="Ellipse_2972" data-name="Ellipse 2972" cx="1" cy="1" r="1" transform="translate(1059 266)" fill="#fff"/>
+                                            <rect id="Rectangle_253" data-name="Rectangle 253" width="2" height="8" rx="1" transform="translate(1059 270)" fill="#fff"/>
+                                        </g>
+                                    </svg>
+                                    <div class="pop-bubble">
+                                        計畫簡稱為做日後系統顯示之用，您可以輸入任何有助您辨別計畫的文字
+                                        <svg class="bubble-ar" xmlns="http://www.w3.org/2000/svg" width="7" height="9" viewBox="0 0 7 9">
+                                            <path id="Polygon_54" data-name="Polygon 54" d="M4.5,0,9,7H0Z" transform="translate(0 9) rotate(-90)" fill="#257455" opacity="0.8"/>
+                                        </svg>
+    
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="text" name="short_title" placeholder="請輸入計畫簡稱">
+                        </div>
+                    </div>
+    
+                    <!-- 計畫關鍵字 ＆ 委辦單位 section -->
+                    <div class="inp2box">
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>計畫關鍵字</p>
+                                <div class="inf-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="2" height="12" viewBox="0 0 2 12">
+                                        <g id="Group_821" data-name="Group 821" transform="translate(-1059 -266)">
+                                            <circle id="Ellipse_2972" data-name="Ellipse 2972" cx="1" cy="1" r="1" transform="translate(1059 266)" fill="#fff"/>
+                                            <rect id="Rectangle_253" data-name="Rectangle 253" width="2" height="8" rx="1" transform="translate(1059 270)" fill="#fff"/>
+                                        </g>
+                                    </svg>
+                                    <div class="pop-bubble">
+                                        請輸入與其他同類型計畫共有之文字，以利於同類型計畫搜尋篩選用，例如調查方式相同的多年期計畫因時空關係有不同計畫名稱時，即建議使用相同關鍵字
+                                        <svg class="bubble-ar" xmlns="http://www.w3.org/2000/svg" width="7" height="9" viewBox="0 0 7 9">
+                                            <path id="Polygon_54" data-name="Polygon 54" d="M4.5,0,9,7H0Z" transform="translate(0 9) rotate(-90)" fill="#257455" opacity="0.8"/>
+                                        </svg>
+    
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="text" name="keyword" placeholder="請輸入計畫關鍵字">
+                        </div>
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>委辦單位</p>
+                            </div>
+                            <input type="text" name="funding_agency" placeholder="請輸入委辦單位">
+                        </div>
+                    </div>
+    
+                    <!-- 執行單位 ＆ 計畫編號 section -->
+                    <div class="inp2box">
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>執行單位</p>
+                            </div>
+                            <input type="text" name="executive_unit">
+                        </div>
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>計畫編號</p>
+                            </div>
+                            <input type="text" name="code">
+                        </div>
+                    </div>
+    
+                    <!-- 計畫主持人 ＆ 計畫地區 ＆ 計畫起始時間 ＆ 計畫結束時間 section -->
+                    <ul class="inp4box">
+                        <li class="inpboxitem">
+                            <div class="inptitle">
+                                <span class="redmark">*</span>
+                                <p>計畫主持人</p>
+                            </div>
+                            <div class="input-item">
+                                <input type="text" placeholder="請輸入計畫主持人" name="principal_investigator" required>
+                            </div>
+                        </li>
+                        <li class="inpboxitem">
+                            <p>計畫地區</p>
+                            <div class="input-item">
+                                <select name="region" id="select-area" multiple="multiple">
+                                    <!-- <option value="" selected>請選擇計畫地區</option> -->
+                                    {% for i in city_list %}
+                                        <option>{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </li>
+                        <li class="inpboxitem">
+                            <div class="inptitle">
+                                <span class="redmark">*</span>
+                                <p>計畫起始時間</p>
+                            </div>
+                            <div class="input-item date-select">
+                                <input type="text" class="datepicker datepicker-start" type="text" value='{% now "o-m-d" %}' name="start_date" required >
+                                <a class="date-cal date-start">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+                                        <g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+                                            <g id="Group_686" data-name="Group 686">
+                                                <path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"/>
+                                                <path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"/>
+                                                <path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"/>
+                                                <path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"/>
+                                                <path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"/>
+                                                <path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"/>
+                                                <path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"/>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </a>
+                            </div>
+                        </li>
+                        <li class="inpboxitem">
+                            <div class="inptitle">
+                                <span class="redmark">*</span>
+                                <p>計畫結束時間</p>
+                            </div>
+                            <div class="input-item date-select">
+                                <input type="text" class="datepicker datepicker-end" placeholder="2023-01-01" type="text" value='{% now "o-m-d" %}' name="end_date" required>
+                                <a class="date-cal date-end">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+                                        <g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+                                            <g id="Group_686" data-name="Group 686">
+                                                <path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"/>
+                                                <path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"/>
+                                                <path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"/>
+                                                <path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"/>
+                                                <path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"/>
+                                                <path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"/>
+                                                <path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"/>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+    
+                    <!-- 計畫摘要 ＆ 備註 section -->
+                    <div class="inp2box text-area">
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>計畫摘要</p>
+                            </div>
+                            <textarea placeholder="請簡單描述計畫目的" name="description" id=""></textarea>
+                        </div>
+                        <div class="input-item">
+                            <div class="inptitle">
+                                <p>備註</p>
+                            </div>
+                            <textarea name="note" id="" ></textarea>
+                        </div>
                     </div>
                 </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">計畫簡稱：</div>
-                    <div class="col-sm-8 col-lg-4"><input type="text" class="form-control" style="width: 100%;" placeholder="請輸入計畫簡稱" name="short_title"></div>
-                    <div class="col-1 my-auto">
-                        <i class="fa fa-info-circle text-green" style="font-size: 1.4em;" data-bs-toggle="tooltip" data-bs-placement="right" title="計畫簡稱為做日後系統顯示之用，您可以輸入任何有助您辨別計畫的文字"></i>
-                    </div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">計畫關鍵字：</div>
-                    <div class="col-sm-8 col-lg-4"><input type="text" class="form-control" style="width: 100%;" placeholder="請輸入計畫關鍵字" name="keyword"></div>
-                    <div class="col-1 my-auto">
-                        <i class="fa fa-info-circle text-green" style="font-size: 1.4em;" data-bs-toggle="tooltip" data-bs-placement="right" title="請輸入與其他同類型計畫共有之文字，以利於同類型計畫搜尋篩選用，例如調查方式相同的多年期計畫因時空關係有不同計畫名稱時，即建議使用相同關鍵字"></i>
-                    </div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">委辦單位：</div>
-                    <div class="col-sm-8 col-lg-4"><input type="text" class="form-control" style="width: 100%;" placeholder="請輸入委辦單位" name="funding_agency"></div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">執行單位：</div>
-                    <div class="col-sm-8 col-lg-4"><input type="text" class="form-control" style="width: 100%;" placeholder="請輸入執行單位" name="executive_unit"></div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">計畫編號：</div>
-                    <div class="col-sm-8 col-lg-4"><input type="text" class="form-control" style="width: 100%;" placeholder="請輸入計畫編號" name="code"></div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end"><span class="required">*</span>計畫主持人：</div>
-                    <div class="col-sm-8 col-lg-4"><input type="text" class="form-control" style="width: 100%;" placeholder="請輸入計畫主持人" name="principal_investigator" required></div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end"><span class="required">*</span>計畫時間：</div>
-                    <div class="col-sm-8 col-lg-4 d-flex justify-content-between">
-                        <input type="text" class="datepicker form-control" style="width: 45%;" value='{% now "o-m-d" %}' name="start_date" required> 
-                        <span class="my-auto">至</span> 
-                        <input class="datepicker form-control" type="text" style="width: 45%;" value='{% now "o-m-d" %}' name="end_date" required> 
-                    </div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">計畫地區：</div>
-                    <div class="col-sm-8 col-lg-4">
-                        <select class="selectpicker form-control" title="請選擇計畫地區" multiple data-width="100%" data-style="btn-new" name="region">
-                        {% for i in city_list %}
-                        <option>{{ i }}</option>
-                        {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">計畫摘要：</div>
-                    <div class="col-sm-8 col-lg-4"><textarea style="width: 100%;" class="form-control" placeholder="請簡單描述計畫目的" name="description"></textarea></div>
-                </div>
-                <div class="row p-3">
-                    <div class="col-2 text-end">備註：</div>
-                    <div class="col-sm-8 col-lg-4"><textarea style="width: 100%;" class="form-control" placeholder="您可以輸入任何補註資料" name="note"></textarea></div>
-                </div>
+            </div>
+    
+            <div class="btn2-area">
+                <button class="btn-greeno" href="{% url 'project_overview' %}">
+                    取消
+                </button>
+                <a id="validateForm" class="btn-green">
+                    下一步
+                </a>
+            </div>
+        </div>    
+        
+        <!-- Switch page -->
+        <div id="second-page">
+            <div class="wbg-box marb_50">
+				<div class="create-newpj">
+					<h3 class="light-green">創用CC授權許可</h3>
+					<div class="ccinf">授權計畫內的詮釋資料、鑑定資訊與影像資訊讓其他遵守授權條款的用戶不必向您詢問許可，即能合法使用其中資料。「Camera Trap 監測資料管理平台」使用您的創用 CC 授權內容，來與像是全球生物多樣性資訊機構（GBIF），一個專門編輯發佈全球生物多樣化訊息之國際政府間組織如此般的資料合作者共享內容。
+						了解<a href="http://creativecommons.tw/" target="_blank">創用 CC 授權內容</a>。
+					</div>
+
+					<ul class="ccbox">
+						<li>
+							<div class="title-area">
+								詮釋資料
+							</div>
+							<div class="select-box metadata-select-box">
+								<!--選到給class now-->
+								<div class="item">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{%static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="interpretive_data_license" value="cc0" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{%static 'image/cc-0@2x.png'%}" alt="">
+									</div>
+									<p>無著作權 (CC0)</p>
+								</div>
+								<div class="item ">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{%static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="interpretive_data_license" value="by" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{%static 'image/cc-1@2x.png'%}" alt="">
+									</div>
+									<p>姓名標示</p>
+								</div>
+								<div class="item ">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{%static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="interpretive_data_license" value="by-nc" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{%static 'image/cc-2@2x.png'%}" alt="">
+									</div>
+									<p>姓名標示－非商業性</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<div class="title-area">
+								鑑定資訊
+							</div>
+							<div class="select-box identification-select-box">
+								<!--選到給class now-->
+								<div class="item">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{%static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="identification_information_license" value="by" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{%static 'image/cc-1@2x.png'%}" alt="">
+									</div>
+									<p>姓名標示</p>
+								</div>
+							</div>
+						</li>
+						<li>
+							<div class="title-area">
+								影像資料
+							</div>
+							<div class="select-box image-select-box">
+								<!--選到給class now-->
+								<div class="item">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{%static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="video_material_license" value="cc0" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{% static 'image/cc-0@2x.png'%}" alt="">
+									</div>
+									<p>無著作權 (CC0)</p>
+								</div>
+								<div class="item ">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{% static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="video_material_license" value="by" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{%static 'image/cc-1@2x.png'%}" alt="">
+									</div>
+									<p>姓名標示</p>
+								</div>
+								<div class="item ">
+									<label>
+                      <div class="cir-checkbox">
+                          <img class="coricon" src="{% static 'image/correct.svg'%}" alt="">
+                          <input type="radio" name="video_material_license" value="by-nc" />
+                      </div>
+                  </label>
+									<div class="ccimg">
+										<img src="{% static 'image/cc-2@2x.png'%}" alt="">
+									</div>
+									<p>姓名標示－非商業性</p>
+								</div>
+							</div>
+						</li>
+					</ul>
+
+					<div class="date-box">
+						<h3><span>*</span>公開日期</h3>
+						<div class="flex-box">
+							<div class="input-item date-select">
+								<input type="text" class="datepicker_publish" name="publish_date" value='{% now "o-m-d" %}'>
+								<a class="date-cal date-publish">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+										<g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+											<g id="Group_686" data-name="Group 686">
+												<path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"></path>
+												<path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"></path>
+												<path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"></path>
+												<path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"></path>
+												<path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"></path>
+												<path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"></path>
+												<path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"></path>
+											</g>
+										</g>
+									</svg>
+								</a>
+							</div>
+							<p>計畫內的詮釋資料將會直接公開，鑑定資訊、影像資料的公開日期之上限為計畫結束時間的5年內。</p>
+						</div>
+					</div>
+				</div>
+			</div>
+            <div class="btn2-area">
+                <button class="btn-greeno">
+                    取消
+                </button>
+                <a class="btn-green" id="submitForm">
+                    確認送出
+                </a>
             </div>
         </div>
-            <div class="row mt-3 px-0">
-                <div class="text-end px-0 mx-0">
-                    <a class="btn btn-outline-success" href="{% url 'project_overview' %}">取消</a>
-                    <a class="btn btn-orange" onClick="validateForm()">下一步</a>
-                    {% comment %} <a onClick="test()">test</a> {% endcomment %}
-                </div>
+    </form>
+</div>
+
+
+<!-- Old version UI -->
+<!-- <div class="container content">
+  <form id="createProjectForm" novalidate action="{% url 'create_project' %}" method="post">
+    {% csrf_token %}
+    <div class="row mb-10">
+      <h4 class="title-dark">新增計畫</h4>
+    </div>
+    <div id="first-page">
+      <div class="row">
+        <div class="bg-white shadow px-0 pb-5 mx-2">
+          <p class="backgroud-dark text-white fw-bold px-3 py-2">計畫基本資訊</p>
+          <div class="row p-3">
+            <div class="col-2 text-end"><span class="required">*</span>計畫名稱：</div>
+            <div class="col-sm-8 col-lg-4">
+              <input type="text" class="form-control w-100" name="name" placeholder="請輸入計畫名稱" required />
             </div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">計畫簡稱：</div>
+            <div class="col-sm-8 col-lg-4"><input type="text" class="form-control w-100" placeholder="請輸入計畫簡稱" name="short_title" /></div>
+            <div class="col-1 my-auto">
+              <span data-bs-toggle="tooltip" data-bs-placement="right" title="計畫簡稱為做日後系統顯示之用，您可以輸入任何有助您辨別計畫的文字">
+                <i class="fa fa-info-circle text-green f-14"></i>
+              </span>
+            </div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">計畫關鍵字：</div>
+            <div class="col-sm-8 col-lg-4"><input type="text" class="form-control w-100" placeholder="請輸入計畫關鍵字" name="keyword" /></div>
+            <div class="col-1 my-auto">
+              <span data-bs-toggle="tooltip" data-bs-placement="right" title="請輸入與其他同類型計畫共有之文字，以利於同類型計畫搜尋篩選用，例如調查方式相同的多年期計畫因時空關係有不同計畫名稱時，即建議使用相同關鍵字">
+                <i class="fa fa-info-circle text-green f-14"></i>
+              </span>
+            </div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">委辦單位：</div>
+            <div class="col-sm-8 col-lg-4"><input type="text" class="form-control w-100" placeholder="請輸入委辦單位" name="funding_agency" /></div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">執行單位：</div>
+            <div class="col-sm-8 col-lg-4"><input type="text" class="form-control w-100" placeholder="請輸入執行單位" name="executive_unit" /></div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">計畫編號：</div>
+            <div class="col-sm-8 col-lg-4"><input type="text" class="form-control w-100" placeholder="請輸入計畫編號" name="code" /></div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end"><span class="required">*</span>計畫主持人：</div>
+            <div class="col-sm-8 col-lg-4"><input type="text" class="form-control w-100" placeholder="請輸入計畫主持人" name="principal_investigator" required /></div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end"><span class="required">*</span>計畫時間：</div>
+            <div class="col-sm-8 col-lg-4 d-flex justify-content-between">
+              <input type="text" class="datepicker form-control w-45" value='{% now "o-m-d" %}' name="start_date" required />
+              <span class="my-auto">至</span>
+              <input class="datepicker form-control w-45" type="text" value='{% now "o-m-d" %}' name="end_date" required />
+            </div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">計畫地區：</div>
+            <div class="col-sm-8 col-lg-4">
+              <select class="selectpicker form-control" title="請選擇計畫地區" multiple data-width="100%" data-style="btn-new" name="region">
+                {% for i in city_list %}
+                <option>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">計畫摘要：</div>
+            <div class="col-sm-8 col-lg-4"><textarea class="form-control w-100" placeholder="請簡單描述計畫目的" name="description"></textarea></div>
+          </div>
+          <div class="row p-3">
+            <div class="col-2 text-end">備註：</div>
+            <div class="col-sm-8 col-lg-4"><textarea class="form-control w-100" placeholder="您可以輸入任何補註資料" name="note"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div class="row mt-3 px-0">
+        <div class="text-end px-0 mx-0">
+          <a class="btn btn-outline-success" href="{% url 'project_overview' %}">取消</a>
+          <a class="btn btn-orange" id="validateForm">下一步</a>
+          {% comment %} <a onClick="test()">test</a> {% endcomment %}
+        </div>
+      </div>
     </div>
     {% comment %} CHANGE PAGE HERE {% endcomment %}
     <div id="second-page">
-        <div class="row">
-            <div class="bg-white shadow px-0 pb-5 mx-2">
-                <p class="backgroud-dark text-white fw-bold px-3 py-2">創用CC授權許可</p>
-                <div class="row py-3">
-                    <div class="col-10 mx-auto">
-                        <p>
-                            授權計畫內的詮釋資料、鑑定資訊與影像資訊讓其他遵守授權條款的用戶不必向您詢問許可，即能合法使用其中資料。「Camera
-                            Trap 監測資料管理平台」使用您的創用 CC
-                            授權內容，來與像是全球生物多樣性資訊機構（GBIF），一個專門編輯發佈全球生物多樣化訊息之國際政府間組織如此般的資料合作者共享內容。
-                            了解<a href="http://creativecommons.tw/" target="_blank">創用 CC 授權內容</a>。
-                        </p>
-                        <br>
-                        <b>詮釋資料：</b>
-                        <ul class="list-unstyled">
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="interpretive_data_license" value="cc0" checked>
-                                <img src="{% static 'image/cc-0.png' %}" height="40px" srcset="{% static 'image/cc-0@2x.png' %}">
-                                無著作權 (CC0)
-                                </label>
-                            </li>
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="interpretive_data_license" value="by">
-                                <img src="{% static 'image/cc-1.png' %}" height="40px" srcset="{% static 'image/cc-1@2x.png' %}">
-                                姓名標示
-                                </label>
-                            </li>
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="interpretive_data_license" value="by-nc" >
-                                <img src="{% static 'image/cc-2.png' %}" height="40px" srcset="{% static 'image/cc-2@2x.png' %}">
-                                姓名標示－非商業性
-                                </label>
-                            </li>
-                        </ul>
-                        <b>鑑定資訊：</b>
-                        <ul class="list-unstyled">
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="identification_information_license" value="by" checked>
-                                <img src="{% static 'image/cc-1.png' %}" height="40px" srcset="{% static 'image/cc-1@2x.png' %}">
-                                姓名標示
-                                </label>
-                            </li>
-                        </ul>
-                        <b>影像資料：</b>
-                        <ul class="list-unstyled">
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="video_material_license" value="cc0" checked>
-                                <img src="{% static 'image/cc-0.png' %}" height="40px" srcset="{% static 'image/cc-0@2x.png' %}">
-                                無著作權 (CC0)
-                                </label>
-                            </li>
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="video_material_license" value="by">
-                                <img src="{% static 'image/cc-1.png' %}" height="40px" srcset="{% static 'image/cc-1@2x.png' %}">
-                                姓名標示
-                                </label>
-                            </li>
-                            <li class="py-3">
-                                <label class="form-check-label">             
-                                <input type="radio" name="video_material_license" value="by-nc" >
-                                <img src="{% static 'image/cc-2.png' %}" height="40px" srcset="{% static 'image/cc-2@2x.png' %}">
-                                姓名標示－非商業性
-                                </label>
-                            </li>
-                        </ul>
-                        <div class="row py-3">
-                            <div class="align-items-center d-flex flex-row col-sm-8 col-lg-6" style="display: inline">
-                                <div><span class="required">*</span><b>公開日期：</b></div><input type="text" class="datepicker_publish form-control" name="publish_date" style="width: 50%;" value='{% now "o-m-d" %}'>
-                            </div>
-                            <p class="text-gray fs-6 pt-1">計畫內的詮釋資料將會直接公開，鑑定資訊、影像資料的公開日期之上限為計畫結束時間的5年內。</p>
-                        </div>
-                    </div>
-                </div>    
+      <div class="row">
+        <div class="bg-white shadow px-0 pb-5 mx-2">
+          <p class="backgroud-dark text-white fw-bold px-3 py-2">創用CC授權許可</p>
+          <div class="row py-3">
+            <div class="col-10 mx-auto">
+              <p>授權計畫內的詮釋資料、鑑定資訊與影像資訊讓其他遵守授權條款的用戶不必向您詢問許可，即能合法使用其中資料。「Camera Trap 監測資料管理平台」使用您的創用 CC 授權內容，來與像是全球生物多樣性資訊機構（GBIF），一個專門編輯發佈全球生物多樣化訊息之國際政府間組織如此般的資料合作者共享內容。 了解<a href="http://creativecommons.tw/" class="link" target="_blank">創用 CC 授權內容</a>。</p>
+              <br />
+              <b>詮釋資料：</b>
+              <ul class="list-unstyled">
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="interpretive_data_license" value="cc0" checked />
+                    <img src="{% static 'image/cc-0.png' %}" height="40px" srcset="{% static 'image/cc-0@2x.png' %}" />
+                    無著作權 (CC0)
+                  </label>
+                </li>
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="interpretive_data_license" value="by" />
+                    <img src="{% static 'image/cc-1.png' %}" height="40px" srcset="{% static 'image/cc-1@2x.png' %}" />
+                    姓名標示
+                  </label>
+                </li>
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="interpretive_data_license" value="by-nc" />
+                    <img src="{% static 'image/cc-2.png' %}" height="40px" srcset="{% static 'image/cc-2@2x.png' %}" />
+                    姓名標示－非商業性
+                  </label>
+                </li>
+              </ul>
+              <b>鑑定資訊：</b>
+              <ul class="list-unstyled">
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="identification_information_license" value="by" checked />
+                    <img src="{% static 'image/cc-1.png' %}" height="40px" srcset="{% static 'image/cc-1@2x.png' %}" />
+                    姓名標示
+                  </label>
+                </li>
+              </ul>
+              <b>影像資料：</b>
+              <ul class="list-unstyled">
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="video_material_license" value="cc0" checked />
+                    <img src="{% static 'image/cc-0.png' %}" height="40px" srcset="{% static 'image/cc-0@2x.png' %}" />
+                    無著作權 (CC0)
+                  </label>
+                </li>
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="video_material_license" value="by" />
+                    <img src="{% static 'image/cc-1.png' %}" height="40px" srcset="{% static 'image/cc-1@2x.png' %}" />
+                    姓名標示
+                  </label>
+                </li>
+                <li class="py-3">
+                  <label class="form-check-label">
+                    <input type="radio" name="video_material_license" value="by-nc" />
+                    <img src="{% static 'image/cc-2.png' %}" height="40px" srcset="{% static 'image/cc-2@2x.png' %}" />
+                    姓名標示－非商業性
+                  </label>
+                </li>
+              </ul>
+              <div class="row py-3">
+                <div class="align-items-center d-flex flex-row col-sm-8 col-lg-6 d-inline">
+                  <div><span class="required">*</span><b>公開日期：</b></div>
+                  <input type="text" class="datepicker_publish form-control w-50" name="publish_date" value='{% now "o-m-d" %}' />
+                </div>
+                <p class="text-gray fs-6 pt-1">計畫內的詮釋資料將會直接公開，鑑定資訊、影像資料的公開日期之上限為計畫結束時間的5年內。</p>
+              </div>
             </div>
+          </div>
         </div>
-        <div class="row mt-3 px-0">
-            <div class="text-end px-0">
-                <a class="btn btn-orange" onClick="submitForm()">送出</a>
-            </div>
+      </div>
+      <div class="row mt-3 px-0">
+        <div class="text-end px-0">
+          <a class="btn btn-orange" id="submitForm">送出</a>
         </div>
+      </div>
     </div>
-</form>
+  </form> -->
 {% else %}
-<div class="container content">
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        您的權限不足
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <a class="btn btn-outline-success" href="{% url 'project_overview' %}">回上一頁</a>
-
+<div class="main-box">
+  <div class="main-title">
+    您的權限不足      
+  </div>		
+  <a class="return-btn" href="/"> < 返回 </a>
+</div>
 {% endif %}
 </div>
-{% endblock body %}
-
-{% block script %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
-<script>
-
-$(document).ready(function() {
-
-    $(".datepicker").datepicker({ 
-        dateFormat: "yy-mm-dd",         
-        });
-
-    $(".datepicker_publish").datepicker({ 
-        dateFormat: "yy-mm-dd", 
-        defaultDate: "+5y",
-        });
-  });
-
-function validateForm(){  
-      // name
-      let name = $('[name="name"]')
-      if (name.val()==''){
-       name.addClass("is-invalid").addClass("was-validated");
-      } else {
-        name.removeClass("is-invalid").removeClass("was-validated").removeAttr("id", "invalid");
-      }
-
-      // principal_investigator
-      let pi = $('[name="principal_investigator"]')
-        if (pi.val()==''){
-            pi.addClass("is-invalid").addClass("was-validated");
-        } else {
-            pi.removeClass("is-invalid").removeClass("was-validated").removeAttr("id", "invalid");
-        }
-
-      // start_date 
-      let start_date = $('[name="start_date"]');
-        if (start_date.val()==''){
-            start_date.addClass("is-invalid").addClass("was-validated");
-        } else {
-            try {
-                date = $.datepicker.parseDate('yy-mm-dd', start_date.val());
-                start_date.removeClass("is-invalid").removeClass("was-validated").removeAttr("id", "invalid");
-            } catch (error) {
-                start_date.addClass("is-invalid").addClass("was-validated");
-        }
-        }
-
-      // end_date
-      let end_date = $('[name="end_date"]');
-
-        if (end_date.val()==''){
-            end_date.addClass("is-invalid").addClass("was-validated");
-        } else {
-            try {
-                date = $.datepicker.parseDate('yy-mm-dd', end_date.val());
-                end_date.removeClass("is-invalid").removeClass("was-validated").removeAttr("id", "invalid");
-            } catch (error) {
-                end_date.addClass("is-invalid").addClass("was-validated");
-            }
-        }
-
-    if(!$('.is-invalid').length){
-        $('#first-page').hide();
-        $('#second-page').show();
-        window.location.hash = "#second-page"
-        window.location.href = "#second-page"
-    } else {
-        $('.is-invalid').first().attr('id', 'invalid');
-        window.location.href = "#invalid"
-        window.location.hash = "#invalid"
-    }
-  }
-
-
-    function submitForm (){
-         // publish_date
-
-        let check = []
-      let publish_date = $('[name="publish_date"]');
-
-        if (publish_date.val()==''){
-            publish_date.addClass("is-invalid").addClass("was-validated");
-            check.push(false)
-
-        } else {
-            try {
-                date = $.datepicker.parseDate('yy-mm-dd', publish_date.val());
-                publish_date.removeClass("is-invalid").removeClass("was-validated");
-            } catch (error) {
-                publish_date.addClass("is-invalid").addClass("was-validated");
-                check.push(false)
-            }
-        }
-
-    if(!$('.is-invalid').length){
-        $('#createProjectForm').submit()
-    } 
-    }
-  
-  </script>
+{% endblock body %} {% block script %}
+<script src="{% static 'js/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'js/create_project.js' %}"></script>
 {% endblock script %}
+</div>

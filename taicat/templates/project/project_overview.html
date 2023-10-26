@@ -1,377 +1,348 @@
-{% extends 'base/base.html' %}
+{% extends 'base/base.html' %} 
+{% load static %}
 {% block style %}
-    <style>
-        .clickable-row {
-            cursor: pointer;
-        }
+<link rel="stylesheet" href="{% static 'css/project_overview.css' %}">
+{% endblock style %} 
 
-        .table {
-            padding: 1% 0;
-        }
-          
-        .nav-link {
-            color: gray;
-        }
+{% block title %}計畫總覽 | {% endblock title %} 
 
-        .nav-link:hover {
-            color: lightgrey;
-        }
 
-        .page-item.active .page-link {
-            background-color: rgb(228, 224, 224) !important;
-            border: 1px solid rgb(228, 224, 224) ;
-        }
-        .page-link {
-            color: black !important;
-        }
-        
-        /* radio style */
-        input[type="radio"] {
-            display: none
-        }
-
-        label {
-            cursor: pointer
-        }
-    </style>
-{% endblock style %}
-{% block body %}
+{% block body %} 
 {% csrf_token %}
-<div class="container content">
-    <div class="row" style="margin-bottom: 10px">
-            <h4 class="title-dark p-0">計畫總覽</h4>
+
+
+<div class="main-box">
+  <div class="main-title pad-pj">
+    <div class="flex-boxleft">
+      <h2>計畫總覽</h2>
     </div>
-    <div class="row">
-        <div class="col-2 bg-white">
-            <div class="row">
-                    <div class="mt-3 d-flex justify-content-between">
-                        <p>篩選條件</p>
-                        <div>
-                        <button type="button" style="font-size: 14px" class="btn btn-orange py-0 px-1 select">篩選</button>
-                        <button type="button" style="font-size: 14px" class="btn btn-light border-secondary py-0 px-1 clear">清除</button>
-                        </div>
-                    </div>
+    {% if is_authorized_create %}
+    <div class="right-btnaera">
+      <a href="{% url 'create_project' %}" class="add-btn">
+        <svg class="plus" xmlns="http://www.w3.org/2000/svg" width="18.425" height="18.425" viewBox="0 0 18.425 18.425">
+          <g id="Group_688" data-name="Group 688" transform="translate(-1603.839 983.606) rotate(-45)">
+            <line id="Line_1" data-name="Line 1" x1="10.2" y2="10.2" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+            <line id="Line_2" data-name="Line 2" x2="10.2" y2="10.2" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+          </g>
+        </svg>
+        新增計畫
+      </a>
+    </div>
+    {% endif %}
+  </div>
 
-                <hr style='margin: auto; width: 90%'>
-                <p class="mt-3 mb-1">
-                    <strong>物種</strong> 
-                </p>
-                <ul id="species-list" style="list-style: none">
-                    <li class="public-species">       
-                            <label class="form-check-label">
-                            <i class="fas fa-check title-dark"></i>
-                            <input class="filter all publicproject" type="radio" name="species-filter" value="" checked>
-                            全部
-                            </label>
-                    </li>
-                    <li  class="my-species d-none">       
-                            <label class="form-check-label">
-                            <i class="fas fa-check title-dark"></i>
-                            <input class="filter all myproject" type="radio" name="species-filter" value="" checked>
-                            全部
-                    </label>
-                    </li>
-                    {% for i in public_species_data %}   
-                    <li class="public-species">
-                        <label class="form-check-label">
-                        <input class="filter publicproject" type="radio" group="species" name="species-filter" value="{{ i.1 }}">
-                            {{ i.1 }} ({{i.0}})
-                        </label>
-                    </li>
-                    {% endfor %}
-
-                    {% for i in my_species_data %}
-                    <li class="my-species d-none">
-                        <label class="form-check-label">
-                        <input class="filter myproject" type="radio" group="species" name="species-filter" value="{{ i.1 }}">
-                            {{ i.1 }} ({{i.0}})
-                        </label>
-                    </li>
-                    {% endfor %}
-                </ul>
+  <div class="pjflex-content">
+    <div class="left-selectlist">
+      <div class="opitem-btn">
+        篩<br/>選<br/>條<br/>件
+      </div>
+      <div class="topitem">
+        <h3 class="light-green">篩選條件</h3>
+        <div class="right-btn">
+          <button class="red" id="filterTableBySpecies">篩選</button>
+          <button id="resetTable">清除</button>
+        </div>
+      </div>
+      <div class="sscro-area">
+        <div class="item-set1">
+          <div class="settitle-box">
+            <h4>物種</h4>
+            <div class="arrup">
+              <img src="/static/image/arrup.svg" alt="">
             </div>
-        </div>
-        <div class="col-10 tab-area">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link active" id="publicproject-tab" data-bs-toggle="tab" data-bs-target="#publicproject" type="button" role="tab" aria-controls="publicproject" aria-selected="false">公開計畫</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="myproject-tab" data-bs-toggle="tab" data-bs-target="#myproject" type="button" role="tab" aria-controls="myproject" aria-selected="true">我的計畫</button>
-                </li>
-                {% if is_authorized_create %}
-                <li class="nav-item ms-auto">
-                    <a class="btn btn-orange" href="{% url 'create_project' %}">新增計畫</a>
-                </li>
-                {% endif %}
-            </ul>
-              <div class="tab-content" id="myTabContent" style="background-color: white; padding: 2%">
-                <div class="tab-pane fade" id="myproject" role="tabpanel" aria-labelledby="myproject-tab">
-                    {% if request.session.is_login == True %}
-                    <table class="table table-hover bg-white" id="myproject-table" style="width: 100%;">
-                        <thead>
-                        <tr>
-                            <td>ID</td>
-                            <td>計畫名稱</td>
-                            <td>計畫關鍵字</td>
-                            <td>起始年份</td>
-                            <td>委辦單位</td>
-                            <td>樣區數量</td>
-                            <td>相機位置數</td>
-                            <td>資料量</td>
-                        </tr>
-                        </thead>
-                        <tbody id="myproject-tbody">
-                        {% for tuples in my_project %}
-                            <tr class='clickable-row' data-href="{% url 'project_detail' tuples.0 %}">
-                                {% for t in tuples %}
-                                    {% if t == None or t == 'None' %}
-                                        <td></td>
-                                    {% else %}
-                                        <td>{{ t }}</td>
-                                    {% endif %}
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    請先登入後查看您的計畫
-                    {% endif %}
-
-                </div>
-                <div class="tab-pane fade show active" id="publicproject" role="tabpanel" aria-labelledby="publicproject-tab">
-                    <table class="table table-hover bg-white" id="publicproject-table" style="width: 100%;">
-                        <thead>
-                            <tr>
-                                <td>ID</td>
-                                <td>計畫名稱</td>
-                                <td>計畫關鍵字</td>
-                                <td>起始年份</td>
-                                <td>委辦單位</td>
-                                <td>樣區數量</td>
-                                <td>相機位置數</td>
-                                <td>資料量</td>
-                            </tr>
-                        </thead>
-                        <tbody id="publicproject-tbody">
-                        {% for tuples in public_project %}
-                            <tr class='clickable-row' data-href="{% url 'project_detail' tuples.0 %}">
-                                {% for t in tuples %}
-                                    {% if t == None or t == 'None' %}
-                                        <td></td>
-                                    {% else %}
-                                        <td>{{ t }}</td>
-                                    {% endif %}
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+          </div>
+          <ul class="check-list species-check-list">
+            <!---點選給li now-->
+            <li class="now filter all" data-table="public-species">
+              <div class="cir-checkbox">
+                <img class="coricon" src="/static/image/correct.svg">
               </div>
+              <p>全部</p>
+            </li>
+            <li class="now filter all d-none" data-table="my-species">
+              <div class="cir-checkbox">
+                <img class="coricon" src="/static/image/correct.svg">
+              </div>
+              <p>全部</p>
+            </li>
+            {% for i in public_species_data %}
+            <li class="now" data-table="public-species" data-species="{{ i.1 }}">
+              <div class="cir-checkbox">
+                <img class="coricon" src="/static/image/correct.svg">
+              </div>
+              <p>{{ i.1 }} ({{i.0}})</p>
+            </li>
+            {% endfor %} 
+
+            {% for i in my_species_data %}
+            <li class="now d-none" data-table="my-species" data-species="{{ i.1 }}">
+              <div class="cir-checkbox">
+                <img class="coricon" src="/static/image/correct.svg">
+              </div>
+              <p>{{ i.1 }} ({{i.0}})
+              </p>
+              <!--
+              <label class="form-check-label">
+                <i class="fas fa-check title-dark w-12"></i>
+                <input class="filter myproject" type="checkbox" group="species" name="species-filter" value="{{ i.1 }}" checked />
+                {{ i.1 }} ({{i.0}})
+              </label>-->
+            </li>
+            {% endfor %}
+
+            
+          </ul>
         </div>
+
+        <!--
+        <div class="item-other">
+          <div class="item1">
+            <h4>起始年份</h4>
+            <div class="input-item">
+              <select name="" id="">
+                <option value="">123</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        -->
+      </div>
     </div>
+    <div class="right-tablecont">
+      <div class="pj-alltable">
+        <div class="top-area">
+          <div class="search-box">
+            <div class="input-item">
+              <input type="text" name="project_keyword" placeholder="請輸入關鍵字">
+              <button class="searchicon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21.061" height="21.061" viewBox="0 0 21.061 21.061">
+                  <g id="Group_718" data-name="Group 718" transform="translate(-966.939 -1128)">
+                    <g id="Group_719" data-name="Group 719" transform="translate(968 1128)">
+                      <g id="Ellipse_5" data-name="Ellipse 5" transform="translate(2)" fill="none" stroke="#257455" stroke-width="1.5">
+                        <circle cx="9" cy="9" r="9" stroke="none"/>
+                        <circle cx="9" cy="9" r="8.25" fill="none"/>
+                      </g>
+                      <line id="Line_5" data-name="Line 5" x1="5" y2="5" transform="translate(0 15)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
+                    </g>
+                  </g>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <ul class="pj-tab">
+            <!--目前選項給class now-->
+            <li class="now" data-table="publicproject">公開計畫</li>
+            <li data-table="myproject">我的計畫</li>
+          </ul>
+        </div>
+        <div class="cont-area">
+          <div class="ov-scroll">
+            <table class="pjtable-styel" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td class="nth1">
+                    <div class="flex-box">
+                      <p>計畫名稱</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="name" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="name"  data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="nth2">
+                    <div class="flex-box">
+                      <p>計畫關鍵字</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="keyword" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="keyword" data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="nth3">
+                    <div class="flex-box">
+                      <p>起始年份</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="start_year" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="start_year" data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="nth4">
+                    <div class="flex-box">
+                      <p>委辦單位</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="funding_agency" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="funding_agency" data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="nth5">
+                    <div class="flex-box">
+                      <p>樣區數量</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="num_studyarea" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="num_studyarea" data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="nth6">
+                    <div class="flex-box">
+                      <p>相機位置數</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="num_deployment" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="num_deployment" data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                  <td class="nth7">
+                    <div class="flex-box">
+                      <p>資料量</p>
+                      <svg class="selectarr" xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+                        <g data-name="Group 806" transform="translate(-604 -352)">
+                          <path class="upar1" data-order="num_data" data-name="Polygon 29" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(604 352)" fill="#59ae68" opacity="0.996"/>
+                          <path class="dwar1" data-order="num_data" data-name="Polygon 30" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(615 371) rotate(180)" fill="#59ae68" opacity="0.996"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </td>
+                </tr>
+                  {% for tuples in public_project %}
+                  <tr class="clickable-row publicproject-rows" data-href="{% url 'project_info' tuples.0 %}">
+                    {% for t in tuples %} 
+                    {% if not forloop.first %}
+                      <td>{{ t|default_if_none:'' }}</td>
+                      {% endif %}
+                      {% endfor %}
+                  </tr>
+                  {% endfor %}
+                  <!--
+                  {% for tuples in my_project %}
+                  <tr class="clickable-row myproject-rows d-none" data-href="{% url 'project_info' tuples.0 %}">
+                    {% for t in tuples %} 
+                        {% if not forloop.first %}
+                          <td>{{ t|default_if_none:'' }}</td>
+                        {% endif %}
+                      {% endfor %}
+                  </tr>
+                  {% endfor %}-->
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-inf" data-table="public-page">
+        <div class="leftbox">
+          <p>正在檢視第 <span class="show-start">{% if public_total >= 1  %}1{% else %}0{% endif %}</span> 至 <span class="show-end">{% if public_total >= 10  %}10{% else %}{{ public_total }}{% endif %}</span> 筆，總共 <span class="show-total">{{ public_total }}</span> 筆</p>
+          <div class="evpage">
+            <p>每頁顯示</p>
+            <div class="input-item">
+              <select name="limit">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+            <p>筆</p>
+          </div>
+        </div>
+
+        <div class="page-num d-none">
+            <a class="first_page num changePage {% if public_total_page <= 1 %} d-none {% endif %}" data-page="1">1</a>
+            <a class="back pt-none" data-page="">
+              <svg xmlns="http://www.w3.org/2000/svg" width="9.187" height="17.053" viewBox="0 0 9.187 17.053">
+                <g id="pre" transform="translate(111.483 17.054) rotate(180)">
+                  <g id="Group_17" data-name="Group 17" transform="translate(102.297 0)">
+                    <path id="Path_59" data-name="Path 59" d="M111.291,8.059,103.417.185a.656.656,0,0,0-.928.928L109.9,8.523l-7.411,7.411a.656.656,0,0,0,.928.928l7.874-7.874A.656.656,0,0,0,111.291,8.059Z" transform="translate(-102.297 0)" fill="#529a81"/>
+                  </g>
+                </g>
+              </svg>
+              <p>上一頁</p>
+            </a>
+            <!--目前頁面給 now-->
+            {% for p in public_page_list %}
+                <a class="middle_page num {% if p == 1 %} now {% endif %} changePage" data-page="{{ p }}">{{ p }}</a>
+            {% endfor %}
+            <a class="next {% if 2 in page_list %} changePage {% else %} pt-none {% endif %}" data-page="2">
+              <p>下一頁</p>
+              <svg xmlns="http://www.w3.org/2000/svg" width="9.187" height="17.053" viewBox="0 0 9.187 17.053">
+                <g id="next" transform="translate(-102.297 0)">
+                  <g id="Group_17" data-name="Group 17" transform="translate(102.297 0)">
+                    <path id="Path_59" data-name="Path 59" d="M111.291,8.059,103.417.185a.656.656,0,0,0-.928.928L109.9,8.523l-7.411,7.411a.656.656,0,0,0,.928.928l7.874-7.874A.656.656,0,0,0,111.291,8.059Z" transform="translate(-102.297 0)" fill="#529a81"/>
+                  </g>
+                </g>
+              </svg>            
+            </a>
+            <a class="final_page num changePage {% if public_total_page <= 1 %} d-none {% endif %}" data-page="{{ public_total_page }}">{{ public_total_page }}</a>
+        </div>
+
+      </div>
+
+
+
+      <div class="page-inf d-none" data-table="my-page">
+        <div class="leftbox">
+          <p>正在檢視第 <span class="show-start">0</span> 至 <span class="show-end">0</span> 筆，總共 <span class="show-total">0</span> 筆</p>
+          <div class="evpage">
+            <p>每頁顯示</p>
+            <div class="input-item">
+              <select name="limit">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+            <p>筆</p>
+          </div>
+        </div>
+
+        <div class="page-num d-none">
+          <a class="first_page num changePage" data-page="1">1</a>
+          <a class="back changePage" data-page="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="9.187" height="17.053" viewBox="0 0 9.187 17.053">
+              <g id="pre" transform="translate(111.483 17.054) rotate(180)">
+                <g id="Group_17" data-name="Group 17" transform="translate(102.297 0)">
+                  <path id="Path_59" data-name="Path 59" d="M111.291,8.059,103.417.185a.656.656,0,0,0-.928.928L109.9,8.523l-7.411,7.411a.656.656,0,0,0,.928.928l7.874-7.874A.656.656,0,0,0,111.291,8.059Z" transform="translate(-102.297 0)" fill="#529a81"/>
+                </g>
+              </g>
+            </svg>
+            <p>上一頁</p>
+          </a>
+          <a class="next changePage" data-page="">
+            <p>下一頁</p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="9.187" height="17.053" viewBox="0 0 9.187 17.053">
+              <g id="next" transform="translate(-102.297 0)">
+                <g id="Group_17" data-name="Group 17" transform="translate(102.297 0)">
+                  <path id="Path_59" data-name="Path 59" d="M111.291,8.059,103.417.185a.656.656,0,0,0-.928.928L109.9,8.523l-7.411,7.411a.656.656,0,0,0,.928.928l7.874-7.874A.656.656,0,0,0,111.291,8.059Z" transform="translate(-102.297 0)" fill="#529a81"/>
+                </g>
+              </g>
+            </svg>
+          </a>
+          <a class="final_page num changePage" data-page=""></a>
+        </div>
+
+      </div>
+
     </div>
-{% endblock body %} {% block script %}
-    <script>
-        var $crf_token = $('[name="csrfmiddlewaretoken"]').attr('value');
+  </div>
 
-        $(function () {
+</div>
 
-            // speices filter list
-            $('#publicproject-tab').on('click', function(){
-                $('.public-species').removeClass('d-none')
-                $('.my-species').addClass('d-none')
-            })
 
-            $('#myproject-tab').on('click', function(){
-                $('.my-species').removeClass('d-none')
-                $('.public-species').addClass('d-none')
-            })
 
-            // clickable datatable
-            $("#myproject-table").on("click", ".clickable-row", function(){
-                window.location = $(this).data("href");            
-                });
-
-            $("#publicproject-table").on("click", ".clickable-row", function(){
-                window.location = $(this).data("href");
-            });
-
-            // filter data by species
-            $(".select").on("click", function(){
-                // show loading
-                $('.tab-area').addClass('loading');
-                // current table
-                let table_id = $('.col-10 .active').attr('aria-controls')
-                let check_list = $(`[name=species-filter].${table_id}:checked`);
-                let speciesArray = [];
-                check_list.each(function(){
-                    speciesArray.push($(this).val()); 
-                });
-                if (speciesArray.length){
-                    $.ajax({
-                        type: 'POST',
-                        url: "{% url 'update_datatable' %}",
-                        data: {'table_id': table_id, 'species': speciesArray},
-                        headers:{"X-CSRFToken": $crf_token},
-                        success: function (response) {
-                            $('.tab-area').removeClass('loading');
-                            // reset table
-                            $('#'+table_id+'-table').DataTable().destroy()
-                            $('#'+table_id+'-tbody').html('')
-                            let i;
-                            for (i = 0; i < response.length; i++) {
-                                // keyword & funding agency
-                                if (response[i][2] == 'None' | response[i][2] == null){
-                                    response[i][2] = ''
-                                }
-
-                                if (response[i][4] == 'None' | response[i][2] == null){
-                                    response[i][4] = ''
-                                }
-
-                            $('#'+table_id+'-tbody').append(`
-                                <tr class='clickable-row' data-href="details/${response[i][0]}/">
-                                    <td>${response[i][0]}</td>
-                                    <td>${response[i][1]}</td>
-                                    <td>${response[i][2]}</td>
-                                    <td>${response[i][3]}</td>
-                                    <td>${response[i][4]}</td>
-                                    <td>${response[i][5]}</td>
-                                    <td>${response[i][6]}</td>
-                                    <td>${response[i][7]}</td>
-                                </tr>`)
-                            }
-                            $('#'+table_id+'-table').DataTable({"language": language_settings, columnDefs: column_defs, order: [[ 3, "desc" ]]});
-
-                        },
-                    })
-                }
-            })
-
-        });
-
-        $('.clear').on('click', function(){
-            // reset table
-            
-           $('#myproject-table').DataTable().destroy();
-           $('#publicproject-table').DataTable().destroy();
-
-            $('#myproject-tbody').html(
-                `{% for tuples in my_project %}
-                    <tr class='clickable-row' data-href="{% url 'project_detail' tuples.0 %}">
-                        {% for t in tuples %}
-                            {% if t == None or t == 'None' %}
-                                <td></td>
-                            {% else %}
-                                <td>{{ t }}</td>
-                            {% endif %}
-                        {% endfor %}
-                    </tr>
-                {% endfor %}`
-            )
-
-            $('#publicproject-tbody').html(
-                `{% for tuples in public_project %}
-                    <tr class='clickable-row' data-href="{% url 'project_detail' tuples.0 %}">
-                        {% for t in tuples %}
-                            {% if t == None or t == 'None' %}
-                                <td></td>
-                            {% else %}
-                                <td>{{ t }}</td>
-                            {% endif %}
-                        {% endfor %}
-                    </tr>
-                {% endfor %}`
-            )
-            
-
-            $('#myproject-table').DataTable({
-            language: language_settings,                       
-            columnDefs: column_defs,
-            fixedColumns: true,
-            order: [[ 3, "desc" ]]
-        })
-            $('#publicproject-table').DataTable({
-            language: language_settings,                       
-            columnDefs: column_defs,
-            fixedColumns: true,
-            order: [[ 3, "desc" ]]
-        })
-            
-            // filter
-            let table_id = $('.col-10 .active').attr('aria-controls')
-            if (table_id == 'myproject'){
-                $('.my-species').removeClass('d-none')
-                $('.public-species').addClass('d-none')
-            } else {
-                $('.my-species').addClass('d-none')
-                $('.public-species').removeClass('d-none')
-            }
-
-            // reset radio
-            $('input[type=radio]').prop('checked', false);
-            $('input[type=radio].all').prop('checked', true);
-
-            // radio
-            $('.fa-check').remove()
-            $('<i class="fas fa-check title-dark"></i>').insertBefore($("input[type=radio].all"))
-        })
-
-        // datatable
-        let language_settings = {
-            "decimal":        "",
-            "emptyTable":     "查無資料",
-            "info":           "共 _TOTAL_ 筆",
-            "infoEmpty":      "共 0 筆",
-            "infoFiltered":   "",
-            "infoPostFix":    "",
-            "thousands":      ",",
-            "lengthMenu":     "每頁顯示 _MENU_ 筆",
-            "loadingRecords": "載入中...",
-            "processing":     "處理中...",
-            "search":         "查詢🔍",
-            "zeroRecords":    "查無符合資料",
-            "paginate": {
-                "next":       "下一頁",
-                "previous":   "上一頁"
-            }
-        };
-
-        let column_defs = [
-                      { visible: false, targets: 0 },       
-                      { width: "33%", targets: 1 },       
-                      { width: "12%", targets: 2 },
-                      { width: "10%", targets: 3 },
-                      { width: "15%", targets: 4 },
-                      { width: "10%", targets: 5 },
-                      { width: "10%", targets: 6 },
-                      { width: "10%", targets: 7 },
-                      ]
-
-        let myproject_table = $('#myproject-table').DataTable({
-            language: language_settings,                       
-            columnDefs: column_defs,
-            fixedColumns: true,
-            order: [[ 3, "desc" ]]
-        });
-
-        let publicproject_table = $('#publicproject-table').DataTable({
-            language: language_settings,                       
-            columnDefs: column_defs,
-            fixedColumns: true,
-            order: [[ 3, "desc" ]]
-        });
-
-    // radio style
-    $("input[type=radio]").click( function () {
-        let group = $(this).attr('name')
-        let table_id = $('.col-10 .active').attr('aria-controls')
-        $(`input[name=${group}].${table_id}`).parent('label').children('i').remove()
-        $('<i class="fas fa-check title-dark"></i>').insertBefore(this);
-    });
-
-    </script>
+{% endblock body %} 
+{% block script %}
+<script src="{% static 'js/project_overview.js' %}"></script>
 {% endblock script %}

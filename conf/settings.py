@@ -13,17 +13,21 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import environ
 import os
-from django.contrib.messages import constants as messages
 
 
-# for bootstrap alert
-MESSAGE_TAGS = {
-    messages.DEBUG: 'alert-secondary',
-    messages.INFO: 'alert-info',
-    messages.SUCCESS: 'alert-success',
-    messages.WARNING: 'alert-warning',
-    messages.ERROR: 'alert-danger',
-}
+# from django.contrib.messages import constants as messages
+
+
+# # for bootstrap alert
+
+# MESSAGE_TAGS = {
+#     messages.DEBUG: 'alert-secondary',
+#     messages.INFO: 'alert-info',
+#     messages.SUCCESS: 'alert-success',
+#     messages.WARNING: 'alert-warning',
+#     messages.ERROR: 'alert-danger',
+# }
+
 
 # Build paths inside the taicat like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,11 +35,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Build .env to locate private settings
 # https://pypi.org/project/python-environ/
 env = environ.Env(DEBUG=(bool, False))
+
 config_dir = os.path.join(BASE_DIR, 'conf')
 environ.Env.read_env(os.path.join(config_dir, '.env'))
 
 # current mode (development/production)
 ENV = env('ENV', default='dev')
+assert ENV in ['dev', 'test', 'prod', 'stag']
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -60,9 +66,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
 ]
 
 MIDDLEWARE = [
+    'csp.middleware.CSPMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -73,6 +81,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'conf.urls'
+
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 TEMPLATES = [
     {
@@ -156,6 +167,14 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         },
         "KEY_PREFIX": "basdb"
+    },
+    'file': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/bucket/cache-files',
+        'TIMEOUT': None,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000
+        }
     }
 }
 
@@ -175,6 +194,7 @@ AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='')
 AWS_SES_REGION_NAME = env('AWS_SES_REGION_NAME', default='')
 AWS_SES_REGION_ENDPOINT = env('AWS_SES_REGION_ENDPOINT', default='')
+AWS_S3_BUCKET = env('AWS_S3_BUCKET', default='')
 
 CT_SERVICE_EMAIL = env('CT_SERVICE_EMAIL', default='')
 CT_BCC_EMAIL_LIST = env('CT_BCC_EMAIL_LIST', default='')
@@ -182,3 +202,121 @@ CT_BCC_EMAIL_LIST = env('CT_BCC_EMAIL_LIST', default='')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = env('MEDIA_ROOT')
+
+
+ORCID_CLIENT_ID = env('ORCID_CLIENT_ID')
+ORCID_CLIENT_SECRET = env('ORCID_CLIENT_SECRET')
+
+# Content Security Policy 
+CSP_DEFAULT_SRC = ("'self'", "https://www.google.com/recpatcha/", "https://www.google.com/") 
+CSP_STYLE_SRC = ["'self'","https://cdn.datatables.net","https://*.fontawesome.com","https://*.highcharts.com","https://unpkg.com/","https://fonts.googleapis.com","http://www.w3.org","https://cdnjs.cloudflare.com"] #  "'unsafe-inline'"
+CSP_IMG_SRC = ("'self'","https://*.highcharts.com", "https://*.fontawesome.com", "data: http://www.w3.org", 'https://*.tile.osm.org/',"https://*.s3.ap-northeast-1.amazonaws.com/","https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/") 
+CSP_MEDIA_SRC = ("'self'","https://*.s3.ap-northeast-1.amazonaws.com/","https://d3gg2vsgjlos1e.cloudfront.net/") 
+CSP_FONT_SRC = ("'self'", "https://*.fontawesome.com","https://fonts.googleapis.com","https://fonts.gstatic.com" ) 
+
+CSP_SCRIPT_SRC = ["'self'", "https://cdnjs.cloudflare.com",
+    "https://fonts.googleapis.com",
+    "https://code.jquery.com",
+    "https://cdn.datatables.net",
+    "https://*.highcharts.com",
+    "https://*.fontawesome.com",
+    "https://unpkg.com/", "data: http://www.w3.org", "https://www.google.com", "https://www.gstatic.com"
+]
+
+CSP_CONNECT_SRC = ("'self'","https://*.fontawesome.com",)
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5000000 #20000000 change to 5MB (9999 image post need almost 1MB)
+
+# via: https://docs.djangoproject.com/en/4.1/topics/logging/
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            #'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+            'format': '{levelname} {asctime} {module}.{funcName} #{lineno} {process} {thread} {message}',
+        },
+        'main': {
+            'format': '{levelname} {asctime} {module}.{funcName} #{lineno} {message}',
+            'style': '{',
+        },
+        'django.server': {
+            '()': 'django.utils.log.ServerFormatter',
+            'format': '[{server_time}] {message}',
+            'style': '{',
+        }
+    },
+    'filters': {
+        #'special': {
+        #    '()': 'project.logging.SpecialFilter',
+        #    'foo': 'bar',
+        #},
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'main'
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_true']
+        },
+        'file': {
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': '/var/log/ct-web/ct-web.log',
+            'when': 'W3',
+            'backupCount': 7,
+            'formatter': 'main'
+        },
+        'django.server': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'django.server',
+        },
+        'null': {
+            'level': 'DEBUG',
+            'class': 'logging.NullHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'django.utils.autoreload': {
+            'level': 'INFO',
+        },
+        # 'django.server': {
+        #     'handlers': ['django.server'],
+        #     'propagate': False,
+        #     'level': 'DEBUG',
+        # },
+        # 'django.request': {
+        #     'handlers': ['mail_admins'],
+        #     'level': 'ERROR',
+        #     'propagate': False,
+        # },
+        'django.db.backends': {
+            'handlers': ['null'],  # Quiet by default!
+            'propagate': False,
+            'level': 'DEBUG',
+        },
+        #'myproject.custom': {
+        #    'handlers': ['console', 'mail_admins'],
+        #    'level': 'INFO',
+        #    'filters': ['special']
+        #}
+    }
+}
+
+CSRF_TRUSTED_ORIGINS = ['https://dbtest.camera-trap.tw', 'https://camera-trap.tw']

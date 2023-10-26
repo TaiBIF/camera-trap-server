@@ -1,989 +1,642 @@
-{% extends 'base/base.html' %}
-{% block title %}
-{{ project_info.0 }} | {{ block.super }}
-{% endblock title %}
-{% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/css/bootstrap-select.min.css">
-{% load static %}
-<style>
-    /* datatable loader */
-    .dataTables_wrapper .dataTables_processing {
-        content: '';
-        position: absolute;
-        width: 100%;
-        min-height: 150px;
-        height: 150px;
-        left: 0;
-        right: 0;
-        margin: auto;
-        background: url("{% static  'icon/Leaves-1.8s-200px.gif' %}") no-repeat center;
-        background-size: 150px;
-        z-index: 1099;
-        border: 0
-    }
-
-    .dataTables_wrapper .dataTables_processing:after {
-        content:'處理中';
-        position: absolute;
-        top: 160px;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        color: rgb(37, 116, 85);
-        width: 100px;
-        height: 20px;
-        margin: auto;
-        z-index: 1199;
-        text-align: center;
-    }
-
-    /* datatable page button */
-    .page-item.active .page-link {
-        background-color: rgb(228, 224, 224) !important;
-        border: 1px solid rgb(228, 224, 224) ;
-    }
-    .page-link {
-        color: black !important;
-    }
-
-    .dataTables_wrapper {
-        background-color: white
-    }
-
-    #img-table {
-        margin: 0 auto
-    }
-
-    #img-table_wrapper {
-        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-    }
-
-    .oversight:hover {
-        color: lightgrey;
-    }
-
-    .back:hover {
-        color: lightgrey;
-    }
-
-    .btn-new {
-        background-color: white;
-        border: 1px solid #cccccc;
-        color: black !important;
-    }
-
-    .ui-autocomplete { 
-        z-index:2147483647; 
-        max-height: 200px;
-        overflow-y: auto;
-        /* prevent horizontal scrollbar */
-        overflow-x: hidden;
-        /* add padding to account for vertical scrollbar */
-        padding-right: 20px;
-    }
-
-    /* radio style */
-    input[type="radio"] {
-        display: none
-    }
-
-    label {
-        cursor: pointer
-    }
-
-    /* window size */
-
-    .header {
-        height: 70px
-    }
-
-    .remain.col-2{
-        overflow-y: scroll;
-        height:calc(100vh - 126px);
-        background-color: yellow;
-        }
+{% extends 'base/base.html' %} {% load tag_library %}
 
 
-    .remain.col-10{
-        position: relative;
-        height:calc(100vh - 126px);
-    }
 
-    footer {
-        display: none
-    }
-    
-    /* studyarea */
-    .studyarea-list-area ul {
-        padding: 0;
-        list-style: none;
-    }
+{% block head %} {% load static %}
 
-   .studyarea-list-area li {
-        padding: 15px 0 ;
-        cursor: pointer
-    }
+<link rel=stylesheet type="text/css" href="/static/css/select2.min.css">
+{% comment %} <script src="/static/js/select2.min.js"></script> {% endcomment %}
+<script src="/static/js/select2/select2.min.js"></script>
+<script src="/static/js/select2/i18n/zh-TW.js"></script>
 
-    /* sub studyarea */
-    .collapse > li {
-        margin-left: 10%
-    }
+{% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/standalone/selectize.js" integrity="sha512-pF+DNRwavWMukUv/LyzDyDMn8U2uvqYQdJN0Zvilr6DDo/56xPDZdDoyPDYZRSL4aOKO/FGKXTpzDyQJ8je8Qw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/css/selectize.bootstrap4.min.css" integrity="sha512-MMojOrCQrqLg4Iarid2YMYyZ7pzjPeXKRvhW9nZqLo6kPBBTuvNET9DBVWptAo/Q20Fy11EIHM5ig4WlIrJfQw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    .collapse-s > li {
-        margin-left: 20%
-    }
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="{% static 'js/datatable-settings.js' %}"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css" />
+ {% endcomment %}
+<link rel="stylesheet" href="{% static 'css/project_detail.css' %}" />
+<link rel="stylesheet" href="{% static 'css/air-datepicker.css' %}">
 
-    /* font small */
-    .font-sm {
-        font-size: 15px
-    }
+{% endblock head %} 
 
-</style>
-{% endblock head %}
+{% block title %}{{ project_info.name }} | {% endblock title %} 
+
+{% block pop %}
+<div class="pop-box remove-pop d-none">
+    <div class="center-box">
+        <div class="wbox">
+            <div class="xx">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                        <g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+                            <circle cx="20" cy="20" r="20" stroke="none"/>
+                            <circle cx="20" cy="20" r="19" fill="none"/>
+                        </g>
+                        <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                            <line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                            <line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+            <div class="contentbox">
+                <p class="marb_20">
+                    確定刪除？
+                </p>
+                <div class="btn-center">
+                    <button class="btn-green calcel-remove">
+                        取消
+                    </button>
+                    <button class="btn-red" id="deleteData">
+                        刪除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--下載跳匡-->
+<div class="pop-box down-pop d-none" id="downloadModal">
+	{% csrf_token %}
+	<div class="center-box">
+		<div class="wbox">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+			<div class="titlebox">
+				下載篩選資料
+			</div>
+			<div class="contentbox">
+				<p class="marb_20">
+					檔案為離線產生，處理完成後，系統會寄下載資訊到您輸入的電子郵件信箱。如未收到信件，請檢查您的郵件設定，如仍未收到信件，請聯絡我們。
+				</p>
+				<div class="input-item d-flex jc-start-ai-center">
+					<input class="w-80" type="text" id="download-email" placeholder="請輸入您的電子郵件"/>
+					<svg id="email-check" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="lightgrey" class="bi bi-check my-auto" viewBox="0 0 16 16">
+						<path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+					</svg>
+				</div>
+				<div class="btn-center">
+					<button class="btn-green" id="canceldownload">
+						取消
+					</button>
+					<button class="btn-green download" disabled>
+						確認送出
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+	
+<!--詳細＋編輯跳匡 打開隱藏背後卷軸-->
+<div class="pop-box photode-pop d-none" id="editModal">
+	<div class="center-box photocontent edit-content">
+		<div class="photo-debox ">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+			<div class="left-photobox" id="modal-text">
+				<button class="arl">
+					<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+						<g id="Group_798" data-name="Group 798" transform="translate(-380 -695)">
+							<g id="Ellipse_2969" data-name="Ellipse 2969" transform="translate(380 695)" fill="#fff" stroke="#257455" stroke-width="1">
+								<circle cx="20" cy="20" r="20" stroke="none"/>
+								<circle cx="20" cy="20" r="19.5" fill="none"/>
+							</g>
+							<g id="Group_795" data-name="Group 795" transform="translate(397 708)">
+								<line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+								<line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							</g>
+						</g>
+					</svg>
+				</button>
+				<button class="arr">
+					<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+						<g id="Group_797" data-name="Group 797" transform="translate(-890 -690)">
+							<g id="Ellipse_2970" data-name="Ellipse 2970" transform="translate(890 690)" fill="#fff" stroke="#257455" stroke-width="1">
+								<circle cx="20" cy="20" r="20" stroke="none"/>
+								<circle cx="20" cy="20" r="19.5" fill="none"/>
+							</g>
+							<g id="Group_796" data-name="Group 796" transform="translate(-247.774 -982.049)">
+								<line id="Line_6" data-name="Line 6" x2="6.549" y2="6.549" transform="translate(1154.5 1685.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+								<line id="Line_7" data-name="Line 7" y1="6.549" x2="6.549" transform="translate(1154.5 1692.049)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							</g>
+						</g>
+					</svg>
+				</button>
+				
+				<div class="img-all">
+					<a class="download-link" href="">
+						<button class="image-download-btn">
+							<svg xmlns="http://www.w3.org/2000/svg" width="18.808" height="17.276" viewBox="0 0 18.808 17.276">
+								<g id="Group_752" data-name="Group 752" transform="translate(0 0)">
+									<path class="download-icon" id="Path_10218" data-name="Path 10218" d="M9.386,174.34H2.506a2.36,2.36,0,0,1-2.5-2.5c0-1,0-2,0-2.994a.78.78,0,0,1,1.539-.187,1.365,1.365,0,0,1,.024.316c0,.973,0,1.947,0,2.92a.792.792,0,0,0,.862.873q6.979,0,13.957,0a.786.786,0,0,0,.851-.858c0-.99,0-1.979,0-2.969a.788.788,0,1,1,1.566-.011c0,1,0,2,0,2.994a2.347,2.347,0,0,1-2.416,2.414q-3.5.006-7,0" transform="translate(0.001 -157.064)" fill="#257455"/>
+									<path class="download-icon" id="Path_10219" data-name="Path 10219" d="M76.534,11.7v-.346q0-5.212,0-10.425a1.374,1.374,0,0,1,.043-.386A.767.767,0,0,1,77.41.006.8.8,0,0,1,78.1.7,2.786,2.786,0,0,1,78.1,1q0,5.2,0,10.4v.316c.38-.3.722-.572,1.063-.845q.794-.635,1.585-1.272a.784.784,0,1,1,.989,1.211q-1.936,1.559-3.879,3.11a.78.78,0,0,1-1.09-.007q-1.894-1.514-3.784-3.033a.78.78,0,1,1,.965-1.226c.788.622,1.57,1.253,2.354,1.88.062.049.126.1.23.174" transform="translate(-67.914 -0.001)" fill="#257455"/>
+								</g>
+							</svg>
+							下載影像
+						</button>
+					</a>
+					<div class="item" id="edit-image"></div>
+				</div>
+			</div>
+			<div class="right-form">
+				<form novalidate action="{% url 'edit_image' pk %}" method="post" autocomplete="off" id="editForm">
+					{% csrf_token %}
+				<div class="top-infbox">
+					<div class="itembox">
+						<h3>檔名</h3>
+						<p id="edit-filename"></p>
+					</div>
+					<div class="itembox">
+						<h3>日期時間</h3>
+						<p id="edit-datetime"></p>
+					</div>
+				</div>
+				<div class="form-area">
+					<div class="input-item">
+						<p class="title">計畫</p>
+						<div class="autocomplete">
+							<input id="edit-project_id" type="hidden" name="project_id" />
+							<input  id="edit-project" type="text" />
+						</div>
+						<div class="notice d-none">
+							必填欄位
+						</div>
+					</div>
+					<div class="item-2">
+						<div class="input-item">
+							<p class="title">樣區</p>
+							<div class="autocomplete">
+								<input id="edit-studyarea_id" type="hidden" name="studyarea_id" />
+								<input  id="edit-studyarea" type="text" />
+							</div>
+							<div class="notice d-none">
+								必填欄位
+							</div>
+						</div>
+						<div class="input-item">
+							<p class="title">相機位置</p>
+							<div class="autocomplete">
+								<input  id="edit-deployment" type="text" />
+								<input id="edit-deployment_id" type="hidden" name="deployment_id" />
+							</div>
+							<div class="notice d-none">
+								必填欄位
+							</div>
+						</div>
+					</div>
+
+					<div class="item-2">
+						<div class="input-item">
+							<p class="title">物種</p>
+							<div class="autocomplete">
+								<input  id="edit-species" type="text" name="species" />
+							</div>
+							<div class="notice d-none">
+								必填欄位
+							</div>
+						</div>
+						<div class="input-item">
+							<p class="title">年齡</p>
+							<div>
+								<div class="autocomplete">
+									<input  id="edit-life_stage" type="text" name="life_stage" />
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="item-2">
+						<div class="input-item">
+							<p class="title">性別</p>
+								<div class="autocomplete">
+									<input  id="edit-sex" type="text" name="sex" />
+								</div>
+						</div>
+						<div class="input-item">
+							<p class="title">角況</p>
+							<div class="autocomplete">
+								<input  id="edit-antler" type="text" name="antler" />
+							</div>
+						</div>
+					</div>
+					<div class="item-2">
+						<div class="input-item">
+							<p class="title">個體ID</p>
+							<input  id="edit-animal_id" type="text" name="animal_id" />
+						</div>
+						<div class="input-item">
+							<p class="title">備註</p>
+							<input  id="edit-remarks" type="text" name="remarks" />
+						</div>
+					</div>
+					<input type="hidden" id="edit-image_uuid" name="image_uuid" value="" />
+					<input type="hidden" id="edit-image_id" name="image_id" value="" />
+					<input type="hidden" id="edit-page_info" name="page_info" value="" />
+				</form>
+					<div class="btn-area edit-footer">
+						<button class="btn-greeno" id="canceledit">取消</button>
+						<button class="btn-green edit-submit">確認儲存</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock pop %}
+
+
 {% block body %}
-<div class="container box">
-    {% if project_name > 35 %}
-    <div class="row pb-2 pt-4 header overflow-auto" style="height: 120px">
-            {% else %}
-    <div class="row pb-2 pt-4 header overflow-auto">
-        {% endif %}
-        <div class="col-2">
-            <a class="text-gray back text-decoration-none align-middle" href="{% url 'project_overview' %}"><i class="fa fa-chevron-left"></i> 返回計畫總覽</a>
-        </div>
-        <div class="col-10">
-            <div class="d-flex justify-content-between align-items-center">
-              <h4 class="title-dark p-0">{{ project_info.0 }} <i class="fa fa-info-circle" style="cursor: pointer" data-bs-toggle="modal" data-bs-target="#infoModal"></i></h4>
-                <div>
-                {% if is_authorized %}
-                    <a class="btn btn-outline-success" href="{% url 'edit_project_basic' pk %}"><i class="fa fa-xs fa-pencil"></i> 計畫管理</a>
-                {% endif %}
-                    <a class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#downloadModal"><i class="fas fa-file-csv"></i> 下載篩選資料</a>
-                    {% comment %} <a class="btn btn-outline-success download"><i class="fas fa-file-csv"></i> 下載篩選資料</a> {% endcomment %}
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-2 bg-white shadow-sm remain">
-            <form action="{% url 'download' pk %}" method="post" id="downloadForm">
-            {% csrf_token %}
-            <input type="hidden" name="email" value="">
-                <div class="row">
-                    <div class="mt-3 d-flex justify-content-between">
-                        <p>篩選條件</p>
-                        <div>
-                        <button type="button" style="font-size: 14px" class="btn btn-orange py-0 px-1 select">篩選</button>
-                        <button type="button" style="font-size: 14px" class="btn btn-light border-secondary py-0 px-1 clear">清除</button>
-                        </div>
-                    </div>
-                    <hr style='margin: auto; width: 90%'>
-                    <p class="mt-3 mb-1 d-flex justify-content-between">
-                        <strong>物種</strong> 
-                    </p>
-                    <ul style="list-style: none" id="species-list" class="font-sm">
-                        <li id="species-list-all">       
-                            <label class="form-check-label">
-                            <i class="fas fa-check title-dark"></i>
-                            <input id="species-all-option" class="filter all" type="radio" name="species-filter" value="" checked>
-                            全部
-                            </label>
-                        </li>
-                        {% for i in species %}
-                        <li>
-                            <label class="form-check-label w-100">
-                            <input class="filter" type="radio" name="species-filter" value="{{ i.1 }}">
-                                {{ i.1 }} ({{i.0}})
-                            </label>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <p class="mb-1"><strong>樣區 / 相機位置</strong></p>
-                    <input type="hidden" id="checkbox-all-unchecked" value="false">
-                    <ul style="list-style: none" id="studyarea-list" class="font-sm">
-                        <li>
-                            <label class="form-check-label">             
-                            <i class="fas fa-check title-dark"></i>
-                            <input class="filter all" type="radio" name="sa-filter" value="" checked>
-                            全部
-                            </label>
-                        </li>
-                        {% for i in study_area %}
-                            {% if i.parent_id == None %}
-                            <li>
-                                <label class="form-check-label w-100">
-                                <input class="filter studyarea-name" type="radio" name="sa-filter" value="{{ i.id }}" 
-                                       id="{{ i.id }}" data-bs-toggle="collapse" href="#collapse_{{ i.id }}" role="button" 
-                                       aria-expanded="false" aria-controls="collapse_{{ i.id }}">
-                                    {{ i.name }}
-                                </label>
-                            </li>
-                            <div class="collapse" id="collapse_{{ i.id }}">
-                                {% if i.deployment_set.all != None %}
-                                    <li>
-                                        <label class="form-check-label w-auto">
-                                            <input class="filter all" type="checkbox" name="d-filter" value="all" data-parent-radio="{{ i.id }}">
-                                                全部
-                                        </label>
-                                    </li>
-                                    {% for j in i.deployment_set.all %}
-                                    <li>
-                                        <label class="form-check-label w-auto">
-                                            <input class="filter" type="checkbox" name="d-filter" value="{{ j.id }}" data-parent-radio="{{ i.id }}">
-                                                {{ j.name }}
-                                        </label>
-                                    </li>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                    <p class="mb-1"><strong>拍攝日期</strong></p>
-                    <p id="date-content" class="font-sm"></p>
-                    <input type="text" class="d-none" id="date" readonly>
-                    <div id="date-slider" class="w-75 mx-auto mb-5"></div>
-                </div>
-            <input type="hidden" name="start_date" value="">
-            <input type="hidden" name="end_date" value="">
-            </form>
-        </div>
-        <div class="col-10 remain">
-            <table class="table table-borderless w-100 px-3 h-100" id="img-table">
-                <thead class="fw-bold title-dark">
-                    <tr>
-                        <td>樣區</td>
-                        <td>相機位置</td>
-                        <td>檔名</td>
-                        <td>拍攝時間</td>
-                        <td>物種</td>
-                        <td>年齡</td>
-                        <td>性別</td>
-                        <td>角況</td>
-                        <td>個體ID</td>
-                        <td>備註</td>
-                        <td>影像</td>
-                        <td>group_id</td>
-                        <td>id</td>
-                    </tr>
-                </thead>
-            </table>
-        </div>
-    </div>
+<input type="hidden" name="pk" value="{{ pk }}"></input>
+<input type="hidden" name="get-folder" value="{{ folder }}"></input>
+<input type="hidden" name="project-name" value="{{ project_info.name }}"></input>
+    {% if is_project_authorized or is_project_public %}
+		<div class="main-box">
+			<div class="main-title flex-spb">
+				<div class="flex-boxleft">
+					<a href="{% url 'project_info' pk %}" class="back-btn">
+						<svg xmlns="http://www.w3.org/2000/svg" width="9.377" height="15.927" viewBox="0 0 9.377 15.927">
+							<g id="Group_736" data-name="Group 736" transform="translate(1.414 1.414)">
+								<line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+								<line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							</g>
+						</svg>
+						<p>返回</p>
+					</a>
+					<h2>{{ project_info.name }}</h2>
+				</div>
+
+				{% comment %} this could be part of datatable {% endcomment %}
+				<div class="right-btnaera">
+					{% if editable %}
+						<button class="edi-btn" id="edit_button" data-edit="off">
+							<svg id="Group_749" data-name="Group 749" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="19.999" viewBox="0 0 20 19.999">
+								<g id="Group_748" data-name="Group 748" clip-path="url(#clip-path)">
+									<path id="Path_10217" data-name="Path 10217" d="M20,4.238a2.818,2.818,0,0,1-.855,2q-3.8,3.8-7.6,7.6-1.8,1.8-3.613,3.6a1.215,1.215,0,0,1-.45.279q-3.29,1.11-6.586,2.2a1.082,1.082,0,0,1-.4.078.546.546,0,0,1-.446-.786Q.775,17,1.512,14.792c.256-.769.509-1.54.774-2.306a1.037,1.037,0,0,1,.231-.384Q8.133,6.477,13.756.861A2.744,2.744,0,0,1,17.741.853q.734.724,1.46,1.457A2.747,2.747,0,0,1,20,4.238M7.447,16.318,17,6.767,13.233,3,3.678,12.549l3.768,3.769M17.837,5.967c.2-.192.414-.38.607-.587a1.622,1.622,0,0,0,.03-2.23c-.523-.565-1.071-1.108-1.634-1.633a1.578,1.578,0,0,0-2-.128,9.64,9.64,0,0,0-.828.753l3.824,3.825M6.4,16.925,3.073,13.6,1.406,18.587,6.4,16.925" transform="translate(0 0)" fill="#257455"/>
+								</g>
+							</svg>
+							編輯模式
+						</button>
+					{% endif %}
+					<button class="dow-btn" id="downloadButton">
+						<svg xmlns="http://www.w3.org/2000/svg" width="18.808" height="17.276" viewBox="0 0 18.808 17.276">
+							<g id="Group_752" data-name="Group 752" transform="translate(0 0)">
+								<path id="Path_10218" data-name="Path 10218" d="M9.386,174.34H2.506a2.36,2.36,0,0,1-2.5-2.5c0-1,0-2,0-2.994a.78.78,0,0,1,1.539-.187,1.365,1.365,0,0,1,.024.316c0,.973,0,1.947,0,2.92a.792.792,0,0,0,.862.873q6.979,0,13.957,0a.786.786,0,0,0,.851-.858c0-.99,0-1.979,0-2.969a.788.788,0,1,1,1.566-.011c0,1,0,2,0,2.994a2.347,2.347,0,0,1-2.416,2.414q-3.5.006-7,0" transform="translate(0.001 -157.064)" fill="#257455"/>
+								<path id="Path_10219" data-name="Path 10219" d="M76.534,11.7v-.346q0-5.212,0-10.425a1.374,1.374,0,0,1,.043-.386A.767.767,0,0,1,77.41.006.8.8,0,0,1,78.1.7,2.786,2.786,0,0,1,78.1,1q0,5.2,0,10.4v.316c.38-.3.722-.572,1.063-.845q.794-.635,1.585-1.272a.784.784,0,1,1,.989,1.211q-1.936,1.559-3.879,3.11a.78.78,0,0,1-1.09-.007q-1.894-1.514-3.784-3.033a.78.78,0,1,1,.965-1.226c.788.622,1.57,1.253,2.354,1.88.062.049.126.1.23.174" transform="translate(-67.914 -0.001)" fill="#257455"/>
+							</g>
+						</svg>
+						下載篩選資料
+					</button>
+				</div>
+				{% comment %} this could be part of datatable {% endcomment %}
+
+			</div>
+
+
+			<div class="pjflex-content">
+				{% comment %} condiction search start  {% endcomment %}
+				<div class="left-selectlist">
+					<div class="opitem-btn">
+						篩<br/>選<br/>條<br/>件
+					</div>
+					<div class="topitem">
+						<h3 class="light-green">篩選條件</h3>
+						<div class="right-btn">
+							<button class="red" id="submitSelect">篩選</button>
+							<button class="clear">清除</button>
+						</div>
+					</div>
+					<div class="sscro-area">
+						<div class="item-set1">
+							<div class="settitle-box">
+								<h4>物種</h4>
+								<div class="arrup">
+									<img src="{% static 'image/arrup.svg' %}" alt="">
+								</div>
+							</div>
+							<ul class="check-list species-check-list" id="species-list">
+							<!---點選給li now-->
+							<li class="now filter all">
+								<div class="cir-checkbox">
+									<img class="coricon" src="/static/image/correct.svg">
+								</div>
+								<p>全部</p>
+							</li>
+							{% for i in species %}
+							<li class="now" data-species="{{ i.1 }}">
+								<div class="cir-checkbox">
+									<img class="coricon" src="/static/image/correct.svg">
+								</div>
+								<p>{{ i.1 }} ({{i.0}})</p>
+							</li>
+							{% endfor %} 
+							</ul>
+						</div>
+						<div class="item-set1">
+							<div class="settitle-box">
+								<h4>樣區 / 相機位置</h4>
+								<div class="arrup">
+									<img src="{% static 'image/arrup.svg' %}" alt="">
+								</div>
+							</div>
+							
+							<ul class="check-list camera-local studyarea-list" id="studyarea-list" >
+								<li class="now all-sa">
+									<div class="flex-box">
+										<div class="cir-checkbox">
+											<img class="coricon" src="/static/image/correct.svg" alt="">
+										</div>
+										<p>全部
+										</p>
+									</div>
+								</li>
+								{% for i in study_area %}
+								<li class="now" data-sa="{{ i.id }}">
+									<div class="flex-box sa-title">
+										<div class="cir-checkbox">
+											<img class="coricon" src="/static/image/correct.svg" alt="">
+										</div>
+										<p>
+											{{ i.name }}
+										</p>							
+										<div class="arrup">
+											<img src="{% static 'image/arrup.svg' %}" alt="">
+										</div>
+									</div>
+									<div class="check2-layerbox d-none">
+										<ul>
+											{% if i.deployment_set.all != None %}
+												<li data-parent_sa="{{ i.id }}" class="dep-checkbox filter all" >
+													<input class="filter all" type="checkbox" checked name="d-filter" value="all" data-parent-radio="{{ i.id }}" />
+													<p>全部</p>
+												</li>
+												{% for j in i.deployment_set.all|dictsort:"name" %}
+													<li data-parent_sa="{{ i.id }}" class="dep-checkbox filter" >
+														<input class="filter" type="checkbox" checked name="d-filter" value="{{ j.id }}" data-parent-radio="{{ i.id }}" />
+														<p>{{ j.name }}</p>
+													</li>
+												{% endfor %} 
+											{% endif %}
+										</ul>
+									</div>
+								</li>
+								{% endfor %}
+							</ul>
+						</div>
+						<div class="item-other">
+							<div class="item1">
+								<h4>資料夾名稱</h4>
+								<div class="input-item">
+									<select id="select-folder" name="folder_name" placeholder="請選擇資料夾名稱" multiple="multiple">
+										<!-- <option value="">請選擇資料夾名稱</option> -->
+										{% for f in folder_list %}
+										<option value="{{ f.folder_name }}" {% if f.folder_name == folder %} selected {% endif %}>
+											{{ f.folder_name }} (最後更新：{{ f.folder_last_updated }})
+										</option>
+										{% endfor %}
+									  </select>
+								</div>
+							</div>
+							<div class="item1">
+								<h4>海拔</h4>
+								<div class="input-item">
+								</div>
+								<div class="input-item right30">
+									起（公尺）<input type="text" placeholder="{{ altitude__min }}" name="start_altitude"/>
+									訖（公尺）<input type="text" placeholder="{{ altitude__max }}" name="end_altitude"/>
+								</div>
+							</div>
+							<div class="item1">
+								<h4>縣市</h4>
+								<div class="input-item">
+									<select id="select-county" name="county_name">
+										<option value='' selected>請選擇</option>
+										{% for i in county_list%}  
+											<option value="{{ i.parametername }}">{{i.name}}</option>
+										{% endfor %} 
+									</select> 
+								</div>
+							</div>
+							<div class="item1">
+								<h4>保護留區</h4>
+								<div class="input-item">
+									<select id="select-protectarea" name="protectarea_name">
+										<option value='' selected>請選擇</option>
+										{% for i in protectedarea_list%}  
+											<option value="{{ i.parametername }}">{{i.name}}</option>
+										{% endfor %}
+									  </select>
+								</div>
+							</div>
+							<div class="item1">
+								<h4>拍攝時間</h4>
+								<div class="input-item">
+									<input type="time" id="times" name="times" step="2" class="timeclock">
+								 <button class="icon-clock" >
+									</button> 
+								</div>
+
+								{% comment %} <div class="input-item right30">
+									<button class="icon-clock">
+										<input type="time" id="times" name="times" step="2" class="timeclock" />
+										<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+											<g id="Group_739" data-name="Group 739" transform="translate(-408 -2324)">
+												<g id="Ellipse_50" data-name="Ellipse 50" transform="translate(408 2324)" fill="#fff" stroke="#257455" stroke-width="1.5">
+													<circle cx="11" cy="11" r="11" stroke="none"/>
+													<circle cx="11" cy="11" r="10.25" fill="none"/>
+												</g>
+												<g id="Group_740" data-name="Group 740" transform="translate(419 2329.5)">
+													<line id="Line_16" data-name="Line 16" y2="4.998" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
+													<line id="Line_17" data-name="Line 17" x2="3.332" y2="3.332" transform="translate(0 4.998)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
+												</g>
+											</g>
+										</svg>
+									</button>									
+								</div> {% endcomment %}
+							</div>
+							<div class="item1">
+								<h4>拍攝日期</h4>
+									<div class="input-item date-select">
+										<input name="start_date" class="filter" id="start_date" type="text" {% if earliest_date %} placeholder="{{ earliest_date }}" {% else %} placeholder="YYYY-MM-DD"  {% endif %}>
+										 <button class="date-cal show_start">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+												<g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+													<g id="Group_686" data-name="Group 686">
+														<path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"/>
+														<path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"/>
+														<path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"/>
+														<path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"/>
+														<path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"/>
+														<path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"/>
+														<path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"/>
+													</g>
+												</g>
+											</svg>
+										</button>
+									</div>
+									<div class="input-item date-select">
+										<input name="end_date" class="filter" id="end_date" type="text" {% if latest_date %} placeholder="{{ latest_date }}" {% else %} placeholder="YYYY-MM-DD"  {% endif %}/>
+										<button class="date-cal show_end">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25.211" viewBox="0 0 24 25.211">
+												<g id="Group_3" data-name="Group 3" transform="translate(0 0)">
+													<g id="Group_686" data-name="Group 686">
+														<path id="Path_10209" data-name="Path 10209" d="M4.771,1.8C4.995.617,5.65-.011,6.628,0c.951.011,1.6.652,1.8,1.788h7.163A1.862,1.862,0,0,1,16.38.322a1.765,1.765,0,0,1,1.17-.316,1.843,1.843,0,0,1,1.666,1.8c.526,0,1.057-.011,1.587,0a4.414,4.414,0,0,1,.918.095,2.955,2.955,0,0,1,2.272,2.8c0,.084.005.169.005.253q0,8.553,0,17.106a2.929,2.929,0,0,1-1.8,2.887A2.987,2.987,0,0,1,21,25.2q-9,.023-18,.007A2.967,2.967,0,0,1,.011,22.277C-.009,21.508,0,20.739,0,19.97q0-7.512,0-15.024A2.957,2.957,0,0,1,2.046,1.97a3.937,3.937,0,0,1,1.047-.162c.56-.026,1.121-.007,1.678-.007M1.2,8.414v.324q0,6.639,0,13.277a1.825,1.825,0,0,0,1.987,2H20.822A1.823,1.823,0,0,0,22.8,22.038q0-6.653,0-13.305V8.414Zm0-1.232H22.8c0-.853.023-1.688-.007-2.52a1.687,1.687,0,0,0-1.412-1.6,20.671,20.671,0,0,0-2.158-.016c-.205,1.115-.822,1.731-1.769,1.752-.989.022-1.59-.544-1.884-1.776H8.42A1.832,1.832,0,0,1,6.636,4.794C5.644,4.81,4.984,4.182,4.78,3.03c-.692,0-1.387-.049-2.073.013a1.7,1.7,0,0,0-1.5,1.618c-.03.833-.007,1.667-.007,2.522M7.2,2.4c0-.187.008-.375,0-.562a.614.614,0,0,0-.61-.638A.606.606,0,0,0,6,1.825c-.013.384-.014.768,0,1.152a.6.6,0,0,0,.594.622A.607.607,0,0,0,7.2,2.962c.009-.187,0-.375,0-.562M18,2.421h0c0-.215.015-.432,0-.646a.6.6,0,0,0-.583-.575.594.594,0,0,0-.608.576c-.021.411-.02.825,0,1.236a.59.59,0,0,0,.6.586.6.6,0,0,0,.6-.588c.015-.2,0-.393,0-.59" transform="translate(0 0)" fill="#257455"/>
+														<path id="Path_10210" data-name="Path 10210" d="M47.962,145.811c0-.319-.01-.638,0-.956a1.174,1.174,0,0,1,1.159-1.144q.928-.018,1.856,0a1.172,1.172,0,0,1,1.165,1.166c.014.6.011,1.2,0,1.8a1.18,1.18,0,0,1-1.191,1.231c-.6.019-1.2.018-1.8,0a1.184,1.184,0,0,1-1.2-1.226c-.006-.291,0-.581,0-.872h0m2.975-.885H49.172v1.766h1.765Z" transform="translate(-44.354 -132.903)" fill="#257455"/>
+														<path id="Path_10211" data-name="Path 10211" d="M131.813,145.762c0-.319-.011-.638,0-.956a1.166,1.166,0,0,1,1.121-1.122q.969-.028,1.94,0a1.159,1.159,0,0,1,1.116,1.126c.018.618.014,1.238.005,1.856a1.176,1.176,0,0,1-1.181,1.212c-.609.021-1.219.021-1.828,0a1.179,1.179,0,0,1-1.178-1.215c-.006-.3,0-.6,0-.9h0m2.978-.87h-1.772v1.762h1.772Z" transform="translate(-121.903 -132.873)" fill="#257455"/>
+														<path id="Path_10212" data-name="Path 10212" d="M219.816,145.886c0,.281.005.563,0,.844a1.18,1.18,0,0,1-1.176,1.217c-.608.022-1.219.021-1.827,0a1.177,1.177,0,0,1-1.183-1.209q-.014-.886,0-1.772a1.182,1.182,0,0,1,1.231-1.218q.858-.007,1.715,0a1.188,1.188,0,0,1,1.241,1.237c.005.3,0,.6,0,.9m-1.2-.919h-1.775v1.755h1.775Z" transform="translate(-199.419 -132.943)" fill="#257455"/>
+														<path id="Path_10213" data-name="Path 10213" d="M52.1,233.578c0,.319.011.638,0,.956a1.171,1.171,0,0,1-1.143,1.13q-.942.023-1.884,0a1.168,1.168,0,0,1-1.152-1.151c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.175-1.217c.609-.021,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.184,1.209c.007.3,0,.6,0,.9h0m-2.968.877H50.89V232.68H49.136Z" transform="translate(-44.312 -214.062)" fill="#257455"/>
+														<path id="Path_10214" data-name="Path 10214" d="M135.957,233.58c0,.309.009.619,0,.928a1.176,1.176,0,0,1-1.147,1.157q-.942.023-1.884,0a1.168,1.168,0,0,1-1.15-1.152c-.015-.609-.012-1.219,0-1.828a1.175,1.175,0,0,1,1.177-1.215c.609-.02,1.219-.02,1.828,0a1.179,1.179,0,0,1,1.182,1.211c.007.3,0,.6,0,.9h0m-2.984.873h1.775v-1.759h-1.775Z" transform="translate(-121.863 -214.062)" fill="#257455"/>
+														<path id="Path_10215" data-name="Path 10215" d="M215.661,233.554c0-.291-.005-.581,0-.872a1.179,1.179,0,0,1,1.18-1.213c.609-.02,1.219-.02,1.828,0a1.175,1.175,0,0,1,1.179,1.213q.014.886,0,1.772a1.184,1.184,0,0,1-1.235,1.214q-.858.007-1.715,0a1.186,1.186,0,0,1-1.236-1.214c-.007-.3,0-.6,0-.9m2.98-.861h-1.77v1.766h1.77Z" transform="translate(-199.453 -214.062)" fill="#257455"/>
+													</g>
+												</g>
+											</svg>
+										</button>
+									</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="right-tablecont">
+					<div class="delete-area">
+						<button class="e-button editButton d-none disabled" id="editButton">編輯</button>
+						<button class="d-button deleteButton d-none disabled" id="deleteButton">刪除</button>
+					</div> 
+					<div class="table-area">
+						<table class="phototable" cellspacing="0" cellpadding="0">
+							<tr>
+								<td class="del-check d-none">
+									<input class="inp-check edit-checkbox" id="edit-all" type="checkbox" name="edit">
+									{% comment %} <input name="edit" class="inp-check" type="checkbox"> {% endcomment %}
+								</td>
+								<td class="nth1">樣區</td>
+								<td class="nth2">
+									<div class="sortbox">
+										<p>相機位置</p>
+										<div class="sortbtn">
+											<svg xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+												<path class="upar" data-order="d.name" id="Polygon_23" data-name="Polygon 23" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" fill="#78d989" opacity="0.996"/>
+												<path class="downar" data-order="d.name" id="Polygon_24" data-name="Polygon 24" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(11 19) rotate(180)" fill="#78d989" opacity="0.996"/>
+											</svg>
+										</div>
+									</div>
+								</td>
+								<td class="nth3">檔名</td>
+								<td class="nth4">
+									<div class="sortbox">
+										<p>日期時間</p>
+										<div class="sortbtn">
+											<svg xmlns="http://www.w3.org/2000/svg" width="11" height="19" viewBox="0 0 11 19">
+												<path class="upar" data-order="datetime" id="Polygon_23" data-name="Polygon 23" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" fill="#78d989" opacity="0.996"/>
+												<path class="downar" data-order="datetime" id="Polygon_24" data-name="Polygon 24" d="M4.676,1.2a1,1,0,0,1,1.648,0l3.6,5.235A1,1,0,0,1,9.1,8H1.9a1,1,0,0,1-.824-1.567Z" transform="translate(11 19) rotate(180)" fill="#78d989" opacity="0.996"/>
+											</svg>
+										</div>
+									</div>
+								</td>
+								<td>物種</td>
+								<td>年齡</td>
+								<td>性別</td>
+								<td>角況</td>
+								<td class="nth9">個體ID</td>
+								<td class="nth10">備註</td>
+								<td>影像</td>
+							</tr>						
+						</table>
+					</div>
+
+					      <!-- default 不需要放內容 -->
+
+						  <div class="page-inf d-none">
+							<div class="leftbox">
+							  <p>正在檢視第 <span class="show-start"></span> 至 <span class="show-end"></span> 筆，總共 <span class="show-total"></span> 筆</p>
+							  <div class="evpage">
+								<p>每頁顯示</p>
+								<div class="input-item">
+								  <select name="limit">
+									<option value="10">10</option>
+									<option value="25">25</option>
+									<option value="50">50</option>
+									<option value="100">100</option>
+								  </select>
+								</div>
+								<p>筆</p>
+							  </div>
+							</div>
+					
+							<div class="page-num">
+							  <a class="first_page num changePage" data-page="1">1</a>
+							  <a class="back changePage" data-page="">
+								<svg xmlns="http://www.w3.org/2000/svg" width="9.187" height="17.053" viewBox="0 0 9.187 17.053">
+								  <g id="pre" transform="translate(111.483 17.054) rotate(180)">
+									<g id="Group_17" data-name="Group 17" transform="translate(102.297 0)">
+									  <path id="Path_59" data-name="Path 59" d="M111.291,8.059,103.417.185a.656.656,0,0,0-.928.928L109.9,8.523l-7.411,7.411a.656.656,0,0,0,.928.928l7.874-7.874A.656.656,0,0,0,111.291,8.059Z" transform="translate(-102.297 0)" fill="#529a81"/>
+									</g>
+								  </g>
+								</svg>
+								<p>上一頁</p>
+							  </a>
+
+							  <a class="next changePage" data-page="">
+								<p>下一頁</p>
+								<svg xmlns="http://www.w3.org/2000/svg" width="9.187" height="17.053" viewBox="0 0 9.187 17.053">
+								  <g id="next" transform="translate(-102.297 0)">
+									<g id="Group_17" data-name="Group 17" transform="translate(102.297 0)">
+									  <path id="Path_59" data-name="Path 59" d="M111.291,8.059,103.417.185a.656.656,0,0,0-.928.928L109.9,8.523l-7.411,7.411a.656.656,0,0,0,.928.928l7.874-7.874A.656.656,0,0,0,111.291,8.059Z" transform="translate(-102.297 0)" fill="#529a81"/>
+									</g>
+								  </g>
+								</svg>
+							  </a>
+							  <a class="final_page num changePage" data-page=""></a>
+							</div>
+					
+						  </div>
+					
+
+				</div>
+
+			</div>
+		</div>
+
+{% else %}
+<div class="main-box">
+	<div class="main-title">
+		您的權限不足      
+	</div>		
+	<a class="return-btn" href="/"> < 返回 </a>
 </div>
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content edit-content">
-            <div class="modal-body" id="modal-text">
-                <div class="row my-3">
-                    <div class="col-12" id="edit-image">
-                    </div>
-                </div>            
-                <form novalidate action="{% url 'edit_image' pk %}" method="post" autocomplete="off" id="editForm">
-                {% csrf_token %}
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">樣區</div>
-                    <div class="col-9" id="edit-studyarea">
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">相機位置</div>
-                    <div class="col-9" id="edit-deployment">
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">檔名</div>
-                    <div class="col-9" id="edit-filename">
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">拍攝時間</div>
-                    <div class="col-9" id="edit-datetime">
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">物種</div>
-                    <div class="col-9">
-                        <div class="autocomplete">
-                            <input class="form-control" id="edit-species" type="text" name="species">
-                        </div>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">年齡</div>
-                    <div class="col-9">
-                        <div class="autocomplete">
-                            <input class="form-control" id="edit-lifestage" type="text" name="lifestage">
-                        </div>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">性別</div>
-                    <div class="col-9">
-                        <div class="autocomplete">
-                            <input class="form-control" id="edit-sex" type="text" name="sex">
-                        </div>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">角況</div>
-                    <div class="col-9">
-                        <div class="autocomplete">
-                            <input class="form-control" id="edit-antler" type="text" name="antler">
-                        </div>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">個體ID</div>
-                    <div class="col-9">
-                        <div class="autocomplete">
-                            <input class="form-control" id="edit-animal_id" type="text" name="animal_id">
-                        </div>
-                    </div>
-                </div>                
-                <div class="row my-3">
-                    <div class="col-3 text-end my-auto ">備註</div>
-                    <div class="col-9">
-                        <div class="autocomplete">
-                            <input class="form-control" id="edit-remarks" type="text" name="remarks">
-                        </div>
-                    </div>
-                </div>
-                <input type="hidden" id="edit-group_id" name="group_id" value="">
-                <input type="hidden" id="edit-id" name="id" value="">
-                <input type="hidden" id="edit-page_info" name="page_info" value="">
-                </form>
-            </div>
-            <div class="modal-footer edit-footer">
-                <a class="btn btn-outline-success" data-bs-dismiss="modal">取消</a>
-                <a class="btn btn-orange edit-submit" >儲存</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- Info Modal -->
-<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title title-dark">計畫基本資訊</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <td class="px-3">委辦單位</td>
-                        {% if project_info.1 != None and project_info.1 != 'None' %}
-                        <td class="text-gray">{{ project_info.1 }}</td>
-                        {% else %}
-                        <td></td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td class="px-3">計畫編號</td>
-                        {% if project_info.1 != None and project_info.2 != 'None' %}
-                        <td class="text-gray">{{ project_info.2 }}</td>
-                        {% else %}
-                        <td></td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td class="px-3">計畫主持人</td>
-                        {% if project_info.1 != None and project_info.3 != 'None' %}
-                        <td class="text-gray">{{ project_info.3 }}</td>
-                        {% else %}
-                        <td></td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td class="px-3">計畫時間</td>
-                        <td class="text-gray">{{ project_info.4 }} 至 {{ project_info.5 }}</td>
-                    </tr>
-                    <tr>
-                        <td class="px-3">相機樣點運作及缺失比例</td>
-                        <td><a class="oversight text-green text-decoration-none" href="{% url 'project_oversight' pk %}">查看</a></td>
-                    </tr>
-                </table> 
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- Download Modal -->
-<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title title-dark">下載篩選資料</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>檔案為離線產生，處理完成後，系統會寄下載資訊到您輸入的電子郵件信箱。如未收到信件，請檢查您的郵件設定，如仍未收到信件，請聯絡我們。</p>
-                <p>請輸入您的電子郵件：</p>
-                <div class="d-flex justify-content-start">
-                    <input class="form-control w-75" type="text" id="download-email" onkeyup="ValidateEmail(this.value)">                       
-                     <svg id="email-check" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="lightgrey" class="bi bi-check my-auto " viewBox="0 0 16 16">
-                            <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                    </svg>
-                    <button class="ms-1 btn btn-outline-success download">送出</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock body %}
+{% endif %}
+{% endblock body %} 
 
 {% block script %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
-<script>
-//https://emailregex.com
-function ValidateEmail(inputText){
-    let mailformat = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
-    if(inputText.match(mailformat)){
-        $('#email-check').attr('fill', 'green');
-        $('button.download').prop('disabled', false);
-    } else {
-        $('#email-check').attr('fill', 'lightgrey');
-        $('button.download').prop('disabled', true);
-    }
-}
-
-// autocomplete
-var species = ['水鹿','山羌','獼猴','山羊','野豬','鼬獾','白鼻心','食蟹獴','松鼠','飛鼠','黃喉貂','黃鼠狼','小黃鼠狼','麝香貓','黑熊','石虎','穿山甲','梅花鹿','野兔','蝙蝠', '無法辨識', '空拍', '工作照', '測試', '台灣山鷓鴣', '台灣竹雞', '黑長尾雉', '藍腹鷴', '黑冠麻鷺', '環頸雉', '山鷸', '灰林鴿', '金背鳩', '珠頸斑鳩', '翠翼鳩', '黃痣藪眉', '台灣噪眉', '台灣紫嘯鶇', '虎鶇', '白眉鶇', '白腹鶇', '赤腹鶇', '白頭鶇'].sort()
-var antler = ['初茸','茸角一尖','茸角一岔二尖','茸角二岔三尖','茸角三岔四尖','硬角一尖','硬角一岔二尖','硬角二岔三尖','硬角三岔四尖','解角']
-var sex = ['雄性','雌性','無法判定']
-var lifestage = ['成體','亞成體','幼體','無法判定']
-
-$('#edit-species').autocomplete({
-    minLength: 0,
-    source: function(request, response) {            
-        var data = $.grep(species, function(value) {
-            return value.substring(0, request.term.length).toLowerCase() == request.term.toLowerCase();
-        });            
-        response(data);
-    }
-    }).focus(function () {
-        $(this).autocomplete("search", "");
-});
-
-$('#edit-antler').autocomplete({
-    minLength: 0,
-    source: function(request, response) {            
-        var data = $.grep(antler, function(value) {
-            return value.substring(0, request.term.length).toLowerCase() == request.term.toLowerCase();
-        });            
-        response(data);
-    }
-    }).focus(function () {
-        $(this).autocomplete("search", "");
-});
-
-$('#edit-sex').autocomplete({
-    minLength: 0,
-    source: function(request, response) {            
-        var data = $.grep(sex, function(value) {
-            return value.substring(0, request.term.length).toLowerCase() == request.term.toLowerCase();
-        });            
-        response(data);
-    }
-    }).focus(function () {
-        $(this).autocomplete("search", "");
-});
-
-$('#edit-lifestage').autocomplete({
-    minLength: 0,
-    source: function(request, response) {            
-        var data = $.grep(lifestage, function(value) {
-            return value.substring(0, request.term.length).toLowerCase() == request.term.toLowerCase();
-        });            
-        response(data);
-    }
-    }).focus(function () {
-        $(this).autocomplete("search", "");
-});
-
-
-// datatable
-let language_settings = {
-    "decimal":        "",
-    "emptyTable":     "查無資料",
-    "info":           "共 _TOTAL_ 筆",
-    "infoEmpty":      "共 0 筆",
-    "infoFiltered":   "",
-    "infoPostFix":    "",
-    "thousands":      ",",
-    "lengthMenu":     `每頁顯示 _MENU_ 筆`,
-    "loadingRecords": "載入中...",
-    "processing":     "",
-    "zeroRecords":    "查無符合資料",
-    "paginate": {
-        "next":       "下一頁",
-        "previous":   "上一頁"
-    }
-};
-
-
-$(document).ready(function() {
-
-    /* sub studyarea */
-    {% for i in study_area %}
-        {% if i.parent_id != None %}
-            $("#collapse_{{ i.parent_id }}").append(`
-            <li>
-                <label class="form-check-label">
-                    <input class="filter" type="radio" name="sa-filter" value="{{ i.id }}"  data-parent="{{ i.parent_id }}" id="{{ i.id }}" data-bs-toggle="collapse" 
-                           href="#collapse_s_{{ i.id }}" role="button" aria-expanded="false" aria-controls="collapse_s_{{ i.id }}">
-                        - {{ i.name }}
-                </label>
-            </li>
-            <div class="collapse collapse-s" id="collapse_s_{{ i.id }}">
-            {% if i.deployment_set.all != None %}
-            <li>
-                <label class="form-check-label w-auto">
-                    <input class="filter all" type="checkbox" name="d-filter" value="all" data-parent-radio="{{ i.id }}">
-                        全部
-                </label>
-            </li>
-            {% for j in i.deployment_set.all %}
-                <li>
-                    <label class="form-check-label w-100">
-                        <input class="filter" type="checkbox" name="d-filter" value="{{ j.id }}" data-parent-radio="{{ i.id }}">
-                            {{ j.name }}
-                    </label>
-                </li>
-                {% endfor %}
-            {% endif %}
-            </div>            
-            `);
-        {% endif %}
-    {% endfor %}
-
-    // date slider
-    {% if earliest_date != None %}
-    $("#date-slider").slider({
-      range: true,
-      min: new Date('{{ earliest_date }}').getTime() / 1000,
-      max: new Date('{{ latest_date }}').getTime() / 1000,
-      step: 86400,
-      values: [ new Date('{{ earliest_date }}').getTime() / 1000, new Date('{{ latest_date }}').getTime() / 1000 ],
-      slide: function( event, ui ) {
-        $('#date-content').html((new Date(ui.values[ 0 ] *1000).toISOString().substring(0, 10)) + "至" + 
-        (new Date(ui.values[1]*1000)).toISOString().substring(0, 10))
-      },
-    });
-    $("#date-content").html((new Date($("#date-slider").slider("values",0)*1000).toISOString().substring(0, 10)) + "至" + 
-    (new Date($("#date-slider").slider("values",1)*1000)).toISOString().substring(0, 10));
-    {% endif %}
-
-    // initalize datatable
-    let table = $("#img-table").DataTable({
-        dom:"<'row px-3 pt-3'<'col-sm-12 col-md-5'l>>" +
-            "<'row'<'col-sm-12'tr>>" +
-            "<'row p-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-        language: language_settings,
-        ordering: false,
-        processing: true,
-        serverSide: true,
-        searching: false,
-        scrollY: 100,
-        scrollResize: true,
-        scrollX: true,
-        scrollCollapse: true,
-        ajax: {
-            type: "POST",
-            url: "{% url 'data' %}",
-            headers:{'X-CSRFToken':'{{ csrf_token }}'},
-            data: function ( d ) {
-                d.pk = "{{ pk }}";
-                d.species = $("input[name=species-filter]:checked").val()
-                d.sa =  $("input[name=sa-filter]:checked").val()
-                {% if earliest_date != None %}
-                d.start_date = (new Date($("#date-slider").slider("values",0)*1000)).toISOString().substring(0, 10)
-                d.end_date = (new Date($("#date-slider").slider("values",1)*1000)).toISOString().substring(0, 10)
-                {% endif %}
-                d.deployment =  $('input[name="d-filter"]:checked').map(function(){return $(this).val();}).get();
-            },
-
-        }, 
-        order: [[0, "asc"]], 
-        drawCallback:function(){
-            // lazy loading for images
-            var watcher = new IntersectionObserver(onEnterView);
-            var lazyImages = document.querySelectorAll("img.lazy");
-            for (let image of lazyImages) {
-                watcher.observe(image); // 開始監視
-            }
-            function onEnterView(entries, observer) {
-                for (let entry of entries) {
-                    if (entry.isIntersecting) {
-                        var img = entry.target;
-                        img.setAttribute("src", img.dataset.src);
-                        observer.unobserve(img); 
-                    }
-                }
-            }
-            // adjust columns after 1000 ms
-            setTimeout(function(){
-                $.fn.dataTable.tables( { visible: false, api: true } ).columns.adjust();
-            }, 1000);
-        },
-        columns: [
-                    {data: "saname"},
-                    {data: "dname"},
-                    {data: "filename" },
-                    {data: "datetime"},
-                    {data: "species"},
-                    {data: "lifestage"},
-                    {data: "sex"},
-                    {data: "antler"},
-                    {data: "animal_id"},
-                    {data: "remarks"},
-                    {data: "file_url"},
-                    {data: "group_id"},
-                    {data: "image_id"},
-                ], 
-        columnDefs: [ 
-            {
-                "targets": [ 11,12 ], // hidden columns
-                "visible": false
-            }
-        ],
-    });
-
-    // submit select
-    $('.select').on('click', function() {
-        $($.fn.dataTable.tables( true ) ).DataTable().columns.adjust().draw();
-    });
-    
-    $('.clear').on('click', function() {
-        $('input[type=radio]').prop('checked', false);
-        $('input[type=radio].all').prop('checked', true);
-        $('input[type=checkbox].filter').prop('checked', false);
-        // radio
-        $('.fa-check').remove()
-        $('<i class="fas fa-check title-dark"></i>').insertBefore($("input[type=radio].all"))
-
-        {% if earliest_date != None %}
-        $("#date-slider").slider({
-        range: true,
-        min: new Date('{{ earliest_date }}').getTime() / 1000,
-        max: new Date('{{ latest_date }}').getTime() / 1000,
-        step: 86400,
-        values: [ new Date('{{ earliest_date }}').getTime() / 1000, new Date('{{ latest_date }}').getTime() / 1000 ],
-        slide: function( event, ui ) {
-            $('#date-content').html((new Date(ui.values[ 0 ] *1000).toISOString().substring(0, 10)) + "至" + 
-            (new Date(ui.values[1]*1000)).toISOString().substring(0, 10))
-        },
-        });
-        $("#date-content").html((new Date($("#date-slider").slider("values",0)*1000).toISOString().substring(0, 10)) + "至" + 
-        (new Date($("#date-slider").slider("values",1)*1000)).toISOString().substring(0, 10));
-        {% endif %}
-        //$($.fn.dataTable.tables( true ) ).DataTable().columns.adjust().draw();        
-    });
-
-    // set permission: 計畫總管理人/個別計畫承辦人/系統管理員
-    $('#img-table').on('click', 'tbody tr', function () {
-        var row = table.row($(this)).data();
-        $('#edit-studyarea').html(row['saname'])
-        $('#edit-deployment').html(row['dname'])
-        $('#edit-filename').html(row['filename'])
-        $('#edit-datetime').html(row['datetime'])
-        $('#edit-species').val(row['species'])
-        $('#edit-lifestage').val(row['lifestage'])
-        $('#edit-sex').val(row['sex'])
-        $('#edit-antler').val(row['antler'])
-        $('#edit-animal_id').val(row['animal_id'])
-        $('#edit-remarks').val(row['remarks'])
-        $('#edit-group_id').val(row['group_id'])
-        $('#edit-id').val(row['id'])
-        $('#edit-image').html(row['file_url'])
-        $('#edit-image .img').attr('src', $('#edit-image .img').data('src')).addClass('w-100').css("height", "");
-        $('#edit-image video').attr('width', '100%');
-        $('#edit-image video').attr('height', '');
-        $('#editModal').modal('show');
-
-        // disable edit 
-        {% if not edit %}
-        $('.edit-content input').attr('disabled', 'disabled')
-        $('.edit-footer').remove()
-        {% endif %}
-        });
-
-        $('.edit-submit').on('click', function() {
-            $.ajax({
-                data: $('#editForm').serialize(),
-                type: "POST",
-                url: "{% url 'edit_image' pk %}",
-                success: function(data) {
-                    $('#editModal').modal('hide');
-                    table.draw(false); // stay in same page
-                    // update filter //
-                    current_species = $("input[name=species-filter]:checked").val()
-                    $('#species-list-all').nextAll('li').remove();
-                    for (let i = 0; i < data['species'].length; i++) {
-                     $('#species-list').append(
-                        `
-                        <li>
-                        <label class="form-check-label">
-                        <input class="filter" type="radio" name="species-filter" value="${data['species'][i][1]}">
-                            ${data['species'][i][1]} (${data['species'][i][0]})
-                        </label>
-                        </li>
-                        `
-                     )
-                    }
-                    if (current_species==''){
-                        $('#species-all-option').prop('checked', true);
-                    } else {
-                        $(`input[name=species-filter][value=${current_species}]`).attr("checked",true);
-                        $('<i class="fas fa-check title-dark"></i>').insertBefore($(`input[name=species-filter][value=${current_species}]`));
-                        }
-
-                    $("input[type=radio]").click( function () {
-                        let group = $(this).attr('name')
-                        $(`input[name=${group}]`).parent('label').children('i').remove()
-                        $('<i class="fas fa-check title-dark"></i>').insertBefore(this);
-                    });
-            }})
-        });
-
-    // download
-    $('.download').on('click', function(){
-        {% if earliest_date != None %}
-        $("input[name=start_date]").val((new Date($("#date-slider").slider("values",0)*1000)).toISOString().substring(0, 10));
-        $("input[name=end_date]").val((new Date($("#date-slider").slider("values",1)*1000)).toISOString().substring(0, 10));
-        {% endif %}
-        $("input[name=email]").val($("#download-email").val())
-        $.ajax({
-                data: $('#downloadForm').serialize(),
-                type: "POST",
-                url: "{% url 'download' pk %}",
-                success: function(){
-                    alert('請求已送出');
-                    $('#downloadModal').modal('hide')
-                },
-                error:function(){
-                    alert('未知錯誤，請聯繫管理員');
-                    $('#downloadModal').modal('hide')
-                }
-                })
-                
-        //console.log($('#downloadForm').serialize())
-        //$('#downloadForm').submit()
-    })
-
-
-    // radio style for species
-    $("input[name=species-filter]").click( function () {
-        $(`input[name=species-filter]`).parent('label').children('i').remove()
-        $('<i class="fas fa-check title-dark"></i>').insertBefore($(`input[name=species-filter]:checked`));
-    });
-
-    // radio style for studyarea & cameralocation
-    $("input[name=sa-filter]").click( function () {
-        $(`input[type=checkbox].filter`).prop('checked', false);
-        let radio_group = $(`input[name=sa-filter]:checked`).val();
-        if (radio_group){
-            $(`input[data-parent-radio=${radio_group}]`).prop('checked', true);
-            }
-        $(`input[name=sa-filter]`).parent('label').children('i').remove()
-        $('<i class="fas fa-check title-dark"></i>').insertBefore($(`input[name=sa-filter]:checked`));
-    });
-
-    // radio style for studyarea & cameralocation: checkbox toggle
-    $("input[type=checkbox].filter.all").click (function(){
-        let parent_radio = $(this).data('parent-radio')
-
-        // uncheck other checkbox group
-        $(`input[type=checkbox]:not([data-parent-radio=${parent_radio}])`).prop('checked', false)
-
-        if( $(this).is(':checked') ) {
-            $(`input[data-parent-radio=${parent_radio}][type=checkbox]`).prop('checked', true)
-        } else {
-            $(`input[data-parent-radio=${parent_radio}][type=checkbox]`).prop('checked', false)
-        } 
-        // radio
-        $(`input[name=sa-filter]`).parent('label').children('i').remove()
-        $(`input[name=sa-filter]:checked`).prop('checked', false)
-        $(`input[name=sa-filter][id=${parent_radio}]`).prop('checked', true)
-        $('<i class="fas fa-check title-dark"></i>').insertBefore($(`input[name=sa-filter][id=${parent_radio}]`));
-    })
-
-    // if other checkbox checked, uncheck 'all'
-    $("input[type=checkbox].filter:not(.all)").click (function(){
-        let parent_radio = $(this).data('parent-radio')
-        // uncheck other checkbox group
-        $(`input[type=checkbox]:not([data-parent-radio=${parent_radio}])`).prop('checked', false)
-        // uncheck all
-        $(`input[data-parent-radio=${parent_radio}][type=checkbox].all`).prop('checked', false)
-        // radio
-        $(`input[name=sa-filter]`).parent('label').children('i').remove()
-        $(`input[name=sa-filter]:checked`).prop('checked', false)
-        $(`input[name=sa-filter][id=${parent_radio}]`).prop('checked', true)
-        $('<i class="fas fa-check title-dark"></i>').insertBefore($(`input[name=sa-filter][id=${parent_radio}]`));
-    })
-
-});
-
-
-
-
-//  datatable automatically fits window height
-(function( factory ){
-	if ( typeof define === 'function' && define.amd ) {
-		// AMD
-		define( ['jquery', 'datatables.net'], function ( $ ) {
-			return factory( $, window, document );
-		} );
-	}
-	else if ( typeof exports === 'object' ) {
-		// CommonJS
-		module.exports = function (root, $) {
-			if ( ! root ) {
-				root = window;
-			}
-
-			if ( ! $ || ! $.fn.dataTable ) {
-				$ = require('datatables.net')(root, $).$;
-			}
-
-			return factory( $, root, root.document );
-		};
-	}
-	else {
-		// Browser
-		factory( jQuery, window, document );
-	}
-}(function( $, window, document, undefined ) {
-'use strict';
-
-
-var ScrollResize = function ( dt )
-{
-	var that = this;
-	var table = dt.table();
-
-	this.s = {
-		dt:        dt,
-		host:      $(table.container()).parent(),
-		header:    $(table.header()),
-		footer:    $(table.footer()),
-		body:      $(table.body()),
-		container: $(table.container()),
-		table:     $(table.node())
-	};
-
-	var host = this.s.host;
-	if ( host.css('position') === 'static' ) {
-		host.css( 'position', 'relative' );
-	}
-
-	dt.on( 'draw', function () {
-		that._size();
-	} );
-
-	this._attach();
-	this._size();
-};
-
-
-ScrollResize.prototype = {
-	_size: function ()
-	{
-		var settings = this.s;
-		var dt = settings.dt;
-		var t = dt.table();
-		var offsetTop = $( settings.table ).offset().top;
-		var availableHeight = settings.host.height();
-		var scrollBody = $('div.dataTables_scrollBody', t.container());
-
-		// Subtract the height of the header, footer and the elements
-		// surrounding the table
-		availableHeight -= offsetTop;
-		availableHeight -= settings.container.height() - ( offsetTop + scrollBody.height() );
-
-		$('div.dataTables_scrollBody', t.container()).css( {
-			maxHeight: availableHeight,
-			height: availableHeight
-		} );
-
-		if ( dt.fixedColumns ) {
-			dt.fixedColumns().relayout();
-		}
-	},
-
-	_attach: function () {
-		// There is no `resize` event for elements, so to trigger this effect,
-		// create an empty HTML document using an <iframe> which will issue a
-		// resize event inside itself when the document resizes. Since it is
-		// 100% x 100% that will occur whenever the host element is resized.
-		var that = this;
-		var obj = $('<iframe/>')
-			.css( {
-				position: 'absolute',
-				top: 0,
-				left: 0,
-				height: '100%',
-				width: '100%',
-				zIndex: -1,
-				border: 0
-			} )
-			.attr( 'frameBorder', '0' )
-			.attr( 'src', 'about:blank' );
-
-		obj[0].onload = function () {
-			var body = this.contentDocument.body;
-			var height = body.offsetHeight;
-			var contentDoc = this.contentDocument;
-			var defaultView = contentDoc.defaultView || contentDoc.parentWindow;
-
-			defaultView.onresize = function () {
-				// Three methods to get the iframe height, to keep all browsers happy
-				var newHeight = body.clientHeight || body.offsetHeight;
-				var docClientHeight = contentDoc.documentElement.clientHeight;
-
-				if ( ! newHeight && docClientHeight ) {
-					newHeight = docClientHeight;
-				}
-
-				if ( newHeight !== height ) {
-					height = newHeight;
-
-					that._size();
-				}
-			};
-		};
-
-		obj
-			.appendTo( this.s.host )
-			.attr( 'data', 'about:blank' );
-	}
-};
-
-$.fn.dataTable.ScrollResize = ScrollResize;
-$.fn.DataTable.ScrollResize = ScrollResize;
-
-// Automatic initialisation listener
-$(document).on( 'init.dt', function ( e, settings ) {
-	if ( e.namespace !== 'dt' ) {
-		return;
-	}
-
-	var api = new $.fn.dataTable.Api( settings );
-
-	if ( settings.oInit.scrollResize || $.fn.dataTable.defaults.scrollResize ) {
-		new ScrollResize( api );
-	}
-} );
-
-
-}));
-
-</script>
+<script src="{% static 'js/air-datepicker.js' %}"></script>
+{% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/selectize.min.js" integrity="sha512-JiDSvppkBtWM1f9nPRajthdgTCZV3wtyngKUqVHlAs0d5q72n5zpM3QMOLmuNws2vkYmmLn4r1KfnPzgC/73Mw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> {% endcomment %}
+<script src="{% static 'js/project_detail.js' %}"></script>
 {% endblock script %}

@@ -1,0 +1,71 @@
+.clickable-row {
+  cursor: pointer;
+}
+
+/* 以下因應新切版 */
+
+.pt-none {
+  pointer-events: none;
+}
+
+
+/*
+.table {
+  padding: 1% 0;
+}
+
+.nav-link {
+  color: gray;
+}
+
+.nav-link:hover {
+  color: lightgrey;
+}*/
+
+/*
+  .page-item.active .page-link {
+    background-color: rgb(228, 224, 224) !important;
+    border: 1px solid rgb(228, 224, 224);
+  }
+  .page-link {
+    color: black !important;
+  }*/
+
+/* radio style */
+/*
+input[type="radio"] {
+  display: none;
+}
+
+label {
+  cursor: pointer;
+}
+
+input[name="species-filter"] {
+  display: none;
+}
+
+.w-12 {
+  width: 12px;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+.fs-14 {
+  font-size: 14px
+}
+
+.hr-style {
+  margin: auto;
+  width: 90%
+}
+
+.ls-none {
+  list-style: none
+}
+
+.tab-content {
+  background-color: white;
+  padding: 2%
+}
+*/

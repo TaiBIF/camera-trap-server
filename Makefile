@@ -5,13 +5,15 @@
 #MAKEFLAGS += --warn-undefined-variables
 #MAKEFLAGS += --no-builtin-rules
 
-dev-up:
+up:
 	docker-compose up -d
-
-dev-down:
+start:
+	docker-compose up
+down:
 	docker-compose down
-
-dev-build:
+logs:
+	docker-compose logs -f
+build:
 	docker-compose build
 
 prod-up:

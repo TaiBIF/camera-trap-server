@@ -1,0 +1,16 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}單機版登入 | {% endblock title %}
+
+{% block body %}
+
+<div class="main-box">
+  <div class="main-title flex-spb">
+    <div class="flex-boxleft">
+      <h2>Camera Trap 桌機版登入</h2>
+    </div>
+  </div>
+  <h1>驗證碼: {{ verify_code }}</h1>
+</div>
+{% endblock body %}

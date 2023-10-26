@@ -1,210 +1,213 @@
 {% extends 'base/base.html' %}
 {% block head %}
 {% load static %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/css/bootstrap-select.min.css">
+<!--<link rel="stylesheet" href="{% static 'css/bootstrap-select.min.css' %}">-->
+<link rel="stylesheet" href="{% static 'css/edit_project_members.css' %}">
+
+<link rel=stylesheet type="text/css" href="/static/css/select2.min.css">
+{% comment %} <script src="/static/js/select2.min.js"></script> {% endcomment %}
+<script src="/static/js/select2/select2.min.js"></script>
+<script src="/static/js/select2/i18n/zh-TW.js"></script>
 
 {% endblock head %}
-{% block style %}
-<style>
-        .nav-link {
-            color: gray;
-        }
 
-        .nav-link:hover {
-            color: lightgrey;
-        } 
+{% block title %}計畫管理 | {% endblock title %}
 
-    .btn-new {
-        background-color: white;
-        border: 1px solid #cccccc;
-    }
-
-    .btn-new[title='請設置權限']{
-        color: #6c757d !important;  
-    }
-
-    /* color for select */
-    .check-mark{
-        color: rgb(37, 116, 85);
-    }
-
-</style>
-{% endblock style %}
-{% block body %}
-{% if is_authorized %}
-<div class="container content">
-    <div class="row" style="margin-bottom: 10px">
-        <div class="col-2">
-            <div class="row mb-3">
-                <a class="text-gray back text-decoration-none" href="{% url 'project_detail' pk %}"><i class="fa fa-chevron-left"></i> 返回計畫首頁</a>
+{% block pop %}
+<div class="pop-box remove-pop d-none">
+    <div class="center-box">
+        <div class="wbox">
+            <div class="xx">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+                        <g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+                            <circle cx="20" cy="20" r="20" stroke="none"/>
+                            <circle cx="20" cy="20" r="19" fill="none"/>
+                        </g>
+                        <g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+                            <line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                            <line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                        </g>
+                    </g>
+                </svg>
             </div>
-            <h4 class="title-dark">計畫管理</h4>
-            <nav class="py-2 mb-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'edit_project_basic' pk %}">
-                            <i class="fa fa-xs fa-circle px-2 py-auto"></i> 基本資訊 
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'edit_project_deployment' pk %}">
-                            <i class="fa fa-xs fa-circle px-2 py-auto"></i> 相機位置管理 
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" style="color: rgb(37, 116, 85)" href="{% url 'edit_project_members' pk %}">
-                            <i class="fa fa-xs fa-pencil px-2 py-auto"></i> 計畫成員 </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'edit_project_license' pk %}">
-                            <i class="fa fa-xs fa-circle px-2 py-auto"></i> 創用CC授權 
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>         
-        <div class="col-10">
-            <div class="bg-white shadow px-0 pb-5 mx-2">
-                <p class="backgroud-dark text-white fw-bold px-3 py-2">計畫成員</p>   
-                <form id="addProjectMember" novalidate action="{% url 'edit_project_members' pk %}" method="post">
-                    {% csrf_token %}
-                    <div class="row py-3 d-flex justify-content-between">
-                            <div class="col-2 my-auto text-end">
-                                加入成員
-                            </div>
-                            <div class="col-4 my-auto">
-                                <input type="text" class="form-control" placeholder="請輸入成員ORCiD或電子郵件" style="width: 100%" name="contact_query">
-                            </div>
-                            <div class="col-4 my-auto">
-                                <select class="selectpicker form-control" data-width="100%" data-style="btn-new" name="role">
-                                    <option value="project_admin">個別計畫承辦人</option>
-                                    <option value="uploader">資料上傳者</option>
-                                </select>
-                            </div>
-                            <div class="col-2 my-auto">
-                                <a class="btn btn-orange" onClick="submitAddForm()">加入</a>
-                            </div>
-                            <input type="hidden" name="action" value="add">
-                    </div>
-                </form>
-                {% comment %} <hr style="width: 90%"> {% endcomment %}
-                <form id="editProjectMember" novalidate action="{% url 'edit_project_members' pk %}" method="post">
-                {% csrf_token %}
-                    <div class="row my-2 mt-4">
-                        <table class="table table-striped mx-auto" id="allproject-table" style="width: 90%;">
-                            <thead>
-                            <tr>
-                                <td style="width: 20%">計畫成員</td>
-                                <td style="width: 35%">電子郵件</td>
-                                <td style="width: 35%">權限設置</td>
-                                <td style="width: 10%"></td>
-                            </tr>
-                            
-                            </thead>
-                            <tbody>
-                                <!-- organization_admin -->
-                                {% for i in organization_admin %}
-                                <tr class="align-middle"  >
-                                    <td style="width: 20%">{{ i.name }}</td>
-                                    <td style="width: 35%">{{ i.email }}</td>
-                                    <td style="width: 35%">
-                                        <select class="selectpicker form-control" data-width="100%" data-style="btn-new" disabled>
-                                            <option>計畫總管理人</option>
-                                        </select>
-                                    </td>
-                                    <td style="width: 10%">
-                                    </td>
-                                </tr>
-                                {% endfor %}
-
-                                {% for i in members %}
-                                <tr class="align-middle"  >
-                                    <td style="width: 20%">{{ i.member.name }}</td>
-                                    <td style="width: 35%">{{ i.member.email }}</td>
-                                    <td style="width: 35%">
-                                    <!-- disable change current user's (self) permission  -->
-                                    {% if request.session.name == i.member.name %}
-                                    <select class="selectpicker form-control" data-width="100%" data-style="btn-new" name="{{ i.member_id }}" id="{{ i.member_id }}" disabled>
-                                    {% else %}
-                                    <select class="selectpicker form-control" data-width="100%" data-style="btn-new" name="{{ i.member_id }}" id="{{ i.member_id }}">
-                                    {% endif %}
-                                        <option value="project_admin">個別計畫承辦人</option>
-                                        <option value="uploader">資料上傳者</option>
-                                    </select>
-                                    </td>
-                                    <td style="width: 10%" class="text-center">
-                                    {% if request.session.name == i.member.name  %}
-                                    <button class="btn btn-outline-secondary" disabled>移除</button>
-                                    {% else %}
-                                    <a class="btn btn-outline-secondary remove" data-id="{{ i.member_id }}" data-bs-toggle="modal" data-bs-target="#removeModal">移除</a>
-                                    {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <input type="hidden" name="action" value="edit">
-                </form>
-            </div>    
-            <div class="row mt-3 px-3">
-                <div class="text-end px-0">
-                    <a class="btn btn-outline-success" href="{% url 'project_detail' pk %}">取消</a>
-                    <a class="btn btn-orange" onClick="submitEditForm()">儲存設定</a>
+            <div class="contentbox">
+                <p class="marb_20">
+                    確定刪除 <span id="remove_mame"></span>？
+                    <form id="removeProjectMember" novalidate action="{% url 'edit_project_members' pk %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="memberid" id="memberid" value="">
+                        <input type="hidden" name="action" value="remove">
+                    </form>        
+                </p>
+                <div class="btn-center">
+                    <button class="btn-green calcel-remove">
+                        取消
+                    </button>
+                    <button class="btn-red" id="removePM">
+                        刪除
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock pop %}
 
-<!-- Modal -->
-<div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <h4>確定移除？</h4>
-                <form id="removeProjectMember" novalidate action="{% url 'edit_project_members' pk %}" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="memberid" id="memberid" value="">
-                <input type="hidden" name="action" value="remove">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
-                <a class="btn btn-danger" onClick="$('#removeProjectMember').submit()">移除</a>
-            </div>
+
+{% block body %}
+{% if is_authorized %}
+
+
+<input type="hidden" name="pk" value="{{ pk }}"></input>
+<input type="hidden" name="return_message" value="{{ return_message }}"></input>
+<div class="main-box">
+    <div class="main-title">
+        <div class="flex-boxleft">
+            <a href="{% url 'project_info' pk %}" class="back-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="9.377" height="15.927" viewBox="0 0 9.377 15.927">
+                    <g id="Group_736" data-name="Group 736" transform="translate(1.414 1.414)">
+                        <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                        <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                    </g>
+                </svg>
+                <p>返回</p>
+            </a>
+            <h2>計畫管理</h2>
         </div>
     </div>
+
+    <div class="management-box">
+        <div class="left-menu-area">
+            <ul>
+                <li data-href="{% url 'edit_project_basic' pk %}">- 基本資訊</li>
+                <li data-href="{% url 'edit_project_deployment' pk %}">- 相機位置管理</li>
+                <li class="now">- 計畫成員</li>
+                <li data-href="{% url 'edit_project_license' pk %}">- 創用CC授權</li>
+            </ul>
+        </div>
+        <div class="right-cont">
+            <div class="wbg-box marb_50">
+                    <h3 class="light-green marb_10">計畫成員</h3>
+                    <form id="addProjectMember" novalidate action="{% url 'edit_project_members' pk %}" method="post">
+                        {% csrf_token %}
+                        <div class="member-addbox">
+                            <div class="input-item">
+                                <input name="contact_query" type="text" placeholder="請輸入成員ORCiD或電子郵件">
+                            </div>
+                            <div class="input-item">
+                                <select name="role">
+                                    <option value="project_admin">個別計畫承辦人</option>
+                                    <option value="uploader" selected>資料上傳者</option>
+                                </select>
+                            </div>
+                            <button class="add-btn" id="submitAddForm">
+                                加入成員
+                            </button>
+                            <input type="hidden" name="action" value="add">
+                        </div>
+                    </form>
+
+                    <form id="editProjectMember" novalidate action="{% url 'edit_project_members' pk %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="edit">
+                        <div class="member-table">
+
+                            <table class="memtable-style" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="td10">計畫成員</td>
+                                    <td class="td25">電子郵件</td>
+                                    <td class="td25">權限設置</td>
+                                    <td class="td25">負責樣區</td>
+                                    <td class="td5">刪除</td>
+                                </tr>
+
+
+                                {% for i in organization_admin %}
+                                <tr>
+                                    <td>{{ i.name }}</td>
+                                    <td>{{ i.email }}</td>
+                                    <td>
+                                        <div class="input-item">
+                                            <select disabled> <!-- 不得修改計畫總管理人的角色 -->
+                                                <option>計畫總管理人</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                {% endfor %}
+
+                                {% for i in members %}
+                                <tr>
+                                    <td>{{ i.member.name }}</td>
+                                    <td>{% if i.member.email and i.member.email != 'None'  %}{{ i.member.email }}{% endif %}</td>
+                                    <td>
+                                        <!-- disable change current user's (self) permission  -->
+                                        <div class="input-item">
+                                            <select name="{{ i.member_id }}" id="{{ i.member_id }}" {% if request.session.name == i.member.name %} disabled {% endif %}>
+                                                <option value="project_admin" {% if i.role == 'project_admin' %} selected {% endif %}>個別計畫承辦人</option>
+                                                <option value="uploader" {% if i.role == 'uploader' %} selected {% endif %}>資料上傳者</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="input-item">
+                                            <select class="select-sa" name="{{ i.member_id }}_studyareas_id" multiple="multiple" id="{{ i.member_id }}_studyareas_id" {% if request.session.name == i.member.name %} disabled {% endif %} >
+                                                {% for item in study_area %}
+                                                    <option value="{{ item.id }}" {% if item in i.pmstudyarea.all %} selected {% endif %} >{{ item.name }}</option>
+                                                {% endfor %}
+                                            </select>  
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if request.session.name != i.member.name  %}
+                                        <a class="remove" data-id="{{ i.member_id }}" data-name="{{ i.member.name }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20.828" height="20.828" viewBox="0 0 20.828 20.828">
+                                                <g data-name="Group 689" transform="translate(-1823.086 -445.086)">
+                                                    <line data-name="Line 1" x1="18" y2="18" transform="translate(1824.5 446.5)" fill="none" stroke="#cb5757" stroke-linecap="round" stroke-width="2"/>
+                                                    <line data-name="Line 2" x2="18" y2="18" transform="translate(1824.5 446.5)" fill="none" stroke="#cb5757" stroke-linecap="round" stroke-width="2"/>
+                                                </g>
+                                            </svg>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                            </table>
+                        </div>
+                    </form>
+
+
+            </div>
+            <div class="btn2-area">
+                <!--
+                <button class="btn-greeno">
+                    取消
+                </button>-->
+                <button class="btn-green" id="submitEditForm">
+                    確認儲存
+                </button>
+            </div>
+        </div>
+
+    </div>
+
 </div>
+
 {% else %}
-<div class="container content">
-<a class="btn btn-outline-success" onClick="goBack()">回上一頁</a></div>
+<div class="main-box">
+	<div class="main-title">
+		您的權限不足      
+	</div>		
+	<a class="return-btn" href="/"> < 返回 </a>
+</div>
 {% endif %}
 {% endblock body %}
 {% block script %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
+<script src="{% static 'js/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'js/edit_project_members.js' %}"></script>
 
-<script>
-$( function() {
-    // preselect role
-    {% for i in members %}
-        $('#{{ i.member_id }}').selectpicker('val', "{{ i.role }}"); 
-    {% endfor %}
-
-})
-    function submitAddForm(){
-        $('#addProjectMember').submit()
-    }
-
-    function submitEditForm(){
-        $('#editProjectMember').submit()
-    }
-
-
-// pass variable to modal
-$(document).on("click", ".remove", function () {
-     var memberid = $(this).data('id');
-     $(".modal-body #memberid").val( memberid );
-});
-</script>
 {% endblock script %}

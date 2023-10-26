@@ -5,9 +5,9 @@ if ! [ -x "$(command -v docker-compose)" ]; then
   exit 1
 fi
 
-domains=(dev.camera-trap.tw)
+domains=(camera-trap.tw)
 rsa_key_size=4096
-data_path="../ct21-volumes/certbot"
+data_path="../ct22-volumes/certbot"
 email="" # Adding a valid address is strongly recommended
 staging=0 # Set to 1 if you're testing your setup to avoid hitting request limits
 

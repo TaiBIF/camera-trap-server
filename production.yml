@@ -1,21 +1,26 @@
 version: '3.7'
 
+#volumes:
+#  asset:
+
 services:
   django:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ct21-django-prod-container
-    image: ct21-django-prod-image
+    container_name: ct22-django-prod-container
+    image: ct22-django-prod-image
     expose:
       - 8001
     depends_on:
       - postgres
     volumes:
       - .:/code
-      - ../ct21-volumes/static:/ct21-volumes/static
-      - ../ct21-volumes/media:/ct21-volumes/media
-      - ../ct21-volumes/bucket:/bucket
+      - ../ct22-volumes/static:/ct22-volumes/static
+      - ../ct22-volumes/media:/ct22-volumes/media
+      - ../ct22-volumes/logs/ct-web:/var/log/ct-web
+      #- asset:/asset
+      - ../ct22-volumes/bucket:/bucket
     command: /srv/start
     restart: always
     #env_file:
@@ -27,18 +32,32 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
       - POSTGRES_DB=cameratrap
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
   postgres:
-    image: postgres:13-alpine
-    container_name: ct21-postgres-container
+    #image: postgres:13-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    image: ct-postgres-image
+    container_name: ct22-postgres-container
     restart: always
     volumes:
-      - ../ct21-volumes/pgdata:/var/lib/postgresql/data/pgdata
-      - ../ct21-volumes/bucket:/bucket
+      - ../ct22-volumes/pgdata:/var/lib/postgresql/data/pgdata
+      - ../ct22-volumes/bucket:/bucket
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
       - POSTGRES_DB=cameratrap
       - PGDATA=/var/lib/postgresql/data/pgdata
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
   nginx:
     image: nginx:1.19.10-alpine
     restart: always
@@ -46,20 +65,83 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./scripts/nginx-django.conf:/etc/nginx/conf.d/ct21.conf
-      - ../ct21-volumes/static:/ct21-volumes/static
-      - ../ct21-volumes/certbot/conf:/etc/letsencrypt
-      - ../ct21-volumes/certbot/www:/var/www/certbot
+      - ./scripts/nginx-django.conf:/etc/nginx/conf.d/ct22.conf
+      - ../ct22-volumes/static:/ct22-volumes/static
+      - ../ct22-volumes/certbot/conf:/etc/letsencrypt
+      - ../ct22-volumes/certbot/www:/var/www/certbot
       #- ../basdb-volumes/media:/basdb-volumes/media
+      - ../ct22-volumes/logs/nginx:/var/log/nginx
+      #- asset:/asset
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
     links:
       - django:django
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
   certbot:
     image: certbot/certbot
     volumes:
-      - ../ct21-volumes/certbot/conf:/etc/letsencrypt
-      - ../ct21-volumes/certbot/www:/var/www/certbot
+      - ../ct22-volumes/certbot/conf:/etc/letsencrypt
+      - ../ct22-volumes/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
   redis:
     image: redis:6-alpine
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+  celery:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ct22-celery-prod-container
+    image: ct22-django-prod-image
+    command: /root/.local/bin/celery -A conf worker -l info
+    volumes:
+      - .:/code
+      - ../ct22-volumes/media:/ct22-volumes/media
+      - ../ct22-volumes/logs/ct-web:/var/log/ct-web
+    depends_on:
+      - redis
+      - django
+    environment:
+      - WEB_ENV=dev
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=cameratrap
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+  flower:
+    restart: unless-stopped
+    build:
+      context: .
+    container_name: ct22-flower-prod-container
+    image: ct22-django-prod-image
+    ports:
+      - 5555:5555
+    command: /root/.local/bin/celery flower -persisten=True --port=5555
+    volumes:
+      - .:/code
+      - ../ct22-volumes/media:/ct22-volumes/media
+      - ../ct22-volumes/logs/ct-web:/var/log/ct-web
+    depends_on:
+      - redis
+      - django
+    environment:
+      - WEB_ENV=dev
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=cameratrap
+      - CELERY_BROKER_URL=redis://redis:6379/3

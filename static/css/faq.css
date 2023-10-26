@@ -1,0 +1,47 @@
+/* New version UI */
+.search-box {
+    display: none;
+}
+/* New version UI end */
+
+
+.nav-link {
+      color: gray;
+      cursor: pointer;
+    }
+  
+    .nav-link:hover {
+      color: lightgrey;
+    }
+  
+    .active {
+      color: rgb(37, 116, 85);
+    }
+  
+    .accordion-body {
+      background-color: #f1efef;
+    }
+  
+    .accordion-button {
+      background-color: white !important;
+      color: black !important;
+    }
+  
+    .accordion-body {
+      font-size: 14px !important;
+      padding-left: 30px;
+    }
+  
+    .accordion-button.collapsed::after {
+      background-image: url("/static/icon/chevron-down.png");
+    }
+  
+    .accordion-button:not(.collapsed)::after {
+      background-image: url("/static/icon/chevron-up.png");
+      transform: rotate(0deg);
+    }
+  
+    
+      .fs-14 {
+        font-size: 14px
+      }

@@ -1,0 +1,167 @@
+{% extends 'base/base.html' %} {% block head %} {% load static %} {% endblock head %} {% block style %}
+<link href="{% static 'css/faq.css' %}" rel="stylesheet">
+
+{% endblock %} 
+
+{% block title %}常見問題 | {% endblock title %}
+
+{% block body %}
+<div class="main-box">
+  <div class="main-title flex-spb">
+    <div class="flex-boxleft">
+
+      <h2>常見問題</h2>
+    </div>
+  </div>
+
+
+
+  <div class="management-box faq-box">
+
+    <div class="left-menu-area">
+      <ul>
+        <li class="now nl active" data-type="web">- 網頁操作</li>
+        <li class="nl active" data-type="account">- 帳號相關</li>
+        <li class="nl active" data-type="project">- 計畫管理</li>
+        <li class="nl active" data-type="desktop">- 單機版軟體操作</li>
+      </ul>
+      <div class="contact-area">
+        <p>仍需要協助嗎？</p>
+        <a href="{% url 'contact-us' %}">聯絡我們</a>
+      </div>
+    </div>
+    <div class="right-cont">
+      <div class="top-box">
+          <h3 class="light-green faq-title">網頁操作</h3>
+          {% comment %} <h3 class="light-green">單機版軟體操作</h3> {% endcomment %}
+          <div class="search-box">
+            <div class="input-item">
+              <input type="text" placeholder="請輸入關鍵字">
+              <button class="searchicon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21.061" height="21.061" viewBox="0 0 21.061 21.061">
+                  <g id="Group_718" data-name="Group 718" transform="translate(-966.939 -1128)">
+                    <g id="Group_719" data-name="Group 719" transform="translate(968 1128)">
+                      <g id="Ellipse_5" data-name="Ellipse 5" transform="translate(2)" fill="none" stroke="#257455" stroke-width="1.5">
+                        <circle cx="9" cy="9" r="9" stroke="none"/>
+                        <circle cx="9" cy="9" r="8.25" fill="none"/>
+                      </g>
+                      <line id="Line_5" data-name="Line 5" x1="5" y2="5" transform="translate(0 15)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
+                    </g>
+                  </g>
+                </svg>
+              </button>
+            </div>
+          </div>
+      </div>
+      <div class="faq-content faq-li"></div>
+      {% comment %} <ul class="faq-li">
+        <li >
+          <div class="q-box">
+            <h4>軟體操作說明文件</h4>
+            <div class="arr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+                <g data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+                  <line  data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line  data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="a-box">
+            資料夾命名需有固定格式：名稱-行程開始日期-行程結束日期，否則會跳出警告視窗、無法匯入。其中名稱可自訂，日期則各自需為 yyyymmdd 八碼數字，中間皆需有「-」符號。
+          </div>
+        </li>
+        <li>
+          <div class="q-box">
+            <h4>軟體操作說明文件</h4>
+            <div class="arr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+                <g id="Group_737" data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+                  <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="a-box">
+            <a class="link" target="_blank" href="/media/faq/網頁版系統操作.pdf">點此下載</a>
+          </div>
+        </li>
+        <li>
+          <div class="q-box">
+            <h4>軟體操作說明文件</h4>
+            <div class="arr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+                <g id="Group_737" data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+                  <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="a-box">
+            <a class="link" target="_blank" href="/media/faq/網頁版系統操作.pdf">點此下載</a>
+          </div>
+        </li>
+        <li>
+          <div class="q-box">
+            <h4>軟體操作說明文件</h4>
+            <div class="arr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+                <g id="Group_737" data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+                  <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="a-box">
+            <a class="link" target="_blank" href="/media/faq/網頁版系統操作.pdf">點此下載</a>
+          </div>
+        </li>
+        <li>
+          <div class="q-box">
+            <h4>軟體操作說明文件</h4>
+            <div class="arr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+                <g id="Group_737" data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+                  <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="a-box">
+            <a class="link" target="_blank" href="/media/faq/網頁版系統操作.pdf">點此下載</a>
+          </div>
+        </li>
+        <li>
+          <div class="q-box">
+            <h4>軟體操作說明文件</h4>
+            <div class="arr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+                <g id="Group_737" data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+                  <line id="Line_6" data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                  <line id="Line_7" data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="a-box">
+            <a class="link" target="_blank" href="/media/faq/網頁版系統操作.pdf">點此下載</a>
+          </div>
+        </li>
+      </ul> {% endcomment %}
+
+      <div class="contact-area">
+        <p>仍需要協助嗎？</p>
+        <a href="{% url 'contact-us' %}">聯絡我們</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock body %} {% block script %}<script src="{% static 'js/faq.js' %}"></script>
+{% endblock script %}

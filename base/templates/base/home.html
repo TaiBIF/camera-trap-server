@@ -1,30 +1,8 @@
 {% extends 'base/base.html' %}
-{% block style %}
-{% load static %} 
-<style>
-
-.banner {
-    background-image: url('{% static "image/banner.png" %}');   
-    background-size:     cover;                    
-    background-repeat:   no-repeat;
-    background-position: center center;
-    min-height: 590px;
-    align-items: baseline;
-    justify-content: center;
-    display: flex;
-    flex-direction: column 
-}
-  
-</style>
-{% endblock style %}
-
+{% load static %}
 {% block head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-  integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-  crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-  integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-  crossorigin=""></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 <!-- plot -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/series-label.js"></script>
@@ -32,406 +10,235 @@
 <script src="https://code.highcharts.com/modules/export-data.js"></script>
 <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
+<link href="{% static 'css/home.css' %}" rel="stylesheet">
 
-  {% endblock head %}
+{% endblock head %} 
+
 
 {% block body %}
-    <div class="container-fluid">
-        <div class="row banner">
-                <div style="padding-left: 15%;">
-                    <h1 style="color: white; font-size: 60px">臺灣自動相機資訊系統</h1>
-                    <h1 style="color: white;">Taiwan Camera Trap Information System</h1>
-                    <br> 
-                    <a class="btn btn-orange" style="font-size: 24px; width: 20%;" href="{% url 'project_overview' %}">
-                    開始使用
-                    </a>
-                </div>
-        </div>
+
+<section class="kv-area">
+  <div class="main-box">
+    <div class="title-areabox">
+      <h2>
+        臺灣自動相機資訊系統
+      </h2>
+      <h3>Taiwan Camera Trap Information System</h3>
+      <a href="{% url 'project_overview' %}" class="start-btn">
+        開始使用
+      </a>
     </div>
-    <div class="container content">
-        <div class="row">
-            <!-- MAP -->
-            <div class="col-xs-12 col-sm-12 col-md-6">
-                <h6 class="title-light">資料分布</h6>
-                <div id="map" style="height: 600px; width: 80%;"></div>
-            </div>
-            <!-- <div class="col-xs-12 col-sm-12 col-md-6 text-right mt-5 pt-3">
-                <h2 id="click-county"></h2>
-                <ul style="list-style: none;">
-                    <li><span id="click-no-proj"></span></li>
-                    <li><span id="click-no-img"></span></li>
-                </ul>
-            </div> -->
-            <div class="col-xs-12 col-sm-12 col-md-6 text-end mt-5 pt-3">
-                    <h1 class="title-light" style="font-size: 54px;">自動相機資料庫</h1>
-                      <h2 class="title-dark">
-                      共享的資料平台
-                    </h2>
-                    <p class="text-gray text-start">
-                      Camera Trap提供研究人員自動相機影像統一倉儲、管理、
-                      查詢及分析的便利性，透過公開資源的共享，與其他專業人士交流、探索生態與開創更多研究可能性。
-                    </p>
-            </div>
+  </div>
+</section>
+
+<section class="map-section">
+  <div class="main-box">
+    <div class="left-map">
+      <div class="map-area">
+        <div class="mapbox">
+          <div id="map"></div>
         </div>
-        <div class="row pt-5">
-            <div class="col-xs-12 col-sm-12 col-md-6">
-                <h3 class="title-light text-center">資料成長數</h3>
-                <hr class="home-hr">
-                <div id="data_growth" class="mx-auto"></div>
-            </div>
-            <div class="col-xs-12 col-sm-12 col-md-6">
-                <h3 class="title-light text-center">物種數</h3>
-                <hr class="home-hr">
-                <div id="species_data" class="mx-auto"></div>
-            </div>
-        </div>
-        <div class="row pt-5">
-            <h1 class="title-dark text-center">
-            減少相機資料處理時間，提升工作效率
-            </h1>
-        </div>
-        <div class="row pt-4">
-            <div class="col-xs-12 col-sm-12 col-md-4">
-                <div class="image">
-                <img src='{% static "image/service-1.png" %}'>
-                </div>
-                <div class=" text-center">
-                <h2 class="title-dark">資料彙整</h2>
-                <p class="description">資料雲端留存，統一管理</p>
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-12 col-md-4">
-                <div class="image">
-                <img src='{% static "image/service-2.png" %}'>
-                </div>
-                <div class=" text-center">
-                <h2 class="title-dark">資料處理</h2>
-                <p class="description">辨識物種、標註及分析</p>
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-12 col-md-4">
-                <div class="image">
-                <img src='{% static "image/service-3.png" %}'>
-                </div>
-                <div class=" text-center">
-                <h2 class="title-dark">資料共享</h2>
-                <p class="description">開放科學，資源共享共用</p>
-                </div>
-            </div>
-        </div>
-        <div class="row pt-4">
-            <a class="btn btn-orange mx-auto" style="width: 50%; font-size: 28px;" href="{% url 'project_overview' %}">立即開始使用</a>
-        </div>
+      </div>
     </div>
-{% endblock body %}
+    <div class="map-content">
 
-{% block script %} 
-<script>
-    $(function(){
-
-        // get data by ajax separately
-         $.ajax({
-                    url: "{% url 'get_geo_data' %}",
-                    success: function(data) {
-
-                        // map
-                        data.deployment_points.forEach(i => 
-                                    marker = new L.marker([i[1], i[0]], {icon:fontAwesomeIcon})
-                                    .bindPopup(i[2])
-                                    .on('mouseover', function (e) {
-                                        this.openPopup();
-                                    })
-                                    .on('mouseout', function (e) {
-                                        this.closePopup();
-                                    })
-                                    .addTo(map)  
-                         );
-
-}
-                })
-
-      $.ajax({
-                    url: "{% url 'get_growth_data' %}",
-                    success: function(data) {
-                        // plot                         
-                        data_growth_year = []
-                        data.data_growth_image.forEach(i => 
-                            data_growth_year.push(i[0])
-                            );
-
-                        data_growth_image_count = []
-                        data.data_growth_image.forEach(i => 
-                            data_growth_image_count.push(i[1]/10000)
-                            );
-
-                        data_growth_deployment_count = []
-                        data.data_growth_deployment.forEach(i => 
-                            data_growth_deployment_count.push(i[1])
-                            );
-
-    // plot - data_growth
-    Highcharts.chart('data_growth', {
-        chart: {
-            marginTop: 40,
-            backgroundColor: null
-        },
-        exporting: {enabled: false},
-        credits: {enabled: false},    
-        title: { text: ''},
-        xAxis: [{
-            categories: data_growth_year,
-            crosshair: true
-        }],
-        legend: {                    
-            itemStyle: {
-                fontSize: '14px',
-                fontWeight: 'regular',
-            }
-        },
-        yAxis: [{ // Primary yAxis
-            allowDecimals: false,
-            labels: {
-                format: '{value}',
-                style: {
-                    fontSize: '14px',
-                },
-            },
-            title: {
-                align: 'high',
-                offset: 0,
-                text: '相機位置數',
-                rotation: 0,
-                y: -20,
-                x: -10,
-                style: {
-                    fontSize: '14px',
-                }
-            },
-            opposite: true
-    
-        }, { // Secondary yAxis
-            allowDecimals: false,
-            gridLineWidth: 0,
-            title: {
-                align: 'high',
-                offset: 0,
-                text: '照片累積張數(萬)',
-                rotation: 0,
-                y: -20,
-                x: 30,
-                style: {
-                    fontSize: '14px',
-                }
-            },
-            labels: {
-                format: '{value}',
-                style: {
-                    fontSize: '14px',
-                }
-            }
-        }, ],
-        tooltip: {
-            shared: true
-        },
-        series: [{
-            name: '照片累積張數(萬)',
-            type: 'column',
-            yAxis: 1,
-            data: data_growth_image_count,
-            tooltip: {
-            },
-            color: '#AECC82'
-        }, {
-            name: '相機位置數',
-            type: 'spline',
-            data: data_growth_deployment_count,
-            tooltip: {
-            },
-            marker: {
-                lineWidth: 2,
-                lineColor: '#AECC82',  
-                fillColor: 'white',
-            },
-            color: '#AECC82',
-            label: {
-                enabled: false
-            }       
-        }],
-        responsive: {
-            rules: [{
-                condition: {
-                    maxWidth: 500
-                },
-                chartOptions: {
-                    legend: {
-                        floating: false,
-                        layout: 'horizontal',
-                        align: 'center',
-                        verticalAlign: 'bottom',
-                        x: 0,
-                        y: 0
-                    },
-                    yAxis: [{
-                        labels: {
-                            align: 'right',
-                            x: 0,
-                            y: -6
-                        },
-                        showLastLabel: false
-                    }, {
-                        labels: {
-                            align: 'left',
-                            x: 0,
-                            y: -6
-                        },
-                        showLastLabel: false
-                    }, {
-                        visible: false
-                    }]
-                }
-            }]
-        }
-    });
-                }
-                })
+      <!--進場還沒點地圖時候顯示-->
+      <div class="inf-box d-block">
+        <div class="top">
+          <h2>自動相機資料庫</h2>
+          <h3>共享的資料平台</h3>
+          <p class="short">Camera Trap提供研究人員自動相機影像統一倉儲、管理、 查詢及分析的便利性，透過公開資源的共享，與其他專業人士交流、探索生態與開創更多研究可能性。</p>
+        </div>
+        <div class="note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14.207" height="9.414" viewBox="0 0 14.207 9.414">
+            <g id="Group_874" data-name="Group 874" transform="translate(-989.793 -1177.793)">
+              <line id="Line_41" data-name="Line 41" x2="13" transform="translate(990.5 1182.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1"/>
+              <line id="Line_42" data-name="Line 42" x1="4" y2="4" transform="translate(990.5 1178.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1"/>
+              <line id="Line_43" data-name="Line 43" x1="4" y1="4" transform="translate(990.5 1182.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1"/>
+            </g>
+          </svg>
+          <p>點擊地圖區塊進行資料探索</p>
+        </div>
+      </div>
 
 
+      <!--點擊縣市出現資料-->
+      <div class="city-box d-none">
+      </div>
 
-      $.ajax({
-                    url: "{% url 'get_species_data' %}",
-                    success: function(data) {
-
-        // plot - species
+      <!--點擊pin出現長條圖-->
+      <div class="pin-chartbox d-none">
 
 
-                            species_data_name = []
-                        data.species_data.forEach(i => 
-                            species_data_name.push(i[1])
-                            );
-                        species_data_count = []
-                        data.species_data.forEach(i => 
-                            species_data_count.push(i[0]/10000)
-                            );
-    Highcharts.chart('species_data', {
-        chart: {
-            type: 'bar',
-            marginTop: 40,
-            backgroundColor: null
-        },
-        exporting: {enabled: false},
-        credits: {enabled: false},    
-        title: { text: ''},
-        xAxis: {
-            categories: species_data_name,
-            tickInterval: 1,
-            title: {
-                text: null,
-                style: {
-                    fontSize: '14px',
-                }
-            },
-            labels: {
-                style: {
-                    fontSize: '14px',
-                }}
-        },
-        yAxis: {
-            allowDecimals: false,
-            min: 0,
-            title: {
-                text: '照片累積張數(萬)',
-                align: 'high',
-                style: {
-                    fontSize: '14px',
-                }
-            },
-            labels: {
-                overflow: 'justify',
-                style: {
-                    fontSize: '14px',
-                }
-            },
-        },
-        tooltip: {
-            pointFormatter: function() {
-                var string = this.series.name + ': ' + this.y + '<br>';
-                return string;
-              }          
-        },
-        series: [{
-            name: '照片累積張數(萬)',
-            data: species_data_count,
-            color: '#AECC82'
-        }],
-        legend: {
-            itemStyle: {
-                fontSize: '14px',
-                fontWeight: 'regular',
-            }
-        },
         
-    });
-}
-                })
+        <h2>花蓮處</h2>
+        <h3>自動相機動物監測整合計畫</h3>
+        <div class="mbscro">
+          <div class="chart-box">
 
-
-    })
-
-
-
-    // map
-    const fontAwesomeIcon = L.divIcon({
-    html: '<i class="fa fa-circle" style="color: darkorange; opacity: 0.5"></i>',
-    iconSize: [0.5, 0.5],
-    className: 'myDivIcon'
-    });
-
-
-    let map = L.map('map').setView([23.5, 121.2],7);
-    L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+            <img src="/static/image/examplepic3.png" alt="">
+          </div>
+        </div>
+        <div class="mapiconbox">
+          <button>< 返回</button>
+          <img src="/static/image/marker-icon.png" alt="">
+          <p>相機位置</p>
+        </div>
 
 
 
-    /*function onEachFeature(feature, layer) {
-        layer.on({
-            mouseover: e => {
-                e.target.setStyle({
-                    fillColor: 'green',
-                });
-            },
-            mouseout: e => {
-                e.target.setStyle({
-                    fillColor: '#7C9C2D',
-                });
-            },
-            click: e => {
-                $('#click-county').html(e.target.feature.properties.COUNTYNAME);
-                $.ajax({
-                    data: {"city": e.target.feature.properties.COUNTYNAME},
-                    dataType: "json",
-                    success: function(data) {
-                        $('#click-no-proj').html(`計畫總數：${data.no_proj}`);
-                        $('#click-no-img').html(`影像總數：${data.no_img}`);
-                }})
-            },
-            
-        })
-    }*/
+      </div>
+    </div>
+  </div>
+</section>
 
-    function polystyle(feature) {
-        return {
-            fillColor: '#7C9C2D',
-            weight: 1.2,
-            color: 'white', 
-        };
-    }
 
-    $.getJSON("https://raw.githubusercontent.com/g0v/twgeojson/master/json/twCounty2010.geo.json",function(ret){
-        //L.geoJSON(ret, {onEachFeature: onEachFeature, style: polystyle}).addTo(map);
-        L.geoJSON(ret, {style: polystyle}).addTo(map);
-        })
 
-</script>
-{% endblock script %}
+<section class="chart-section">
+  <div class="main-box">
+    <div class="left-box">
+      <div class="chart-title">
+        <h3>
+          資料成長數
+          <span class="line"></span>
+        </h3>
+      </div>
+      <div class="mbscro">
+        <div class="chart-area">
+          <div id="data_growth" class="mx-auto"></div>
+        </div>
+      </div>
+    </div>
+    <div class="right-box">
+      <div class="chart-title">
+        <h3>
+          物種數
+          <span class="line"></span>
+        </h3>
+      </div>
+      <div class="mbscro">
+        <div class="chart-area">
+          <div id="species_data" class="mx-auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="three-iconbox">
+  <div class="main-box">
+    <div class="title-center">
+      減少相機資料處理時間，提升工作效率
+    </div>
+    <ul class="icon-li">
+      <li>
+        <div class="icon">
+          <img class="coricon" src="/static/image/service-1.png" alt="">
+        </div>
+        <h3>資料彙整</h3>
+        <p>資料雲端留存，統一管理</p>
+      </li>
+      <li>
+        <div class="icon">
+          <img class="coricon" src="/static/image/service-2.png" alt="">
+        </div>
+        <h3>資料處理</h3>
+        <p>辨識物種、標註及分析</p>
+      </li>
+      <li>
+        <div class="icon">
+          <img class="coricon" src="/static/image/service-3.png" alt="">
+        </div>
+        <h3>資料共享</h3>
+        <p>開放科學，資源共享共用</p>
+      </li>
+    </ul>
+    <a href="{% url 'project_overview' %}" class="start-btn">
+      立即開始使用
+    </a>
+  </div>
+</section>
+
+
+<!--  以上為新切版 -->
+
+<!--
+<div class="container-fluid">
+  <div class="row banner">
+    <div class="banner-div">
+      <h1 class="banner-1">臺灣自動相機資訊系統</h1>
+      <h1 class="banner-2">Taiwan Camera Trap Information System</h1>
+      <br />
+      <a class="btn btn-orange banner-a" href="{% url 'project_overview' %}"> 開始使用 </a>
+    </div>
+  </div>
+</div>
+<div class="container content">
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-6">
+      <h6 class="title-light map-explore">點擊地圖區塊進行資料探索</h6>
+      <div id="map"></div>
+    </div>
+    <div id="map-info" class="col-xs-12 col-sm-12 col-md-6 text-right mt-5 d-none">
+    </div> 
+    <div id="default-info" class="col-xs-12 col-sm-12 col-md-6 text-end mt-5 pt-3">
+      <h1 class="title-light">自動相機資料庫</h1>
+      <h2 class="title-dark">共享的資料平台</h2>
+      <p class="text-gray text-start">Camera Trap提供研究人員自動相機影像統一倉儲、管理、 查詢及分析的便利性，透過公開資源的共享，與其他專業人士交流、探索生態與開創更多研究可能性。</p>
+    </div>
+  </div>
+  <div class="row pt-5">
+    <div class="col-xs-12 col-sm-12 col-md-6">
+      <h3 class="title-light text-center">資料成長數</h3>
+      <hr class="home-hr" />
+      <div id="data_growth" class="mx-auto"></div>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-6">
+      <h3 class="title-light text-center">物種數</h3>
+      <hr class="home-hr" />
+      <div id="species_data" class="mx-auto"></div>
+    </div>
+  </div>
+  <div class="row pt-5">
+    <h1 class="title-dark text-center">減少相機資料處理時間，提升工作效率</h1>
+  </div>
+  <div class="row pt-4">
+    <div class="col-xs-12 col-sm-12 col-md-4">
+      <div class="image">
+        <img src='{% static "image/service-1.png" %}' />
+      </div>
+      <div class="text-center">
+        <h2 class="title-dark">資料彙整</h2>
+        <p class="description">資料雲端留存，統一管理</p>
+      </div>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-4">
+      <div class="image">
+        <img src='{% static "image/service-2.png" %}' />
+      </div>
+      <div class="text-center">
+        <h2 class="title-dark">資料處理</h2>
+        <p class="description">辨識物種、標註及分析</p>
+      </div>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-4">
+      <div class="image">
+        <img src='{% static "image/service-3.png" %}' />
+      </div>
+      <div class="text-center">
+        <h2 class="title-dark">資料共享</h2>
+        <p class="description">開放科學，資源共享共用</p>
+      </div>
+    </div>
+  </div>
+  <div class="row pt-4">
+    <a class="btn btn-orange mx-auto start-btn" href="{% url 'project_overview' %}">立即開始使用</a>
+  </div>
+</div>
+-->
+
+
+
+<script src="{% static 'js/home.js' %}"></script>
+
+{% endblock body %} 

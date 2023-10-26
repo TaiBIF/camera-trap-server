@@ -4,6 +4,7 @@ import pandas as pd
 from django.utils import timezone
 import collections
 from operator import itemgetter
+from django.db.models import Count
 
 ret = {}
 for p in Project.objects.all():
@@ -39,3 +40,23 @@ for i in ret.keys():
             last_updated=now,
         )
         p_sp.save()
+
+
+# 2022 version
+
+
+for p in Project.objects.all().values('id'):
+    query = Image.objects.filter(project_id=p['id']).values('species').annotate(total=Count('species')).order_by('-total')
+    for i in query:
+        print(i['species'], i['total'])
+        if p_sp := ProjectSpecies.objects.filter(name=i['species'], project_id=p['id']).first():
+            p_sp.count = i['total']
+            p_sp.last_updated = now
+            p_sp.save()
+        else:
+            p_sp = ProjectSpecies(
+                name=i['species'],
+                last_updated=now,
+                count=i['total'],
+                project_id=p['id'])
+            p_sp.save()
