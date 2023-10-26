@@ -86,7 +86,7 @@ function ValidateEmail(inputText){
   const downloadModalSubmit = getE('download-modal-submit');
   downloadModalSubmit.onclick = (e) => {
     if (downloadModalEmail.value) {
-      if (downloadModalTitle === '下載篩選資料') {
+      if (downloadModalTitle.textContent === '下載篩選資料') {
         goResultDownload(downloadModalEmail.value);
       } else {
         const cleanData = prepareFilterData();
