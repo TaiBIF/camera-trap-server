@@ -218,7 +218,7 @@
                                 <a href="{% url 'announcement'  %}">公告寄信</a>
                                 {% endif %}
                                 {% if request.session.id|if_desktop %}
-                                <a href="member_desktop_download.html">單機版下載</a>
+                                <a href="{% url 'desktop'  %}">單機版下載</a>
                                 {% endif %}
                                 <a href="{% url 'logout' %}">登出</a>
                             </div>
