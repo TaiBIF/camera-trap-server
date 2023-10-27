@@ -1176,7 +1176,7 @@ def get_project_info(project_list, limit=10, offset=0, order=None, sort=None):
                     taicat_project.funding_agency 
                     FROM taicat_project 
                     WHERE taicat_project.id = ANY (%s)
-                    GROUP BY taicat_project.name, taicat_project.funding_agency, taicat_project.start_date, taicat_project.id 
+                    GROUP BY taicat_project.name, taicat_project.funding_agency, taicat_project.start_date, taicat_project.id, taicat_project.keyword 
                     ORDER BY taicat_project.start_date DESC"""
         cursor.execute(q, (project_list, ))
         project_info = cursor.fetchall()
