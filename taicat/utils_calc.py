@@ -776,7 +776,6 @@ def chart_fig1(rows):
                     r['taiwan_area'] = area
 
         data.append(r)
-
     df_rows = pd.DataFrame(data=data)
     if len(df_rows):
         df_rows.set_index('id')
@@ -823,7 +822,6 @@ def chart_fig1(rows):
             },
         }
         for y in years:
-            #print(y, dep_ids)
             oi3_mean = 0
             oi3_sem = 0
             if not pivoted[pivoted.index.isin(dep_ids)].stack()[y].empty:

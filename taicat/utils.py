@@ -1066,14 +1066,24 @@ def find_taiwan_area(name):
 def find_named_area(x, y, datum):
     name = ''
     tw_part = ''
+    x = float(x)
+    y = float(y)
+    #print(x, y, datum)
     if datum == 'TWD97':
         # EPSG:3824 => TWD97 (經緯度)
         # EPSG:3826 => TWD97 / TM2 zone 121 (二度分帶)
         # EPSG: 4326 => WGS84 (經緯度)
         # 這邊填的TWD97是"TM2 zone 121" (誤) => 新資料? 是經緯度
-        #pnt = Point(x=float(x), y=float(y), srid=3826)
-        #pnt.transform(4326)
-        pnt = Point(x=float(x), y=float(y), srid=4326)
+        # TODO: check TM2 meter or degree:
+        if x <= 123.61 \
+           and x >= 114.32 \
+           and y <= 26.96 \
+           and y >= 17.36:
+            pnt = Point(x=float(x), y=float(y), srid=4326)
+        else:
+            pnt = Point(x=float(x), y=float(y), srid=3826)
+            pnt.transform(4326)
+
     elif datum == 'WGS84':
         pnt = Point(x=float(x), y=float(y), srid=4326)
 
