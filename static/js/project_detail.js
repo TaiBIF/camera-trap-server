@@ -226,6 +226,7 @@ function updateTable(page, page_from) {
                             <td>${response.data[i]["file_url"]}</td>
                         </tr>`);
       }
+      
 
 
       // 預設disable
@@ -241,7 +242,7 @@ function updateTable(page, page_from) {
       })
 
       // 如果編輯模式開啟 把checkbox那欄打開
-      if ($('#edit_button').data('edit') == 'on') {
+      if ($('#edit_button').attr('data-edit') == 'on') {
         $('.data-rows .del-check').removeClass('d-none')
         // 如果本來勾選編輯全部 要把下方的checkbox也勾選 且打開編輯及刪除按鈕
         if ($('input[name="edit"]#edit-all').is(":checked")) {
@@ -913,8 +914,8 @@ $(document).ready(function () {
 
 
   $('#edit_button').on('click', function () {
-    if ($('#edit_button').data('edit') == 'off') {
-      $('#edit_button').data('edit', 'on');
+    if ($('#edit_button').attr('data-edit') == 'off') {
+      $('#edit_button').attr('data-edit', 'on');
       // console.log($($.fn.dataTable.tables(true)).DataTable().column(0))
       // $($.fn.dataTable.tables(true)).DataTable().column(0).visible(true);
       $('#edit_button').html(`<svg id="Group_749" data-name="Group 749" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="19.999" viewBox="0 0 20 19.999">
@@ -927,7 +928,7 @@ $(document).ready(function () {
       // bind onclick event
       $('.del-check').removeClass('d-none')
     } else {
-      $('#edit_button').data('edit', 'off');
+      $('#edit_button').attr('data-edit', 'off');
       $('.del-check').addClass('d-none')
       // uncheck all
       // $($.fn.dataTable.tables(true)).DataTable().column(0).visible(false);
@@ -1392,21 +1393,3 @@ function changeEditContent(row) {
 
 }
 
-// function testURL(row) {
-//     const download_link_url = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${row.data('image_uuid')}-l.jpg`;
-//     const test_url = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/63e0a773ae43e99a4360d663-l.jpg`;
-//     // For old images which only one resolution were stored
-//     const download_link_url_alt = `https://camera-trap-21-prod.s3.ap-northeast-1.amazonaws.com/${row.data('image_uuid')}.jpg`;
-    
-//     // Test if the download link url is available
-//     fetch(test_url)
-//         .then(response => {
-//             if (response.status == 200) {
-//                 // If it works, append download link url to href attribute
-//                 $('.download-link').attr('href', test_url)
-//             } else {
-//                 // If not, replace url with alternative download link url 
-//                 $('.download-link').attr('href', download_link_url_alt)
-//             }
-//         });
-// }
