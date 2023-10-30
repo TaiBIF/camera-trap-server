@@ -1064,6 +1064,9 @@ def find_taiwan_area(name):
 
 
 def find_named_area(x, y, datum):
+    if x == None or y == None:
+        return ''
+
     name = ''
     tw_part = ''
     x = float(x)
