@@ -226,6 +226,7 @@ function updateTable(page, page_from) {
                             <td>${response.data[i]["file_url"]}</td>
                         </tr>`);
       }
+      
 
 
       // 預設disable
