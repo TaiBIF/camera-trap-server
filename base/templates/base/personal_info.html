@@ -53,7 +53,7 @@
                         <div class="input-item">
 							<p>電子郵件</p>
                             {% if info.email == None %}
-							    <input type="text">
+							    <input type="text" name="email" required>
                             {% else %}
                                 <input type="text" value="{{ info.email }}" name="email" required>
                             {% endif %}
