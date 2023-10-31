@@ -119,7 +119,9 @@ print('start PROJECT SPECIES', now)
 
 for p in Project.objects.all().values('id'):
     query = Image.objects.filter(project_id=p['id']).values('species').annotate(total=Count('species')).order_by('-total')
+    sp_exist = []
     for i in query:
+        sp_exist.append(i['species'])
         if p_sp := ProjectSpecies.objects.filter(name=i['species'], project_id=p['id']).first():
             p_sp.count = i['total']
             p_sp.last_updated = now
@@ -131,6 +133,11 @@ for p in Project.objects.all().values('id'):
                 count=i['total'],
                 project_id=p['id'])
             p_sp.save()
+
+    # delete ProjectSpecies which species not exist in Image (removed)
+    for ps in ProjectSpecies.objects.filter(project_id=p['id']).all():
+        if ps.name not in sp_exist:
+            ps.delete()
 
 # delete count = 0
 ProjectSpecies.objects.filter(count=0).delete()
