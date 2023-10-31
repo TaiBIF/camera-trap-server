@@ -364,7 +364,7 @@ def calc_output_file(results, file_format, filter_str, calc_str, target_file='')
             row_index = 1
             sheets.append(wb.create_sheet(title=sp))
             if calcData.get('calcType') == 'basic-oi':
-                header_str = '計劃,樣區,相機位置,年,月,物種,相機工作時數,有效照片數,目擊事件數,OI1,OI2,OI3,'+','.join(f'相機工作天{day}' for day in range(1, 32))  # ,捕獲回合比例,存缺,'+','.join(f'活動機率day{day}' for day in range(1, 32))
+                header_str = '計畫,樣區,相機位置,年,月,物種,相機工作時數,有效照片數,目擊事件數,OI1,OI2,OI3,'+','.join(f'相機工作天{day}' for day in range(1, 32))  # ,捕獲回合比例,存缺,'+','.join(f'活動機率day{day}' for day in range(1, 32))
                 header_list = header_str.split(',')
                 for h, v in enumerate(header_list):
                     sheets[sheet_index].cell(row=1, column=h+1, value=v)
@@ -387,7 +387,7 @@ def calc_output_file(results, file_format, filter_str, calc_str, target_file='')
                         sheets[sheet_index].cell(row=row_index, column=13+day_index, value=working)
 
             elif calcData.get('calcType') == 'pod':
-                header_str = '計劃,樣區,相機位置,年,月,物種,拍到天數,相機工作天數,POD,' + ','.join(f'偵測到/未偵測到{day_index+1}' for day_index in range(0, 31))
+                header_str = '計畫,樣區,相機位置,年,月,物種,拍到天數,相機工作天數,POD,' + ','.join(f'偵測到/未偵測到{day_index+1}' for day_index in range(0, 31))
                 header_list = header_str.split(',')
                 for h, v in enumerate(header_list):
                     sheets[sheet_index].cell(row=1, column=h+1, value=v)
@@ -412,7 +412,7 @@ def calc_output_file(results, file_format, filter_str, calc_str, target_file='')
                         sheets[sheet_index].cell(row=row_index, column=10 + day_index, value=d[0])
 
             elif calcData.get('calcType') == 'apoa':
-                header_str = '計劃,樣區,相機位置,物種,date,' + ','.join(f'{hour:02}' for hour in range(0, 24))  # ,捕獲回合比例,存缺,'+','.join(f'活動機率day{day}' for day in range(1, 32))
+                header_str = '計畫,樣區,相機位置,物種,date,' + ','.join(f'{hour:02}' for hour in range(0, 24))  # ,捕獲回合比例,存缺,'+','.join(f'活動機率day{day}' for day in range(1, 32))
                 header_list = header_str.split(',')
                 for h, v in enumerate(header_list):
                     sheets[sheet_index].cell(row=1, column=h+1, value=v)
@@ -1064,16 +1064,29 @@ def find_taiwan_area(name):
 
 
 def find_named_area(x, y, datum):
+    if x == None or y == None:
+        return ''
+
     name = ''
     tw_part = ''
+    x = float(x)
+    y = float(y)
+    #print(x, y, datum)
     if datum == 'TWD97':
         # EPSG:3824 => TWD97 (經緯度)
         # EPSG:3826 => TWD97 / TM2 zone 121 (二度分帶)
         # EPSG: 4326 => WGS84 (經緯度)
         # 這邊填的TWD97是"TM2 zone 121" (誤) => 新資料? 是經緯度
-        #pnt = Point(x=float(x), y=float(y), srid=3826)
-        #pnt.transform(4326)
-        pnt = Point(x=float(x), y=float(y), srid=4326)
+        # TODO: check TM2 meter or degree:
+        if x <= 123.61 \
+           and x >= 114.32 \
+           and y <= 26.96 \
+           and y >= 17.36:
+            pnt = Point(x=float(x), y=float(y), srid=4326)
+        else:
+            pnt = Point(x=float(x), y=float(y), srid=3826)
+            pnt.transform(4326)
+
     elif datum == 'WGS84':
         pnt = Point(x=float(x), y=float(y), srid=4326)
 

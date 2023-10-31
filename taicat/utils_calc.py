@@ -94,6 +94,22 @@ def get_default_chart_data(part):
         }
     return {}
 
+
+def check_sanity(data):
+    # TODO: only test fig1
+    print(data)
+    oi3 = data.get('data__5', None)
+    if oi3 is None or oi3 == 'N/A':
+        return False
+
+    # must have deployment_id
+    dep_id = data.get('deployment_id')
+    if not dep_id:
+        return False
+
+    return True
+
+
 def chart_fig9(rows):
     current_year = datetime.today().year
 
@@ -758,8 +774,9 @@ def chart_fig1(rows):
     #year_month_range = find_year_month_range([r['datetime_from'] for r in rows])
     exist_deployment_area = {}
     data = []
+
     for r in rows:
-        if r['data__5'] == 'N/A':
+        if not check_sanity(r):
             continue
 
         dt = timezone_utc_to_tw(r['datetime_from'])
@@ -776,7 +793,6 @@ def chart_fig1(rows):
                     r['taiwan_area'] = area
 
         data.append(r)
-
     df_rows = pd.DataFrame(data=data)
     if len(df_rows):
         df_rows.set_index('id')
@@ -823,7 +839,6 @@ def chart_fig1(rows):
             },
         }
         for y in years:
-            #print(y, dep_ids)
             oi3_mean = 0
             oi3_sem = 0
             if not pivoted[pivoted.index.isin(dep_ids)].stack()[y].empty:
