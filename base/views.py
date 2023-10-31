@@ -58,8 +58,6 @@ def admin_dashboard(request):
         cache.set('dashboard.stats', json.dumps(context), 86400)
 
     context['project_stats'] = ProjectStat.objects.order_by('-num_data').all()
-    #for i in ProjectStat.objects.all():
-    #    print(i.project.last_upload())
 
     return render(request, 'base/admin-dashboard.html', context)
 
@@ -871,59 +869,81 @@ def stat_studyarea(request):
 
         return HttpResponse(json.dumps(response, cls=DecimalEncoder), content_type='application/json')
 
+def api_dashboard(request, chart):
 
-def api_dashboard_app_ver(request):
+    if chart == 'app_ver':
+        query = "SELECT split_part(memo, '/', 1) as version, COUNT(*) FROM taicat_image WHERE project_id=329 AND memo != '' AND annotation_seq = 0 GROUP BY version ORDER BY version;"
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            data = cursor.fetchall()
 
-    query = "SELECT split_part(memo, '/', 1) as version, COUNT(*) FROM taicat_image WHERE project_id=329 AND memo != '' AND annotation_seq = 0 GROUP BY version ORDER BY version;"
-    with connection.cursor() as cursor:
-        cursor.execute(query)
-        data = cursor.fetchall()
+            res = {
+                'labels': [x[0] for x in data],
+                'data': [x[1] for x in data],
+            }
+            return JsonResponse(res)
 
-    res = {
-        'labels': [x[0] for x in data],
-        'data': [x[1] for x in data],
-    }
-    return JsonResponse(res)
-
-def api_dashboard_top3(request):
-    res = {
-        'projects': [],
-        'labels': [],
-
-    }
-    if ps := Project.objects.filter(id__in=[287, 288, 329]).all():
-        for p in ps:
-            data = Image.objects.filter(project_id=p.id).annotate(year=ExtractYear('datetime')).values('year').annotate(num_image=Count('id')).order_by('year').all()
-            y = {}
-            for d in data:
-                if year := d['year']:
-                    if int(year) < 2000:
-                        res['labels'].append('0000')
-                        if '0000' not in y:
-                            y['0000'] = d['num_image']
+    elif chart == 'top3':
+        res = {
+            'projects': [],
+            'labels': [],
+        }
+        if ps := Project.objects.filter(id__in=[287, 288, 329]).all():
+            for p in ps:
+                data = Image.objects.filter(project_id=p.id).annotate(year=ExtractYear('datetime')).values('year').annotate(num_image=Count('id')).order_by('year').all()
+                y = {}
+                for d in data:
+                    if year := d['year']:
+                        if int(year) < 2000:
+                            res['labels'].append('0000')
+                            if '0000' not in y:
+                                y['0000'] = d['num_image']
+                            else:
+                                y['0000'] += d['num_image']
                         else:
-                            y['0000'] += d['num_image']
-                    else:
-                        res['labels'].append(str(year))
-                        if str(year) not in y:
-                            y[str(year)] = d['num_image']
-                        else:
-                            y[str(year)] += d['num_image']
+                            res['labels'].append(str(year))
+                            if str(year) not in y:
+                                y[str(year)] = d['num_image']
+                            else:
+                                y[str(year)] += d['num_image']
 
-            res['projects'].append({
-                'id': p.id,
-                'name': p.name,
-                'years': y,
-                'data': None,
-            })
-    res['labels'] = sorted(list(set(res['labels'])))
-    for proj in res['projects']:
-        data = []
-        for key in res['labels']:
-            x = 0
-            if key in proj['years']:
-                x = proj['years'][key]
-            data.append(x)
-        proj['data'] = data
+                res['projects'].append({
+                    'id': p.id,
+                    'name': p.name,
+                    'years': y,
+                    'data': None,
+                })
+        res['labels'] = sorted(list(set(res['labels'])))
+        for proj in res['projects']:
+            data = []
+            for key in res['labels']:
+                x = 0
+                if key in proj['years']:
+                    x = proj['years'][key]
+                data.append(x)
+            proj['data'] = data
+
+    elif chart == 'recently':
+        a_month_before = (datetime.now()+timedelta(days=-30)+timedelta(hours=8)).strftime('%Y-%m-%d')
+        sql = f"SELECT DATE(created), COUNT(*) FROM taicat_image WHERE project_id=329 AND created >= '{a_month_before}' GROUP BY DATE(created) ORDER BY DATE(created)"
+        labels = []
+        date_dict = {}
+        for i in range(1, 31):
+            labels.append((datetime.now()+timedelta(days=(i-31))+timedelta(hours=8)).strftime('%Y-%m-%d'))
+        #print(labels)
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+            data = cursor.fetchall()
+            for i in data:
+                date_dict[i[0].strftime('%Y-%m-%d')] = i[1]
+
+            data = []
+            for d in labels:
+                if x:= date_dict.get(d):
+                    data.append(x)
+                else:
+                    data.append(0)
+
+            res = {'data': data, 'labels': labels}
 
     return JsonResponse(res)
