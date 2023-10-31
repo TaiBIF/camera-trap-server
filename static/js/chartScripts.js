@@ -181,9 +181,7 @@ new Chart(char5El, {
 const domReady = () => {
   "use strict";
 
-  const chartData = document.getElementById('chart-data');
-
-    fetch('/api/dashboard/app_ver')
+    fetch('/api/dashboard/app_ver/')
     .then(resp => resp.json())
     .then(results => {
       console.log(results);
@@ -216,16 +214,42 @@ const domReady = () => {
       });
     })
 
+  fetch('/api/dashboard/recently/')
+    .then(resp => resp.json())
+    .then(results => {
+      console.log(results);
+      const chartRecently = document.getElementById('chart-recently');
+      new Chart(chartRecently, {
+        type: 'line',
+        data: {
+          labels: results.labels,
+          datasets: [{
+            data: results.data,
+            label: 'Image annotations',
+            borderColor: "#c45850",
+            fill: false
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          responsiveAnimationDuration: 500,
+          animation: {
+            duration: 2000
+          },
+          title: {
+            display: true,
+            text: '# of Data Uploads Recently'
+          }
+        }
+      });
+    });
 
-  fetch('/api/dashboard/top3')
+  fetch('/api/dashboard/top3/')
     .then(resp => resp.json())
     .then(results => {
       console.log(results);
       const labels = results.labels.map( x => { return (x === '0000') ? '<2000' : x});
-      const datasets = [];
-      console.log(labels);
-      for (let i of results.projects) {
-      }
+      const chartData = document.getElementById('chart-data');
       new Chart(chartData, {
         type: 'line',
         data: {
