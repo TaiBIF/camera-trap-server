@@ -811,7 +811,7 @@ class Image(models.Model):
     )
     id = models.BigAutoField(primary_key=True)
     deployment = models.ForeignKey(Deployment, on_delete=models.SET_NULL, null=True, related_name='images')
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, related_name='images')
     # be careful, this field has no underline!
     studyarea = models.ForeignKey(StudyArea, on_delete=models.SET_NULL, null=True)
     file_url = models.CharField(max_length=1000, null=True)
@@ -987,7 +987,7 @@ class ProjectStat(models.Model):
 
 
 class ProjectSpecies(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, related_name='species_list')
     name = models.CharField(max_length=1000, db_index=True)
     count = models.IntegerField(null=True, blank=True)
     last_updated = models.DateTimeField(null=True, db_index=True)
@@ -1009,7 +1009,7 @@ class DeploymentJournal(models.Model):
         '其他(自由填寫)',
     )
 
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, related_name='upload_list')
     deployment = models.ForeignKey(Deployment, on_delete=models.SET_NULL, null=True)
     studyarea = models.ForeignKey(StudyArea, on_delete=models.SET_NULL, null=True)
     working_start = models.DateTimeField(null=True, blank=True)

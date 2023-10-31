@@ -3,11 +3,12 @@ from django.http import response
 from django.shortcuts import render, HttpResponse, redirect
 import json
 from django.db import connection
-from taicat.models import Deployment, GeoStat, HomePageStat, Image, Contact, Organization, Project, Species, StudyAreaStat, ProjectMember,ParameterCode
+from taicat.models import Deployment, GeoStat, HomePageStat, Image, Contact, Organization, Project, Species, StudyAreaStat, ProjectMember,ParameterCode, ProjectStat
 from django.db.models import Count, Window, F, Sum, Min, Q, Max, DateTimeField, ExpressionWrapper
 from django.db.models.functions import ExtractYear
 from django.template import loader
 from django.core.paginator import Paginator
+from django.core.cache import cache
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
@@ -37,6 +38,30 @@ from django.views.decorators.csrf import csrf_exempt
 # from django.core import serializers
 import geopandas as gpd
 from shapely.geometry import Point
+
+
+def admin_dashboard(request):
+    if not request.user.is_authenticated:
+        return redirect('/admin/login/?next=/admin-dashboard')
+
+    context = {}
+
+    if dashboard_stats := cache.get('dashboard.stats'):
+        context = json.loads(dashboard_stats)
+    else:
+        image_count= Image.objects.filter(annotation_seq=0).count()
+        annotation_count = Image.objects.count()
+        context.update({
+            'image_count': image_count,
+            'annotation_count': annotation_count,
+        })
+        cache.set('dashboard.stats', json.dumps(context), 86400)
+
+    context['project_stats'] = ProjectStat.objects.order_by('-num_data').all()
+    #for i in ProjectStat.objects.all():
+    #    print(i.project.last_upload())
+
+    return render(request, 'base/admin-dashboard.html', context)
 
 
 def desktop_login(request):
@@ -843,5 +868,62 @@ def stat_studyarea(request):
             cursor.execute(query, (said,))
             sa_center = cursor.fetchall()
         response = {'name': name, 'count': count, 'deployment_points': new_sa, 'center': sa_center[0]}
-        
+
         return HttpResponse(json.dumps(response, cls=DecimalEncoder), content_type='application/json')
+
+
+def api_dashboard_app_ver(request):
+
+    query = "SELECT split_part(memo, '/', 1) as version, COUNT(*) FROM taicat_image WHERE project_id=329 AND memo != '' AND annotation_seq = 0 GROUP BY version ORDER BY version;"
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        data = cursor.fetchall()
+
+    res = {
+        'labels': [x[0] for x in data],
+        'data': [x[1] for x in data],
+    }
+    return JsonResponse(res)
+
+def api_dashboard_top3(request):
+    res = {
+        'projects': [],
+        'labels': [],
+
+    }
+    if ps := Project.objects.filter(id__in=[287, 288, 329]).all():
+        for p in ps:
+            data = Image.objects.filter(project_id=p.id).annotate(year=ExtractYear('datetime')).values('year').annotate(num_image=Count('id')).order_by('year').all()
+            y = {}
+            for d in data:
+                if year := d['year']:
+                    if int(year) < 2000:
+                        res['labels'].append('0000')
+                        if '0000' not in y:
+                            y['0000'] = d['num_image']
+                        else:
+                            y['0000'] += d['num_image']
+                    else:
+                        res['labels'].append(str(year))
+                        if str(year) not in y:
+                            y[str(year)] = d['num_image']
+                        else:
+                            y[str(year)] += d['num_image']
+
+            res['projects'].append({
+                'id': p.id,
+                'name': p.name,
+                'years': y,
+                'data': None,
+            })
+    res['labels'] = sorted(list(set(res['labels'])))
+    for proj in res['projects']:
+        data = []
+        for key in res['labels']:
+            x = 0
+            if key in proj['years']:
+                x = proj['years'][key]
+            data.append(x)
+        proj['data'] = data
+
+    return JsonResponse(res)
