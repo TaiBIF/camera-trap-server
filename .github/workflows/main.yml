@@ -20,4 +20,4 @@ jobs:
           script: |
             cd camera-trap-server
             git pull origin main
-            docker-compose down && docker-compose up --build -d
+            docker-compose -f production.yml down && docker-compose -f production.yml up --build -d
