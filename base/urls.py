@@ -32,4 +32,7 @@ urlpatterns = [
     path('announcement_is_read', views.announcement_is_read, name='announcement_is_read'),
     path('desktop_login', views.desktop_login, name='desktop-login'),
     path('desktop_login_verify/', views.desktop_login_verify, name='desktop-login-verify'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('api/dashboard/top3/', views.api_dashboard_top3, name='dashboard-top3'),
+    path('api/dashboard/app_ver/', views.api_dashboard_app_ver, name='dashboard-app-ver'),
 ]
