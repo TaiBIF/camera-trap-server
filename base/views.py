@@ -929,7 +929,8 @@ def api_dashboard(request, chart):
         labels = []
         date_dict = {}
         for i in range(1, 31):
-            labels.append((datetime.now()+timedelta(days=(i-31))+timedelta(hours=8)).strftime('%Y-%m-%d'))
+            a = datetime.now()+timedelta(days=(i-31))+timedelta(hours=8)
+            labels.append([a.strftime('%Y-%m-%d'), a.strftime('%a')])
         #print(labels)
         with connection.cursor() as cursor:
             cursor.execute(sql)
@@ -939,11 +940,11 @@ def api_dashboard(request, chart):
 
             data = []
             for d in labels:
-                if x:= date_dict.get(d):
+                if x:= date_dict.get(d[0]):
                     data.append(x)
                 else:
                     data.append(0)
 
-            res = {'data': data, 'labels': labels}
+            res = {'data': data, 'labels': [f'{x[0]} {x[1]}' for x in labels]}
 
     return JsonResponse(res)
