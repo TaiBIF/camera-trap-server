@@ -228,6 +228,11 @@ const domReady = () => {
             label: 'Image annotations',
             borderColor: "#c45850",
             fill: false
+          }, {
+            data: results.data_has_storage,
+            label: 'Image Uploaded to S3',
+            borderColor: "#e8c3b9",
+            fill: false
           }]
         },
         options: {

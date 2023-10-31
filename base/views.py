@@ -925,26 +925,42 @@ def api_dashboard(request, chart):
 
     elif chart == 'recently':
         a_month_before = (datetime.now()+timedelta(days=-30)+timedelta(hours=8)).strftime('%Y-%m-%d')
-        sql = f"SELECT DATE(created), COUNT(*) FROM taicat_image WHERE project_id=329 AND created >= '{a_month_before}' GROUP BY DATE(created) ORDER BY DATE(created)"
+        #sql = f"SELECT DATE(i.created), i.deployment_id, d.name, COUNT(*) FROM taicat_image i LEFT JOIN taicat_deployment d ON d.id = i.deployment_id WHERE i.project_id=329 AND i.created >= '{a_month_before}' GROUP BY DATE(i.created), i.deployment_id, d.name ORDER BY DATE(i.created)" # 分相機位置
         labels = []
         date_dict = {}
+        date2_dict = {}
         for i in range(1, 31):
             a = datetime.now()+timedelta(days=(i-31))+timedelta(hours=8)
             labels.append([a.strftime('%Y-%m-%d'), a.strftime('%a')])
         #print(labels)
+
+
+        sql = f"SELECT DATE(created), COUNT(*) FROM taicat_image WHERE project_id=329 AND created >= '{a_month_before}' GROUP BY DATE(created) ORDER BY DATE(created)"
         with connection.cursor() as cursor:
             cursor.execute(sql)
             data = cursor.fetchall()
             for i in data:
                 date_dict[i[0].strftime('%Y-%m-%d')] = i[1]
 
+        sql = f"SELECT DATE(created), COUNT(*) FROM taicat_image WHERE project_id=329 AND created >= '{a_month_before}' AND has_storage = 'Y' GROUP BY DATE(created) ORDER BY DATE(created)"
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+            data = cursor.fetchall()
+            for i in data:
+                date2_dict[i[0].strftime('%Y-%m-%d')] = i[1]
+
             data = []
+            data_has_storage = []
             for d in labels:
                 if x:= date_dict.get(d[0]):
                     data.append(x)
                 else:
                     data.append(0)
+                if x:= date2_dict.get(d[0]):
+                    data_has_storage.append(x)
+                else:
+                    data_has_storage.append(0)
 
-            res = {'data': data, 'labels': [f'{x[0]} {x[1]}' for x in labels]}
+            res = {'data': data, 'labels': [f'{x[0]} {x[1]}' for x in labels], 'data_has_storage': data_has_storage}
 
     return JsonResponse(res)
