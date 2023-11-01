@@ -38,8 +38,8 @@ COPY ./scripts/entrypoint /srv/entrypoint
 RUN sed -i 's/\r$//g' /srv/entrypoint
 RUN chmod +x /srv/entrypoint
 
-COPY ./scripts/start_prod /srv/start
-RUN sed -i 's/\r$//g' /srv/start
+COPY ./scripts/start_prod /srv/start_prod
+RUN sed -i 's/\r$//g' /srv/start_prod
 RUN chmod +x /srv/start
 
 ENTRYPOINT ["/srv/entrypoint"]
