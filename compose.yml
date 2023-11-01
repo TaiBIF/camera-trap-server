@@ -2,9 +2,11 @@ version: '3.7'
 
 services:
   django:
-    build: .
-    container_name: ct22-django-dev-container
-    image: ct22-django-dev-image
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cameratrap-django-${WEB_ENV}-container
+    image: cameratrap-django-${WEB_ENV}-image
     ports:
       - 8000:8000
     depends_on:
@@ -37,8 +39,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-postgres
-    image: ct-postgres-image
-    container_name: ct22-postgres-container
+    image: cameratrap-postgres-image
+    container_name: cameratrap-postgres-container
     restart: always
     volumes:
       - ../ct22-volumes/pgdata:/var/lib/postgresql/data/pgdata
@@ -59,17 +61,12 @@ services:
   redis:
     image: redis:6-alpine
     restart: always
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
   celery:
     restart: unless-stopped
     build:
       context: .
-    container_name: ct22-celery-dev-container
-    image: ct22-django-dev-image
+    container_name: cameratrap-celery-${WEB_ENV}-container
+    image: cameratrap-django-${WEB_ENV}-image
     command: /root/.local/bin/celery -A conf worker -l info
     volumes:
       - .:/code
@@ -94,8 +91,8 @@ services:
     restart: unless-stopped
     build:
       context: .
-    container_name: ct22-flower-dev-container
-    image: ct22-django-dev-image
+    container_name: cameratrap-flower-${WEB_ENV}-container
+    image: cameratrap-django-${WEB_ENV}-image
     ports:
       - 5555:5555
     command: /root/.local/bin/celery flower -persisten=True --port=5555
