@@ -40,6 +40,6 @@ RUN chmod +x /srv/entrypoint
 
 COPY ./scripts/start_prod /srv/start_prod
 RUN sed -i 's/\r$//g' /srv/start_prod
-RUN chmod +x /srv/start
+RUN chmod +x /srv/start_prod
 
 ENTRYPOINT ["/srv/entrypoint"]
