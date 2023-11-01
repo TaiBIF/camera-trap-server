@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: cameratrap-django-${WEB_ENV}-container
-    image: cameratrap-django-${WEB_ENV}-image
+    container_name: cameratrap-django-container
+    image: cameratrap-django-image
     ports:
       - 8000:8000
     depends_on:
@@ -65,8 +65,8 @@ services:
     restart: unless-stopped
     build:
       context: .
-    container_name: cameratrap-celery-${WEB_ENV}-container
-    image: cameratrap-django-${WEB_ENV}-image
+    container_name: cameratrap-celery-container
+    image: cameratrap-django-image
     command: /root/.local/bin/celery -A conf worker -l info
     volumes:
       - .:/code
@@ -91,8 +91,8 @@ services:
     restart: unless-stopped
     build:
       context: .
-    container_name: cameratrap-flower-${WEB_ENV}-container
-    image: cameratrap-django-${WEB_ENV}-image
+    container_name: cameratrap-flower-container
+    image: cameratrap-django-image
     ports:
       - 5555:5555
     command: /root/.local/bin/celery flower -persisten=True --port=5555

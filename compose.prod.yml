@@ -1,0 +1,37 @@
+version: '3.7'
+
+#volumes:
+#  asset:
+
+services:
+  django:
+    expose:
+      - 8001
+  nginx:
+    image: nginx:latest-alpine
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./scripts/nginx-django.conf:/etc/nginx/conf.d/ct22.conf
+      - ../ct22-volumes/static:/ct22-volumes/static
+      - ../ct22-volumes/certbot/conf:/etc/letsencrypt
+      - ../ct22-volumes/certbot/www:/var/www/certbot
+      #- ../basdb-volumes/media:/basdb-volumes/media
+      - ../ct22-volumes/logs/nginx:/var/log/nginx
+      #- asset:/asset
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+    links:
+      - django:django
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ../ct22-volumes/certbot/conf:/etc/letsencrypt
+      - ../ct22-volumes/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
