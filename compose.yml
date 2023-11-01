@@ -67,7 +67,7 @@ services:
       context: .
     container_name: cameratrap-celery-container
     image: cameratrap-django-image
-    command: /root/.local/bin/celery -A conf worker -l info
+    command: /root/.local/bin/celery -A conf worker -l info -c 1
     volumes:
       - .:/code
       - ../ct22-volumes/media:/ct22-volumes/media
