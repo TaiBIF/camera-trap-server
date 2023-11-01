@@ -1,5 +1,5 @@
 name: test CameraTrap GitHub Actions
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+run-name: ${{ github.actor }} is push to main branch, go deploy production server 🚀
 on:
   push:
     branches: [ main ]
