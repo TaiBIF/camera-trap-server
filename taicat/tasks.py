@@ -5,7 +5,11 @@ import csv
 from pathlib import Path
 
 from bson.objectid import ObjectId
+#from psycopg2.extensions import adapt
+import psycopg2
+import psycopg2.extensions
 
+from django.db import connection
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -47,18 +51,25 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     download_dir = Path(settings.MEDIA_ROOT, 'download')
     header = ['計畫ID', '計畫名稱', '影像ID', '樣區/子樣區', '相機位置', '檔名', '拍攝時間', '物種', '年齡', '性別', '角況', '個體ID', '備註']
 
-    # faster, but copy cause datitime query error, maybe replace string with postgresql cast syntax can solved
-    #with connection.cursor() as cursor:
-    #    sql = f"copy ({query.query}) to stdout with delimiter ',';"
-    #    with open(os.path.join(download_dir, filename), 'w+') as fp:
-    #    fp.write(','.join(header)+'\n')
-    #    cursor.copy_expert(sql, fp)
+    # with connection.cursor() as cursor:
+    #     # copy cause datitime query error, maybe replace string with postgresql cast syntax can solved
+    #     # sql = f"copy ({query.query}) to stdout with delimiter ',';"
 
+    #     ## unicode, latin-1 encode error in %-format
+    #     sqlx = query.query.get_compiler('default').as_sql()
+    #     params = sqlx[1]
+    #     adapted_params = tuple(psycopg2.extensions.adapt(p) for p in params)
+    #     sql = sqlx[0] % adapted_params
+    #     with open(Path(download_dir, filename), 'w+') as fp:
+    #         fp.write(','.join(header)+'\n')
+    #         cursor.copy_expert(sql, fp)
+
+    # a little bit slower then copy_expert
     with open(Path(download_dir, filename), 'w') as csvfile:
-        spamwriter = csv.writer(csvfile)
-        spamwriter.writerow(header)
-        for row in query.all():
-            spamwriter.writerow(row)
+         spamwriter = csv.writer(csvfile)
+         spamwriter.writerow(header)
+         for row in query.all():
+             spamwriter.writerow(row)
 
     download_url = "https://{}{}{}".format(
         host,
