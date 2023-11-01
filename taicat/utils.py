@@ -39,6 +39,7 @@ from django.utils.timezone import make_aware
 
 from openpyxl import Workbook
 import requests
+from bson.objectid import ObjectId
 
 from taicat.models import (
     Project,
@@ -1111,3 +1112,57 @@ def find_year_month_range(items):
             year_month_range.append([y, m])
 
     return year_month_range
+
+
+def make_image_query_in_project(project_id, args, is_authorized):
+    project = Project.objects.get(pk=project_id)
+    project_stat = ProjectStat.objects.filter(project_id=project_id).first()
+    project_name = project.name
+
+    query = Image.objects.values_list('project_id', 'project__name', 'image_uuid', 'studyarea__name', 'deployment__name', 'filename', 'datetime', 'species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks')
+
+    if start_date := args.get('start_date'):
+        start_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(hours=-8)
+    else:
+        start_date = project_stat.earliest_date
+
+    if end_date := args.get('end_date'):
+        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(hours=-8)
+    else:
+        end_date = project_stat.latest_date
+
+    #start_date = start_date.strftime('%Y-%m-%d')
+    #end_date = end_date.strftime('%Y-%m-%d')
+    query = query.filter(datetime__gte=start_date, datetime__lte=end_date)
+    if times := args.get('times'):
+        h, m, s = times.split(':')
+        query = query.filter(datetime__hour=h, datetime__minute=m, datetime__second=s)
+
+    if sa := args.get('sa[]'):
+        sa = [s for s in sa if s != 'all']
+        query = query.filter(studyarea_id__in=sa)
+
+    if deployment := args.get('deployment[]'):
+        deployment = [int(i) for i in deployment if i != 'all']
+        query = query.filter(deployment_id__in=deployment)
+
+    if species := args.get('species[]'):
+        query = query.filter(species__in=species)
+        if not is_authorized:
+            query = query.exclude(species__in=Species.EXCLUDE_LIST)
+
+    # deployment related
+    if county_name_code := args.get('county_name'):
+        query = query.filter(deployment__county=county_name_code)
+    if protectarea_name_code := args.get('protectarea_name'):
+        query = query.filter(deployment__protectedarea=protectarea_name_code)
+    if start_altitude := args.get('start_altitude'):
+        query = query.filter(deployment__altitude__gte=start_altitude)
+    if end_altitude := args.get('end_altitude'):
+        query = query.filter(deployment__altitude__lte=end_altitude)
+    if folder_name := args.get('folder_name'):
+        query = query.filter(folder_name=folder_name)
+
+    query = query.order_by('-created', 'project_id')
+
+    return query

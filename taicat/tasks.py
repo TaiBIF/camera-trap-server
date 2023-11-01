@@ -16,6 +16,7 @@ from celery.utils.log import get_task_logger
 from taicat.utils import (
     save_calculation,
     apply_search_filter,
+    make_image_query_in_project,
 )
 
 logger = get_task_logger(__name__)
@@ -35,6 +36,42 @@ from .utils import (
     calculated_data,
     calc_output_file,
 )
+
+
+@shared_task
+def process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host):
+    query = make_image_query_in_project(pk, args, is_authorized)
+
+    # export to csv
+    filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}.csv'
+    download_dir = Path(settings.MEDIA_ROOT, 'download')
+    header = ['計畫ID', '計畫名稱', '影像ID', '樣區/子樣區', '相機位置', '檔名', '拍攝時間', '物種', '年齡', '性別', '角況', '個體ID', '備註']
+
+    # faster, but copy cause datitime query error, maybe replace string with postgresql cast syntax can solved
+    #with connection.cursor() as cursor:
+    #    sql = f"copy ({query.query}) to stdout with delimiter ',';"
+    #    with open(os.path.join(download_dir, filename), 'w+') as fp:
+    #    fp.write(','.join(header)+'\n')
+    #    cursor.copy_expert(sql, fp)
+
+    with open(Path(download_dir, filename), 'w') as csvfile:
+        spamwriter = csv.writer(csvfile)
+        spamwriter.writerow(header)
+        for row in query.all():
+            spamwriter.writerow(row)
+
+    download_url = "https://{}{}{}".format(
+        host,
+        settings.MEDIA_URL,
+        Path('download', filename))
+
+    download_log = DownloadLog(user_role=user_role_name, condition=str(args)[:1000], file_link=download_url)
+    download_log.save()
+
+    email_subject = '[臺灣自動相機資訊系統] 下載資料'
+    email_body = render_to_string('project/download.html', {'download_url': download_url, })
+    send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
+
 
 @shared_task
 def process_image_annotation_task(deployment_journal_id, data):
