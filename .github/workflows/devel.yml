@@ -1,0 +1,22 @@
+name: test CameraTrap GitHub Actions
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on:
+  push:
+    branches: [ devel ]
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEVEL_HOST }}
+          username: ${{ secrets.DEVEL_USERNAME }}
+          key: ${{ secrets.DEVEL_KEY }}
+          port: 22
+          script: whoami
+          #script: |
+          #  cd camera-trap-server
+          #  git pull origin main
+          #  docker-compose -f production.yml down && docker-compose -f production.yml up --build -d
