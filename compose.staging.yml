@@ -5,6 +5,9 @@ version: '3.7'
 
 services:
   django:
+    build:
+      context: .
+      dockerfile: Dockerfile_prod
     expose:
       - 8001
   nginx:
