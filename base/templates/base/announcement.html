@@ -70,11 +70,11 @@
               </div>
               <div class="input-item">
                 <p><span class="red">*</span>收件人</p>
-                <select name="" id="">
-                  <option value="">所有人</option>
-                  <option value="">計畫總管理人</option>
-                  <option value="">計畫承辦人</option>
-                  <option value="">資料上傳者</option>
+                <select id="email-option" name="email" class="form-control">
+                  <option value={{email.all_ppl}} selected="selected" name="email">所有人</option>
+                  <option value={{email.organization_admin}} selected="selected" name="email">計畫總管理人</option>
+                  <option value={{email.project_admin}} selected="selected" name="email">計畫承辦人</option>
+                  <option value={{email.uploader}} selected="selected" name="email">資料上傳者</option>
                 </select>
               </div>
             </div>
