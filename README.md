@@ -1,12 +1,14 @@
 # CameraTrap 2023
 
-- `docker-compose.yml`: yml file for development
-- `docker-compose-initdb.yml`: yml file for development (start from xxx.sql.gz dump file)
-- `production.yml` yml file for for production
-- `Makefile` for command shortcuts
 
 ## Development
 
+
+```
+docker-compose up
+```
+
+default will use compose.yml & compose.override.yml
 
 
 ### PostgreSQL
@@ -18,6 +20,17 @@ sync staging/production server database data:
 3. put it in `initdb` folder
 4. docker compose up
 
+## Deployment
+
+### Staging
+```
+docker-compose -f compose.yml -f compose.staging.yml build / up
+```
+
+### Production
+```
+docker-compose -f compose.yml -f compose.prod.yml build / up
+```
 
 ### Data Model
 
