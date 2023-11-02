@@ -4,7 +4,7 @@ services:
   django:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/Dockerfile
     container_name: cameratrap-django-container
     image: cameratrap-django-image
     depends_on:
@@ -35,11 +35,10 @@ services:
     #image: postgres:13-alpine
     shm_size: '1g'
     build:
-      context: .
-      dockerfile: Dockerfile-postgres
+      context: ./docker
+      dockerfile: Dockerfile_postgres
     image: cameratrap-postgres-image
     container_name: cameratrap-postgres-container
-    restart: always
     volumes:
       - ../ct22-volumes/pgdata:/var/lib/postgresql/data/pgdata
       - ../ct22-volumes/bucket:/bucket
@@ -61,11 +60,9 @@ services:
     restart: always
   celery:
     restart: unless-stopped
-    build:
-      context: .
     container_name: cameratrap-celery-container
     image: cameratrap-django-image
-    command: /root/.local/bin/celery -A conf worker -l info -c 1
+    command: celery -A conf worker -l info -c 1
     volumes:
       - .:/code
       - ../ct22-volumes/media:/ct22-volumes/media
@@ -87,13 +84,11 @@ services:
         max-file: "3"
   flower:
     restart: unless-stopped
-    build:
-      context: .
     container_name: cameratrap-flower-container
     image: cameratrap-django-image
     ports:
       - 5555:5555
-    command: /root/.local/bin/celery flower -persisten=True --port=5555
+    command: celery flower -persisten=True --port=5555
     volumes:
       - .:/code
       - ../ct22-volumes/media:/ct22-volumes/media

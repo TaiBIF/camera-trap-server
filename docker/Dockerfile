@@ -28,18 +28,22 @@ ENV TZ=Asia/Taipei
 
 WORKDIR /code
 
-# Package
+# Python packages
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 COPY requirements requirements
 RUN pip install --upgrade pip
-RUN pip install --no-cache --user -r requirements/base.txt
+RUN pip install --no-cache-dir -r requirements/base.txt
 
 
-COPY ./scripts/entrypoint /srv/entrypoint
+COPY ./docker/entrypoint /srv/entrypoint
 RUN sed -i 's/\r$//g' /srv/entrypoint
 RUN chmod +x /srv/entrypoint
 
-COPY ./scripts/start_prod /srv/start_prod
-RUN sed -i 's/\r$//g' /srv/start_prod
-RUN chmod +x /srv/start_prod
+COPY ./docker/start /srv/start
+RUN sed -i 's/\r$//g' /srv/start
+RUN chmod +x /srv/start
 
 ENTRYPOINT ["/srv/entrypoint"]
