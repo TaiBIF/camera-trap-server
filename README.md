@@ -1,13 +1,24 @@
 # CameraTrap 2023
 
-- `docker-compose.yml`: yml file for development
-- `docker-compose-initdb.yml`: yml file for development (start from xxx.sql.gz dump file)
-- `production.yml` yml file for for production
-- `Makefile` for command shortcuts
-
 ## Development
 
+```
+docker compose up
+```
 
+default config use `compose.yml` and `compose.override.yml`
+
+開發流程:
+
+1. fork repo from TaiBIF github to personal github account (first time)
+2. debug start from `devel` branch (github default branch)
+2. create new branch `git co -b fix-xxx`
+3. `git commit `
+4. `git merge fix-xxx`, `git checkout devel`
+5. `git push origin devel`
+6. create Pull requests in github & merge to TaiBIF/devel
+
+正式站就 merge to main branch
 
 ### PostgreSQL
 
@@ -18,6 +29,22 @@ sync staging/production server database data:
 3. put it in `initdb` folder
 4. docker compose up
 
+## Deployment
+
+use `Dockerfile_prod`
+
+Staging
+```
+docker compose -f compose.ylm -f compose.staging.yml up
+```
+
+
+Production
+```
+docker compose -f compose.ylm -f compose.prod.yml up
+```
+
+## Spec
 
 ### Data Model
 
