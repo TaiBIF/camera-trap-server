@@ -20,7 +20,7 @@ default will use compose.yml & compose.override.yml
 2. debug start from `devel` branch (github default branch)
 2. create new branch `git co -b fix-xxx`
 3. `git commit `
-4. `git merge fix-xxx`, `git checkout devel`
+4. `git checkout devel` & `git merge fix-xxx`,
 5. `git push origin devel`
 6. create Pull requests in github & merge to TaiBIF/devel
 
