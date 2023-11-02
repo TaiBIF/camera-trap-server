@@ -395,7 +395,7 @@ def announcement(request):
         project_admin.append(x['email'])
         
     # 資料上傳者 select * from taicat_projectmember where role = 'uploader';
-    uploader = ['jhujyunjhang@gmail.com']
+    uploader = []
     
     # for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='uploader').values('member_id')).values('name','email'):
     #     uploader.append(x['email'])
