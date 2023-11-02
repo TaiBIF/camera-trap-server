@@ -15,8 +15,7 @@ jobs:
           username: ${{ secrets.DEVEL_USERNAME }}
           key: ${{ secrets.DEVEL_KEY }}
           port: 22
-          script: whoami
-          #script: |
-          #  cd camera-trap-server
-          #  git pull origin main
-          #  docker-compose -f production.yml down && docker-compose -f production.yml up --build -d
+          script: |
+            cd camera-trap-server
+            git pull origin devel
+            docker-compose -f compose.yml -f compose.staging.yml down && docker-compose -f compose.yml -f compose.staging.yml up --build -d
