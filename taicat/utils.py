@@ -60,6 +60,7 @@ from taicat.models import (
     timezone_utc_to_tw,
     timezone_tw_to_utc,
     NamedAreaBorder,
+    ParameterCode,
 )
 
 import geopandas as gpd
@@ -859,20 +860,37 @@ def apply_search_filter(filter_dict={}):
             if v2 and op == 'range':
                 query = query.filter(deployment__altitude__gte=v1, deployment__altitude__lte=v2)
 
+    deployments = Deployment.objects.values('id', 'longitude', 'latitude', 'geodetic_datum').exclude(deprecated=True).exclude(longitude__isnull=True).exclude(latitude__isnull=True).all()
+
     if values := filter_dict.get('counties'):
+        names = [x['name'] for x in values]
         q_list = []
-        for x in values:
-            q_list.append(Q(deployment__county__icontains=x['parametername']))
+        na_list = NamedAreaBorder.objects.filter(name__in=names).all()
+        within_ids = []
+        for i in deployments:
+            if county := find_named_area(i['longitude'], i['latitude'], i['geodetic_datum']):
+                if county in names:
+                    within_ids.append(i['id'])
+        # for x in values:
+            #q_list.append(Q(deployment__county__icontains=x['parametername']))
 
-        query = query.filter(reduce(operator.or_, q_list))
+        #query = query.filter(reduce(operator.or_, q_list))
+        query = query.filter(deployment_id__in=within_ids)
 
+    protectedAreas = ParameterCode.objects.filter(type='protectedarea').values('name', 'parametername').all()
+    pa_map = {}
+    for i in protectedAreas:
+        pa_map[i['name']] = i['parametername']
     if values := filter_dict.get('protectedareas'):
         q_list = []
-        for x in values:
+        keys = [pa_map[x['name']] for x in values]
+
+        for k in keys:
             # 只有一筆就用 eq, 多筆就加上前後 ","
-            q_list.append(Q(deployment__protectedarea__icontains=x['parametername']+','))
-            q_list.append(Q(deployment__protectedarea__icontains=','+x['parametername']))
-            q_list.append(Q(deployment__protectedarea=x['parametername']))
+            q_list.append(Q(deployment__protectedarea__icontains=k + ','))
+            q_list.append(Q(deployment__protectedarea__icontains=',' + k))
+            q_list.append(Q(deployment__protectedarea=k))
+
         query = query.filter(reduce(operator.or_, q_list))
 
     if len(sp_values) > 0:
