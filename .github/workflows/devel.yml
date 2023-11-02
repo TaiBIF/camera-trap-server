@@ -1,5 +1,9 @@
 name: test CameraTrap GitHub Actions
+<<<<<<< HEAD
 run-name: ${{ github.actor }} is push to devel branch, go deploy staging server 🚀
+=======
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+>>>>>>> main
 on:
   push:
     branches: [ devel ]
@@ -15,7 +19,15 @@ jobs:
           username: ${{ secrets.DEVEL_USERNAME }}
           key: ${{ secrets.DEVEL_KEY }}
           port: 22
+<<<<<<< HEAD
           script: |
             cd camera-trap-server
             git pull origin devel
             docker-compose -f compose.yml -f compose.staging.yml down && docker-compose -f compose.yml -f compose.staging.yml up --build -d
+=======
+          script: whoami
+          #script: |
+          #  cd camera-trap-server
+          #  git pull origin main
+          #  docker-compose -f production.yml down && docker-compose -f production.yml up --build -d
+>>>>>>> main

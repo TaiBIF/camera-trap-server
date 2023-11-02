@@ -4,6 +4,7 @@ version: '3.7'
 #  asset:
 
 services:
+<<<<<<< HEAD
 django:
     build:
       context: ./docker
@@ -12,12 +13,23 @@ django:
       - 8001
   nginx:
     image: nginx:alpine
+=======
+  django:
+    expose:
+      - 8001
+  nginx:
+    image: nginx:latest-alpine
+>>>>>>> main
     restart: always
     ports:
       - 80:80
       - 443:443
     volumes:
+<<<<<<< HEAD
       - ./docker/nginx-django.conf:/etc/nginx/conf.d/ct22.conf
+=======
+      - ./scripts/nginx-django.conf:/etc/nginx/conf.d/ct22.conf
+>>>>>>> main
       - ../ct22-volumes/static:/ct22-volumes/static
       - ../ct22-volumes/certbot/conf:/etc/letsencrypt
       - ../ct22-volumes/certbot/www:/var/www/certbot
