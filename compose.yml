@@ -10,7 +10,6 @@ services:
     image: cameratrap-django-image
     ports:
       - 8000:8000
->>>>>>> main
     depends_on:
       - postgres
     volumes:
