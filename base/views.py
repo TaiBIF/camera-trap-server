@@ -397,8 +397,8 @@ def announcement(request):
     # 資料上傳者 select * from taicat_projectmember where role = 'uploader';
     uploader = []
     
-    # for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='uploader').values('member_id')).values('name','email'):
-    #     uploader.append(x['email'])
+    for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='uploader').values('member_id')).values('name','email'):
+        uploader.append(x['email'])
     
     # other = []
     # for x in Contact.objects.filter(id=).values('name','email'):
