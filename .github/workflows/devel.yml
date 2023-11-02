@@ -18,4 +18,5 @@ jobs:
           script: |
             cd camera-trap-server
             git pull origin devel
-            docker-compose -f compose.yml -f compose.staging.yml down && docker-compose -f compose.yml -f compose.staging.yml up --build -d
+            #docker-compose -f compose.yml -f compose.staging.yml down && docker-compose -f compose.yml -f compose.staging.yml up --build -d
+            #docker-compose -f compose.yml -f compose.staging.yml restart
