@@ -7,7 +7,6 @@ services:
       dockerfile: ./docker/Dockerfile
     container_name: cameratrap-django-container
     image: cameratrap-django-image
-    image: cameratrap-django-image
     depends_on:
       - postgres
     volumes:
