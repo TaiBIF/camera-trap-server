@@ -1,8 +1,14 @@
 # CameraTrap 2023
 
-
 ## Development
 
+```
+docker compose up
+```
+
+default config use `compose.yml` and `compose.override.yml`
+
+開發流程:
 
 ```
 docker-compose up
@@ -10,6 +16,15 @@ docker-compose up
 
 default will use compose.yml & compose.override.yml
 
+1. fork repo from TaiBIF github to personal github account (first time)
+2. debug start from `devel` branch (github default branch)
+2. create new branch `git co -b fix-xxx`
+3. `git commit `
+4. `git merge fix-xxx`, `git checkout devel`
+5. `git push origin devel`
+6. create Pull requests in github & merge to TaiBIF/devel
+
+正式站就 merge to main branch
 
 ### PostgreSQL
 
@@ -31,6 +46,8 @@ docker-compose -f compose.yml -f compose.staging.yml build / up
 ```
 docker-compose -f compose.yml -f compose.prod.yml build / up
 ```
+
+## Spec
 
 ### Data Model
 
