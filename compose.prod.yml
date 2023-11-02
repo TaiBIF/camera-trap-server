@@ -10,6 +10,8 @@ services:
       dockerfile: Dockerfile_prod
     expose:
       - 8001
+    command: /srv/start_prod
+    restart: always
   nginx:
     image: nginx:alpine
     restart: always

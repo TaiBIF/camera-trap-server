@@ -10,6 +10,12 @@ default config use `compose.yml` and `compose.override.yml`
 
 開發流程:
 
+```
+docker-compose up
+```
+
+default will use compose.yml & compose.override.yml
+
 1. fork repo from TaiBIF github to personal github account (first time)
 2. debug start from `devel` branch (github default branch)
 2. create new branch `git co -b fix-xxx`
@@ -31,17 +37,14 @@ sync staging/production server database data:
 
 ## Deployment
 
-use `Dockerfile_prod`
-
-Staging
+### Staging
 ```
-docker compose -f compose.ylm -f compose.staging.yml up
+docker-compose -f compose.yml -f compose.staging.yml build / up
 ```
 
-
-Production
+### Production
 ```
-docker compose -f compose.ylm -f compose.prod.yml up
+docker-compose -f compose.yml -f compose.prod.yml build / up
 ```
 
 ## Spec
