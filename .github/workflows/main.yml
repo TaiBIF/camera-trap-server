@@ -1,9 +1,7 @@
 name: test CameraTrap GitHub Actions
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+run-name: ${{ github.actor }} is push to main branch, go deploy production server 🚀
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 jobs:
   deploy:
@@ -20,4 +18,4 @@ jobs:
           script: |
             cd camera-trap-server
             git pull origin main
-            docker-compose -f production.yml down && docker-compose -f production.yml up --build -d
+            docker-compose -f compose.yml -f compose.prod.yml down && docker-compose -f compose.yml -f compose.prod.yml up --build -d

@@ -49,6 +49,10 @@ from .utils import (
     find_deployment_working_day,
     get_my_project_list
 )
+from taicat.tasks import (
+    process_project_annotation_download_task,
+)
+
 import collections
 from operator import itemgetter
 from dateutil import parser
@@ -1677,6 +1681,7 @@ def data(request):
         #     conditions = 'AND deployment_id IS NULL'
     spe_conditions = ''
     species = requests.getlist('species[]')
+
     if species:
         if 'all' not in species:
             x = [i for i in species]
@@ -1890,11 +1895,37 @@ def data(request):
 
 
 def download_request(request, pk):
-    task = threading.Thread(target=generate_download_excel, args=(request, pk))
+    #task = threading.Thread(target=generate_download_excel, args=(request, pk))
     # task.daemon = True
-    task.start()
-    return JsonResponse({"status": 'success'}, safe=False)
+    #task.start()
 
+    #print(request.POST)
+    email = request.POST.get('email', '')
+
+    args = {}
+    for k, v in request.POST.items():
+        if v:
+            if '[]' in k:
+                args[k] = request.POST.getlist(k)
+            else:
+                args[k] = v
+
+    member_id = request.session.get('id', None)
+    #print(args)
+
+    # 有權限拿人的資料
+    is_authorized = check_if_authorized(request, pk)
+    member_list = get_project_member(pk)
+    if is_authorized or (member_id in member_list):
+        is_authorized = True
+
+
+    user_role_name = ParameterCode.objects.get(parametername=Contact.objects.get(id=member_id).identity).name
+
+    host = request.META['HTTP_HOST']
+    process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host)
+
+    return JsonResponse({"status": 'success'}, safe=False)
 
 def generate_download_excel(request, pk):
     requests = request.POST
@@ -1903,13 +1934,15 @@ def generate_download_excel(request, pk):
     end_date = requests.get('end_date')
     # check_authorized to read ppl data
     member_id = request.session.get('id', None)
-    project_name = list(Project.objects.filter(id=pk).values("name"))[0]['name']
+    project = Project.objects.get(pk=pk)
+    project_name = project.name #list(project.values("name"))[0]['name']
+
     # 有權限拿人的資料
     is_authorized = check_if_authorized(request, pk)
-    member_list = get_project_member(pk)    
+    member_list = get_project_member(pk)
     if is_authorized or (member_id in member_list):
         is_authorized = True
-    
+
     user_role = ParameterCode.objects.get(parametername=Contact.objects.get(id=member_id).identity).name
     date_filter = ''
     if ((start_date and start_date != ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d")) or (end_date and end_date != ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"))):
@@ -1926,7 +1959,6 @@ def generate_download_excel(request, pk):
     conditions = ''
     sa = requests.getlist('sa[]')
     sa_download_log = []
-
     if sa:
         sa = [s for s in sa if s != 'all']
         sa_str = ' OR '.join([ f'i.studyarea_id = {s}' for s in sa])
@@ -2029,8 +2061,12 @@ def generate_download_excel(request, pk):
         download_url = download_url.replace('http', 'https')
     # download_log
     condition_log = f'''計畫名稱:{project_name}, 日期：{date_filter}。樣區：{sa_download_log}。相機位置：{dep_download_log}。海拔：{start_altitude}~{end_altitude}。物種：{spe_conditions} 。時間：{time_filter}。縣市：{county_name}。保護留區：{protectarea_name}。資料夾：{folder_filter} 。'''
-    download_log_sql = DownloadLog(user_role=user_role, condition=condition_log,file_link=download_url)#file_link=download_url
+
+    # comment for condition_log too large
+    
+    download_log_sql = DownloadLog(user_role=user_role, condition=condition_log[:1000],file_link=download_url)#file_link=download_url
     download_log_sql.save()
+
     email_subject = '[臺灣自動相機資訊系統] 下載資料'
     email_body = render_to_string('project/download.html', {'download_url': download_url, })
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
