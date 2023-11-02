@@ -228,12 +228,10 @@ def calculated_data(filter_args, calc_args, available_project_ids):
     query = apply_search_filter(filter_args)
     query = query.filter(project_id__in=available_project_ids)
 
-    deployment_query = Deployment.objects
-
-    if projects := filter_args.get('projects'):
-        deployment_query = apply_search_filter_projects(projects, deployment_query)
-
-    deployment_list = deployment_query.values('id', 'name', 'project__name', 'study_area__name').all()
+    deployments = query.values('deployment_id', 'deployment__name', 'studyarea__name','project__name').distinct()
+    dep_map = {}
+    for i in deployments:
+        dep_map[i['deployment_id']] = i
 
     for sp in species:
         results[sp] = []
@@ -244,24 +242,25 @@ def calculated_data(filter_args, calc_args, available_project_ids):
             event_interval=event_interval,
             species=sp
         )
-        if deps:
-            dep_ids = [x['id'] for x in deployment_list]
+
+        if len(deployments):
+            dep_ids = [x['deployment_id'] for x in deployments]
             cal_query = cal_query.filter(deployment_id__in=dep_ids)
 
-        #print (cal_query.query, start_dt, end_dt)
-        if res := cal_query.all():
-            for cal in res:
-                # print (cal.datetime_from, cal.datetime_to, cal.id)
-                #results[sp].append(cal.data)
-                if dep := cal.deployment:  # prevent deleted deployment
-                    results[sp].append({
-                        'project': dep.project.name,
-                        'studyarea': dep.study_area.name,
-                        'name': dep.name,
-                        'year': cal.datetime_to.year,
-                        'month': cal.datetime_to.month,
-                        'calc': cal.data
-                    })
+            #print (cal_query.query, start_dt, end_dt)
+            if res := cal_query.all():
+                for cal in res:
+                    # print (cal.datetime_from, cal.datetime_to, cal.id)
+                    #results[sp].append(cal.data)
+                    if dep := cal.deployment:  # prevent deleted deployment
+                        results[sp].append({
+                            'project': dep_map[dep.id]['project__name'], #dep.project.name,
+                            'studyarea': dep_map[dep.id]['studyarea__name'], #dep.study_area.name,
+                            'name': dep_map[dep.id]['deployment__name'], #dep.name,
+                            'year': cal.datetime_to.year,
+                            'month': cal.datetime_to.month,
+                            'calc': cal.data
+                        })
 
     return results
 
@@ -793,10 +792,7 @@ def apply_search_filter_projects(projects, query):
             qlist.append(Q(deployment_id__in=deployment_ids))
         if sa_s := proj.get('studyareas'):
             studyarea_ids = [x['id'] for x in sa_s]
-            # HACK: studyarea, study_area_id ... strange join error
-            #qlist.append(Q(study_area__in=studyarea_ids))
-            sa_dids = Deployment.objects.values_list('id', flat=True).filter(study_area_id__in=studyarea_ids).all()
-            qlist.append(Q(deployment_id__in=sa_dids))
+            qlist.append(Q(studyarea_id__in=studyarea_ids))
         if len(qlist) == 0:
             if p := proj.get('project'):
                 qlist.append(Q(project_id=p['id']))
