@@ -633,7 +633,6 @@ def clone_image(obj):
         file_url=obj.file_url,
         filename=obj.filename,
         datetime=obj.datetime,
-        count=obj.count,
         image_hash=obj.image_hash,
         image_uuid=obj.image_uuid,
         has_storage=obj.has_storage,
