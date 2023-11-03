@@ -22,6 +22,10 @@ $(document).ready(function() {
     species_error == 'True' ? $('.species-error-icon').show() : $('.species-error-icon').hide()
     upload_error == 'True' ? $('.upload-error').show() : $('.upload-error').hide()
     upload_error == 'True' ? $('.upload-error-icon').show() : $('.upload-error-icon').hide()
+
+    var deploymentJournalId = $(this).data('deployment_journal_id');
+    var url = `/get_error_file_list/${deploymentJournalId}`;
+    $('.list-dow').attr('href', url);
 	});
 
   $('.xx').on('click',function (event) {
