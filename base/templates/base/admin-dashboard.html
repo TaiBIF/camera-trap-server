@@ -6,6 +6,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+                <link class="icon" rel="icon" href="{% static 'icon/logo@leaf.png' %}" />
 		<title>Dashboard - UIkit 3 KickOff</title>
 		<!-- CSS FILES -->
 		<link rel="stylesheet" type="text/css" href="{% static 'css/uikit.min.css' %}">
@@ -19,7 +20,7 @@
 				<nav class="uk-navbar uk-light" data-uk-navbar="mode:click; duration: 250">
 					<div class="uk-navbar-left">
 						<div class="uk-navbar-item uk-hidden@m">
-							<a class="uk-logo" href="#"><img class="custom-logo" src="img/dashboard-logo-white.svg" alt=""></a>
+							<a class="uk-logo" href="#"><img class="custom-logo" src="{#img/dashboard-logo-white.svg#}" alt=""></a>
 						</div>
 						<ul class="uk-navbar-nav uk-visible@m">
 							<li><a href="#">Accounts</a></li>
@@ -61,12 +62,11 @@
 		<!-- LEFT BAR -->
 		<aside id="left-col" class="uk-light uk-visible@m">
 			<div class="left-logo uk-flex uk-flex-middle">
-				<img class="custom-logo" src="img/dashboard-logo.svg" alt="">
+				<img class="custom-logo" src="{#img/dashboard-logo.svg#}" alt="">
 			</div>
 			<div class="left-content-box  content-box-dark">
-				<img src="img/avatar.svg" alt="" class="uk-border-circle profile-img">
+				<img src="{#img/avatar.svg#}" alt="" class="uk-border-circle profile-img">
 				<h4 class="uk-text-center uk-margin-remove-vertical text-light">John Doe</h4>
-				
 				<div class="uk-position-relative uk-text-center uk-display-block">
 				    <a href="#" class="uk-text-small uk-text-muted uk-display-block uk-text-center" data-uk-icon="icon: triangle-down; ratio: 0.7">Admin</a>
 				    <!-- user dropdown -->
@@ -157,37 +157,35 @@
 				<div class="uk-grid uk-grid-divider uk-grid-medium uk-child-width-1-2 uk-child-width-1-4@l uk-child-width-1-5@xl" data-uk-grid>
 					<div>
 						<span class="uk-text-small"><span data-uk-icon="icon:image" class="uk-margin-small-right uk-text-primary"></span>Images</span>
-						<h1 class="uk-heading-primary uk-margin-remove  uk-text-primary">{{ image_count|intcomma }}</h1>
+						<h1 class="uk-heading-primary uk-margin-remove  uk-text-primary">{{ total_images|intcomma }}</h1>
 						<!--div class="uk-text-small">
 							<span class="uk-text-success" data-uk-icon="icon: triangle-up">15%</span> more than last week.
 						</div-->
 					</div>
 					<div>
-						
 						<span class="uk-text-small"><span data-uk-icon="icon:crosshairs" class="uk-margin-small-right uk-text-primary"></span>Annotations</span>
-						<h1 class="uk-heading-primary uk-margin-remove uk-text-primary">{{ annotation_count|intcomma }}</h1>
+						<h1 class="uk-heading-primary uk-margin-remove uk-text-primary">{{ total_annotations|intcomma }}</h1>
 						<!--div class="uk-text-small">
 							<span class="uk-text-warning" data-uk-icon="icon: triangle-down">-15%</span> less than last week.
 						</div-->
-						
 					</div>
 					<div>
-						
-						<span class="uk-text-small"><span data-uk-icon="icon:clock" class="uk-margin-small-right uk-text-primary"></span>Traffic hours</span>
+					  <span class="uk-text-small"><span data-uk-icon="icon:clock" class="uk-margin-small-right uk-text-primary"></span>{#Traffic hours#}--</span>
+                                          <!--
 						<h1 class="uk-heading-primary uk-margin-remove uk-text-primary">12.00<small class="uk-text-small">PM</small></h1>
 						<div class="uk-text-small">
 							<span class="uk-text-success" data-uk-icon="icon: triangle-up"> 19%</span> more than last week.
 						</div>
-						
+					  -->
 					</div>
 					<div>
-						
-						<span class="uk-text-small"><span data-uk-icon="icon:search" class="uk-margin-small-right uk-text-primary"></span>Week Search</span>
+					  <span class="uk-text-small"><span data-uk-icon="icon:search" class="uk-margin-small-right uk-text-primary"></span>{#Week Search#}</span>
+                                          <!--
 						<h1 class="uk-heading-primary uk-margin-remove uk-text-primary">9.543</h1>
 						<div class="uk-text-small">
 							<span class="uk-text-danger" data-uk-icon="icon: triangle-down"> -23%</span> less than last week.
 						</div>
-						
+                                          -->
 					</div>
 					<div class="uk-visible@xl">
 						<span class="uk-text-small"><span data-uk-icon="icon:users" class="uk-margin-small-right uk-text-primary"></span>Lorem ipsum</span>
@@ -207,30 +205,35 @@
                                         </div>
                                       </div>
                                       <div class="uk-card-body">
-                                        <table class="uk-table uk-table-striped uk-table-hover"">
+                                        <table class="uk-table uk-table-small uk-table-striped uk-table-hover"">
                                           <thead>
                                             <tr>
                                               <th>Project</th>
-                                              <th># of Annotations</th>
-                                              <th># of StudyAreas</th>
-                                              <th># of Deployments</th>
-                                              <th># of Uploads</th>
-                                              <th># of Species</th>
-                                              <th>Data Range</th>
-                                              <th>Last Updated</th>
+                                              <th>標註數</th>
+                                              <th>照片數</th>
+                                              <th>樣區數</th>
+                                              <th>相機數</th>
+                                              <th>上傳次數</th>
+                                              <th>物種數</th>
+                                              <th>第一張日期</th>
+                                              <th>最後一張日期</th>
+                                              <th>最新上傳時間</th>
                                             </tr>
                                           </thead>
                                           <tbody>
-                                            {% for s in project_stats %}
+
+                                            {% for i in project_list %}
                                             <tr>
-                                              <td>{{ s.project.name }} [{{s.project.id}}]</td>
-                                              <td>{{ s.num_data|intcomma }}</td>
-                                              <td>{{ s.num_sa }}</td>
-                                              <td>{{ s.num_deployment }}</td>
-                                              <td>{{ s.project.upload_list.count }}</td>
-                                              <td>{{ s.project.species_list.count }}</td>
-                                              <td>{{ s.earliest_date|date:"Y-m-d" }} ~ {{ s.latest_date|date:"Y-m-d" }}</td>
-                                              <td>{{ s.last_updated|date:"Y-m-d H:m:s" }}</td>
+                                              <td>{{ i.project_name }} [{{ i.project_id }}]</td>
+                                              <td>{{ i.num_annotations|intcomma }}</td>
+                                              <td>{{ i.num_images|intcomma }}</td>
+                                              <td>{{ i.num_studyareas }}</td>
+                                              <td>{{ i.num_deployments }}</td>
+                                              <td>{{ i.num_uploads }}</td>
+                                              <td>{{ i.num_species }}</td>
+                                              <td>{{ i.first_datetime__date }}</td>
+                                              <td>{{ i.last_datetime__date }}</td>
+                                              <td>{{ i.last_upload_time }}</td>
                                             </tr>
                                             {% endfor %}
                                           </tbody>
@@ -299,114 +302,7 @@
 							</div>
 						</div>
                                         </div>
-					<div class="uk-width-1-1@l">
-                                        <hr class="uk-divider-icon">
-                                        </div>
-					<!-- panel -->
-					<div class="uk-width-1-2@l">
-						<div class="uk-card uk-card-default uk-card-small uk-card-hover">
-							<div class="uk-card-header">
-								<div class="uk-grid uk-grid-small">
-									<div class="uk-width-auto"><h4>Sales Chart</h4></div>
-									<div class="uk-width-expand uk-text-right panel-icons">
-										<a href="#" class="uk-icon-link sortable-icon" title="Move" data-uk-tooltip data-uk-icon="icon: move"></a>
-										<a href="#" class="uk-icon-link" title="Configuration" data-uk-tooltip data-uk-icon="icon: cog"></a>
-										<a href="#" class="uk-icon-link" title="Close" data-uk-tooltip data-uk-icon="icon: close"></a>
-									</div>
-								</div>
-							</div>
-							<div class="uk-card-body">
-								<div class="chart-container">
-									<canvas id="chart2"></canvas>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- /panel -->
-					<!-- panel -->
-					<div class="uk-width-1-2@l">
-						<div class="uk-card uk-card-default uk-card-small uk-card-hover">
-							<div class="uk-card-header">
-								<div class="uk-grid uk-grid-small">
-									<div class="uk-width-auto"><h4>Predictions Chart</h4></div>
-									<div class="uk-width-expand uk-text-right panel-icons">
-										<a href="#" class="uk-icon-link sortable-icon" title="Move" data-uk-tooltip data-uk-icon="icon: move"></a>
-										<a href="#" class="uk-icon-link" title="Configuration" data-uk-tooltip data-uk-icon="icon: cog"></a>
-										<a href="#" class="uk-icon-link" title="Close" data-uk-tooltip data-uk-icon="icon: close"></a>
-									</div>
-								</div>
-							</div>
-							<div class="uk-card-body">
-								<div class="chart-container">
-									<canvas id="chart1"></canvas>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- /panel -->
-					<!-- panel -->
-					<div class="uk-width-1-1 uk-width-1-3@l uk-width-1-2@xl">
-						<div class="uk-card uk-card-default uk-card-small uk-card-hover">
-							<div class="uk-card-header">
-								<div class="uk-grid uk-grid-small">
-									<div class="uk-width-auto"><h4>Activity Chart</h4></div>
-									<div class="uk-width-expand uk-text-right panel-icons">
-										<a href="#" class="uk-icon-link sortable-icon" title="Move" data-uk-tooltip data-uk-icon="icon: move"></a>
-										<a href="#" class="uk-icon-link" title="Configuration" data-uk-tooltip data-uk-icon="icon: cog"></a>
-										<a href="#" class="uk-icon-link" title="Close" data-uk-tooltip data-uk-icon="icon: close"></a>
-									</div>
-								</div>
-							</div>
-							<div class="uk-card-body">
-								<div class="chart-container">
-									<canvas id="chart3"></canvas>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- /panel -->
-					<!-- panel -->
-					<div class="uk-width-1-2@s uk-width-1-3@l uk-width-1-4@xl">
-						<div class="uk-card uk-card-default uk-card-small uk-card-hover">
-							<div class="uk-card-header">
-								<div class="uk-grid uk-grid-small">
-									<div class="uk-width-auto"><h4>Distribution Chart</h4></div>
-									<div class="uk-width-expand uk-text-right panel-icons">
-										<a href="#" class="uk-icon-link sortable-icon" title="Move" data-uk-tooltip data-uk-icon="icon: move"></a>
-										<a href="#" class="uk-icon-link" title="Configuration" data-uk-tooltip data-uk-icon="icon: cog"></a>
-										<a href="#" class="uk-icon-link" title="Close" data-uk-tooltip data-uk-icon="icon: close"></a>
-									</div>
-								</div>
-							</div>
-							<div class="uk-card-body">
-								<div class="chart-container">
-									<canvas id="chart4"></canvas>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- /panel -->
-					<!-- panel -->
-					<div class="uk-width-1-2@s uk-width-1-3@l uk-width-1-4@xl">
-						<div class="uk-card uk-card-default uk-card-small uk-card-hover">
-							<div class="uk-card-header">
-								<div class="uk-grid uk-grid-small">
-									<div class="uk-width-auto"><h4>Population Chart</h4></div>
-									<div class="uk-width-expand uk-text-right panel-icons">
-										<a href="#" class="uk-icon-link sortable-icon" title="Move" data-uk-tooltip data-uk-icon="icon: move"></a>
-										<a href="#" class="uk-icon-link" title="Configuration" data-uk-tooltip data-uk-icon="icon: cog"></a>
-										<a href="#" class="uk-icon-link" title="Close" data-uk-tooltip data-uk-icon="icon: close"></a>
-									</div>
-								</div>
-							</div>
-							<div class="uk-card-body">
-								<div class="chart-container">
-									<canvas id="chart5"></canvas>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- /panel --> 
+
 				</div>
 				<footer class="uk-section uk-section-small uk-text-center">
 					<hr>
@@ -444,6 +340,6 @@
 		<script src="{% static 'js/uikit.min.js' %}"></script>
 		<script src="{% static 'js/uikit-icons.min.js' %}"></script>
 		<script src="{% static 'js/Chart.min.js' %}"></script>
-		<script src="{% static 'js/chartScripts.js' %}"></script>
+		<script src="{% static 'js/dashboard.js' %}"></script>
 	</body>
 </html>
