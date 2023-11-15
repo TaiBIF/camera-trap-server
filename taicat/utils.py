@@ -503,18 +503,21 @@ def calc_output2(results, file_format, filter_str, calc_str):
             tmp.seek(0)
             return tmp.read()
 
-def get_my_project_list(member_id, project_list=[]):
+def get_my_project_list(member_id):
+    '''
+    ## project_list 會cached, 繼續累積上一次呼叫剩下來的
     if Contact.objects.filter(id=member_id, is_system_admin=True).exists():
         project_list += list(Project.objects.all().values_list('id', flat=True))
     else:
         # 1. select from project_member table
-        with connection.cursor() as cursor:
+        with connection.cursor() as cursor2:
             query = "SELECT project_id FROM taicat_projectmember where member_id = %s"
-            cursor.execute(query, (member_id, ))
-            temp = cursor.fetchall()
+            cursor2.execute(query, (member_id, ))
+            temp = cursor2.fetchall()
             for i in temp:
                 if i[0]:
                     project_list += [i[0]]
+
         # 2. check if the user is organization admin
         if_organization_admin = Contact.objects.filter(id=member_id, is_organization_admin=True)
         if if_organization_admin:
@@ -522,7 +525,17 @@ def get_my_project_list(member_id, project_list=[]):
             temp = Organization.objects.filter(id=organization_id).values('projects')
             for i in temp:
                 project_list += [i['projects']]
+
     return project_list
+    '''
+    proj_ids = ProjectMember.objects.values_list('project_id', flat=True).filter(member_id=member_id).all()
+
+    contact = Contact.objects.get(pk=member_id)
+    if contact.is_organization_admin is True:
+        org_proj_ids = Organization.objects.filter(id=contact.organization_id).values_list('projects', flat=True).all()
+        return list(set(list(proj_ids) + list(org_proj_ids)))
+
+    return list(proj_ids)
 
 
 def get_project_member(project_id):

@@ -128,7 +128,7 @@ def api_get_projects(request):
     # my_project = []
     # my_species_data = []
     if member_id := request.session.get('id', None):
-        if my_project_list := get_my_project_list(member_id,[]):
+        if my_project_list := get_my_project_list(member_id):
             # my_project, my_species_data = get_project_info(my_project_list)
             # exclude exist in public_project
             my_project_list = list(set(my_project_list) - set(public_project_list))
@@ -172,7 +172,7 @@ def api_search(request):
         available_project_ids = list(available_project_ids)
 
         if member_id := request.session.get('id', None):
-            if my_project_list := get_my_project_list(member_id,[]):
+            if my_project_list := get_my_project_list(member_id):
                 available_project_ids.extend(my_project_list)
 
         if request.GET.get('filter'):
