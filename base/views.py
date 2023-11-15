@@ -17,7 +17,6 @@ import requests
 
 import time
 import pandas as pd
-
 from datetime import datetime, timedelta
 
 import os
@@ -46,18 +45,80 @@ def admin_dashboard(request):
 
     context = {}
 
-    if dashboard_stats := cache.get('dashboard.stats'):
-        context = json.loads(dashboard_stats)
+    if 0: #cache
+        pass
+    #ctx := cache.get('dashboard_context'):
+    #context = json.loads(ctx)
     else:
-        image_count= Image.objects.filter(annotation_seq=0).count()
-        annotation_count = Image.objects.count()
-        context.update({
-            'image_count': image_count,
-            'annotation_count': annotation_count,
-        })
-        cache.set('dashboard.stats', json.dumps(context), 86400)
+        sql = '''
+SELECT
+  r.project_id,
+  r.project_name,
+  r.num_annotations,
+  r.num_images,
+  r.last_upload_time,
+  r.first_datetime,
+  r.last_datetime,
+  sa.num_studyareas,
+  dep.num_deployments,
+  dj.num_uploads,
+  sp.num_species
+FROM
+  ( SELECT
+      i.project_id as project_id,
+      p.name AS project_name,
+      COUNT(*) AS num_annotations,
+      COUNT(1) FILTER (WHERE i.annotation_seq=0) AS num_images,
+      TIMEZONE('Asia/Taipei', MAX(i.created)) AS last_upload_time,
+      TIMEZONE('Asia/Taipei', MAX(i.datetime)) AS last_datetime,
+      TIMEZONE('Asia/Taipei', MIN(i.datetime)) AS first_datetime
+    FROM taicat_image AS i
+    JOIN taicat_project AS p ON p.id = i.project_id
+    GROUP BY i.project_id, p.name
+  ) AS r
+LEFT JOIN (
+  SELECT project_id, count(*) AS num_studyareas FROM taicat_studyarea GROUP BY project_id
+  ) AS sa ON sa.project_id = r.project_id
+LEFT JOIN (
+  SELECT project_id, count(*) AS num_deployments FROM taicat_deployment GROUP BY project_id
+  ) AS dep ON dep.project_id = r.project_id
+LEFT JOIN (
+  SELECT project_id, count(*) AS num_uploads FROM taicat_deploymentjournal GROUP BY project_id
+  ) AS dj ON dj.project_id = r.project_id
+LEFT JOIN (
+  SELECT project_id, count(*) AS num_species FROM taicat_projectspecies GROUP BY project_id
+  ) AS sp ON sp.project_id = r.project_id
+ORDER BY r.last_upload_time DESC
+;'''
+        project_list = []
+        total_annotations = 0
+        total_images = 0
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+            columns = [col[0] for col in cursor.description]
+            #project_list = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            for row in cursor.fetchall():
+                data = {}
+                for i, v in enumerate(row):
+                    if isinstance(v, datetime): # cannot marshalize
+                        data[f'{columns[i]}__date'] = v.strftime('%Y-%m-%d')
+                        data[f'{columns[i]}'] = v.strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        data[columns[i]] = v
+                        if columns[i] == 'num_annotations':
+                            total_annotations += v
+                        elif columns[i] == 'num_images':
+                            total_images += v
 
-    context['project_stats'] = ProjectStat.objects.order_by('-num_data').all()
+                project_list.append(data)
+
+        context = {
+            'project_list':  project_list,
+            'total_images': total_images,
+            'total_annotations': total_annotations
+        }
+
+        #cache.set('dashboard_context', json.dumps(context), 30) #86400
 
     return render(request, 'base/admin-dashboard.html', context)
 
@@ -929,7 +990,7 @@ def api_dashboard(request, chart):
         labels = []
         date_dict = {}
         date2_dict = {}
-        for i in range(1, 31):
+        for i in range(1, 32):
             a = datetime.now()+timedelta(days=(i-31))+timedelta(hours=8)
             labels.append([a.strftime('%Y-%m-%d'), a.strftime('%a')])
         #print(labels)

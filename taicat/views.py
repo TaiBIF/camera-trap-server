@@ -260,7 +260,7 @@ def get_project_detail(request):
     
     project_list = []
     if editable:
-        pid_list = get_my_project_list(user_id,[])
+        pid_list = get_my_project_list(user_id)
         projects = Project.objects.filter(pk__in=pid_list)
         for p in projects:
             project_list += [{'label': p.name, 'value': p.id}]
@@ -1333,7 +1333,7 @@ def project_overview(request):
     # my project
     my_species_data = []
     if member_id := request.session.get('id', None):
-        if my_project_list := get_my_project_list(member_id,[]):
+        if my_project_list := get_my_project_list(member_id):
             my_project, my_species_data = get_project_info(my_project_list)
     return render(request, 'project/project_overview.html', {'public_project': public_project, 
                                                              'is_authorized_create': is_authorized_create,
@@ -1561,7 +1561,7 @@ def project_detail(request, pk):
     # sa_list = Project.objects.get(pk=pk).get_sa_list()
     # sa_d_list = Project.objects.get(pk=pk).get_sa_d_list()
     if editable:
-        pid_list = get_my_project_list(user_id,[])
+        pid_list = get_my_project_list(user_id)
         projects = Project.objects.filter(pk__in=pid_list)
         project_list = []
         for p in projects:
@@ -2348,7 +2348,7 @@ def get_project_overview(request):
         else:
             member_id = request.session.get('id', None)
             if member_id := request.session.get('id', None):
-                if project_list := get_my_project_list(member_id,[]): 
+                if project_list := get_my_project_list(member_id): 
                     project_filter = Project.objects.filter(id__in=project_list)
 
         if species:
