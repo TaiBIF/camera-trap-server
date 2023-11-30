@@ -1334,7 +1334,10 @@ def project_overview(request):
     my_species_data = []
     if member_id := request.session.get('id', None):
         if my_project_list := get_my_project_list(member_id):
-            my_project, my_species_data = get_project_info(my_project_list)
+            print(member_id, my_project_list)
+            #my_project, my_species_data = get_project_info(my_project_list)
+            # much faster
+            my_species_data = ProjectSpecies.objects.filter(project_id__in=list(my_project_list), name__in=Species.DEFAULT_LIST).values('name').annotate(total_count=Sum('count')).values_list('total_count', 'name').order_by('-total_count')
     return render(request, 'project/project_overview.html', {'public_project': public_project, 
                                                              'is_authorized_create': is_authorized_create,
                                                              'public_species_data': public_species_data, 'my_species_data': my_species_data,
@@ -1641,11 +1644,11 @@ def data(request):
     is_project_authorized = Contact.objects.filter(id=member_id, is_system_admin=True).exists()
     is_authorized = check_if_authorized(request, pk)
     # 團隊成員名單
-    member_list = get_project_member(pk)    
+    member_list = get_project_member(pk)
     if is_authorized or (member_id in member_list):
         is_authorized = True
         is_project_authorized = True
-    
+
     start_date = requests.get('start_date')
     end_date = requests.get('end_date')
     date_filter = ''
@@ -2353,7 +2356,7 @@ def get_project_overview(request):
 
         if species:
             project_filter = project_filter.filter(id__in=ProjectSpecies.objects.filter(name__in=species).values_list('project_id',flat=True))
-        
+
         if keyword: #計畫名稱 計畫關鍵字 委辦單位
             project_filter = project_filter.filter(Q(name__icontains=keyword)|Q(keyword__icontains=keyword)|Q(funding_agency__icontains=keyword))
 
@@ -2364,14 +2367,15 @@ def get_project_overview(request):
         page_list = []
         show_start = 0
         show_end = 0
-
         if project_list:
             total = len(project_list)
             total_page = math.ceil(total / limit)
             page_list = get_page_list(current_page, total_page)
             offset = (current_page-1)*limit
             # [(current_page-1)*limit:current_page*limit]
-            project, _ = get_project_info(project_list, limit, offset, order, sort)
+            #project, _ = get_project_info(project_list, limit, offset, order, sort)
+            project2 = Project.objects.values_list('id', 'name', 'keyword', 'start_date__year', 'funding_agency', 'project_stat__num_sa', 'project_stat__num_deployment', 'project_stat__num_data').filter(id__in=project_list).order_by('-'+order)[offset: offset+int(current_page)*limit]
+            project = list(project2)
             show_start = (current_page-1)*limit + 1
             show_end = current_page*limit if total > current_page*limit else total
         response = {'project': project, 'total': total, 'total_page': total_page, 
