@@ -980,7 +980,7 @@ class HomePageStat(models.Model):
 
 
 class ProjectStat(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, related_name='project_stat') 
     num_sa = models.IntegerField(null=True, blank=True)
     num_deployment = models.IntegerField(null=True, blank=True)
     num_data = models.IntegerField(null=True, blank=True)

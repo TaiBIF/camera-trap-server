@@ -357,7 +357,7 @@ def upload_history(request):
     if request.method == 'GET':
 
         if member_id := request.session.get('id', None):
-            my_project_list = get_my_project_list(member_id,[])
+            my_project_list = get_my_project_list(member_id)
             q = request.GET.get('q', '')
             page_number = request.GET.get('page', 1)
 
