@@ -528,12 +528,15 @@ def get_my_project_list(member_id):
 
     return project_list
     '''
-    proj_ids = ProjectMember.objects.values_list('project_id', flat=True).filter(member_id=member_id).all()
-
+    proj_ids = []
     contact = Contact.objects.get(pk=member_id)
-    if contact.is_organization_admin is True:
-        org_proj_ids = Organization.objects.filter(id=contact.organization_id).values_list('projects', flat=True).all()
-        return list(set(list(proj_ids) + list(org_proj_ids)))
+    if contact.is_system_admin is True:
+        proj_ids = list(Project.objects.all().values_list('id', flat=True))
+    else:
+        proj_ids = ProjectMember.objects.values_list('project_id', flat=True).filter(member_id=member_id).exclude(project_id__isnull=True).all()
+        if contact.is_organization_admin is True:
+            org_proj_ids = Organization.objects.filter(id=contact.organization_id).values_list('projects', flat=True).all()
+            proj_ids = list(set(list(proj_ids) + list(org_proj_ids)))
 
     return list(proj_ids)
 
