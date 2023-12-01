@@ -218,7 +218,7 @@
                                 <a href="{% url 'announcement'  %}">公告寄信</a>
                                 {% endif %}
                                 {% if request.session.id|if_desktop %}
-                                <a href="{% url 'desktop'  %}">單機版下載</a>
+                                <a href="{% url 'desktop'  %}">上傳程式下載</a>
                                 {% endif %}
                                 <a href="{% url 'logout' %}">登出</a>
                             </div>
@@ -256,7 +256,8 @@
             {% if request.session.id|announcement_content != None %}
             <div class="alert alert-warning alert-dismissible fade show" role="alert" id="alert-content">
               <strong class="badge">公告!</strong>
-              <a href="{% url 'desktop'%}"> {{ request.session.id|announcement_content }} </a>
+              <!-- <a href="{% url 'desktop'%}"> {{ request.session.id|announcement_content }} </a> -->
+              <a href="{% url 'desktop'%}"> 單機版軟體更新（v1.1.6版） </a>
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" id="alert-box"></button>
             </div>
             {% endif %}
@@ -265,7 +266,8 @@
           {% if request.session.id|announcement_content != None %}
             <div class="alert alert-warning alert-dismissible fade show" role="alert" id="alert-content">
               <strong class="badge">公告!</strong>
-              <a href="{% url 'desktop'%}"> {{ request.session.id|announcement_content }} </a>
+              <!-- <a href="{% url 'desktop'%}"> {{ request.session.id|announcement_content }} </a> -->
+              <a href="{% url 'desktop'%}"> 單機版軟體更新（v1.1.6版） </a>
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" id="alert-box"></button>
             </div>
           {% endif %}
