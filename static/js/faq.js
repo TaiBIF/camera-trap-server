@@ -184,7 +184,7 @@ let content_dict = {'web':{'title': '網頁操作','content':
 </ul>`
 },
 
-'desktop': {'title': '單機版軟體操作','content': 
+'desktop': {'title': '上傳程式軟體操作','content': 
 `<ul class="faq-li">
     <li>
       <div class="q-box">
