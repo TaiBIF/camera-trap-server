@@ -30,7 +30,7 @@ let content_dict = {'web':{'title': '網頁操作','content':
       </div>
       <div class="a-box">
       <video class="img lazy mx-auto d-block" controls width="100%" preload="none">
-      <source src="/media/faq/網頁版系統操作影片.mp4" type="video/mp4">
+      <source src="/media/faq/web video.mp4" type="video/mp4">
       抱歉，您的瀏覽器不支援內嵌影片。
       </video>
       </div>
@@ -216,7 +216,7 @@ let content_dict = {'web':{'title': '網頁操作','content':
       </div>
       <div class="a-box">
         <video class="img lazy mx-auto d-block" controls width="100%" preload="none">
-          <source src="/media/faq/單機版系統操作影片.mp4" type="video/mp4">
+          <source src="/media/faq/desktop video.mp4" type="video/mp4">
             抱歉，您的瀏覽器不支援內嵌影片。
         </video>
       </div>

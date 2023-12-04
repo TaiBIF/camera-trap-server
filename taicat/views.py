@@ -418,6 +418,8 @@ def delete_dep_sa(request):
                 # 修改相機位置數量 
                 if ProjectStat.objects.filter(project_id=project_id).exists():
                     ProjectStat.objects.filter(project_id=project_id).update(num_deployment = Deployment.objects.filter(project_id=project_id).count())
+
+                #Calculation.objects.filter(deployment_id=id).delete() # Calculation model on_delete set CASCADE will auto delete
                 response = {'status': 'done'}
         # response = {'d': 'done'}
         return HttpResponse(json.dumps(response), content_type='application/json')
