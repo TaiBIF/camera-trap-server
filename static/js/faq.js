@@ -13,7 +13,7 @@ let content_dict = {'web':{'title': '網頁操作','content':
         </div>
       </div>
       <div class="a-box">
-      <a class="link" target="_blank" href="/media/faq/網頁版系統操作.pdf">點此下載</a>
+      <a class="link" target="_blank" href="/media/faq/web documentation.pdf">點此下載</a>
       </div>
     </li>
     <li>
@@ -199,7 +199,7 @@ let content_dict = {'web':{'title': '網頁操作','content':
         </div>
       </div>
       <div class="a-box">
-        <a class="link" target="_blank" href="/media/faq/單機版系統操作.pdf">點此下載</a>
+        <a class="link" target="_blank" href="/media/faq/desktop doucementation.pdf">點此下載</a>
       </div>
     </li>
     <li>
