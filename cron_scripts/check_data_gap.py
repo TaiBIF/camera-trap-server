@@ -73,9 +73,14 @@ for i in rows:
     project_members = get_project_member(project_id)
     email_list = [x.email for x in Contact.objects.filter(id__in=project_members)]
 
+    # append system_admin role
+    system_admin_list = Contact.objects.filter(is_system_admin=True).all()
+    email_list = list(set(email_list + [x.email for x in system_admin_list]))
+    project_members = list(set(project_members + [x.id for x in system_admin_list]))
+    #print(email_list, project_members)
+
     # create notification
     for m in project_members:
-        # print (m.id, m.name)
         un = UploadNotification(
             contact_id = m,
             category='gap',
