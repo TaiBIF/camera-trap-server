@@ -1118,7 +1118,7 @@ class ParameterCode(models.Model):
 class Calculation(models.Model):
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
     studyarea = models.ForeignKey(StudyArea, on_delete=models.SET_NULL, null=True)
-    deployment = models.ForeignKey(Deployment, on_delete=models.SET_NULL, null=True)
+    deployment = models.ForeignKey(Deployment, on_delete=models.CASCADE, null=True)
     #year = models.PositiveSmallIntegerField('year')
     #month = models.PositiveSmallIntegerField('month')
     datetime_from = models.DateTimeField(null=True, db_index=True)
