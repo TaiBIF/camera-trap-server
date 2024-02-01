@@ -77,6 +77,7 @@ for i in rows:
     # append system_admin role
     system_admin_list = Contact.objects.filter(is_system_admin=True).all()
     email_list = list(set(email_list + [x.email for x in system_admin_list]))
+    email_list_non_empty = [x for x in email_list if x]
     project_members = list(set(project_members + [x.id for x in system_admin_list]))
     #print(email_list, project_members)
 
@@ -87,13 +88,13 @@ for i in rows:
             category='gap',
             project_id = project_id
         )
-        un.save()
+        #un.save()
 
     # make email chunks for AWS SES's quota limits per seconds (defaults: 16)
-    if len(email_list) <= 10:
-        send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list)
+    if len(email_list_non_empty) <= 10:
+        send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list_non_empty)
     else:
-        for x in get_chunks(email_list, 10):
+        for x in get_chunks(email_list_non_empty, 10):
             send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, x[1])
             sleep(2)
 
