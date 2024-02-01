@@ -1,10 +1,11 @@
 import datetime
+from time import sleep
 
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Count
 
-from taicat.utils import half_year_ago, get_project_member
+from taicat.utils import half_year_ago, get_project_member, get_chunks
 from taicat.models import (
     DeploymentJournal,
     Contact,
@@ -88,7 +89,13 @@ for i in rows:
         )
         un.save()
 
-    send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list)
+    # make email chunks for AWS SES's quota limits per seconds (defaults: 16)
+    if len(email_list) <= 10:
+        send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list)
+    else:
+        for x in get_chunks(email_list, 10):
+            send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, x[1])
+            sleep(2)
 
     #print(email_subject)
     #print(email_body)
