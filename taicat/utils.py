@@ -1206,3 +1206,8 @@ def make_image_query_in_project(project_id, args, is_authorized):
     query = query.order_by('-created', 'project_id')
 
     return query
+
+def get_chunks(lst, n):
+    '''modified via: https://stackoverflow.com/a/312464/644070'''
+    for i in range(0, len(lst), n):
+        yield (int(i/n), lst[i:i + n])
