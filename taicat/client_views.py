@@ -26,6 +26,7 @@ from taicat.models import (
     DeploymentJournal,
     Image_info,
     Contact,
+    InfoLog,
 )
 from base.models import (
     Announcement,
@@ -234,14 +235,19 @@ def post_image_annotation1_1(request):
         #data = json.loads(request.body)
 
         is_available = False
-        if upload_key := data.get('key'):
+        upload_key = data.get('key', '')
+        if upload_key:
             keys = upload_key.split('/')
             for available_version in settings.AVAILABLE_CLIENT_VERSIONS:
-                if keys[2] in available_version:
+                if available_version in keys[2]:
                     is_available = True
 
         if is_available == False:
-            ret['error'] = 'ct-server: not available upload client version)'
+            ret['error'] = f'目前上傳界面版本已經淘汰: {keys[2]}，無法上傳，請更新至最新版本'
+            ilog = InfoLog(name=upload_key, value=data['deployment_id'])
+            ilog.save()
+
+            return JsonResponse(ret)
 
         if deployment := Deployment.objects.get(pk=data['deployment_id']):
             # create or update DeploymentJournal
