@@ -321,3 +321,5 @@ LOGGING = {
 }
 
 CSRF_TRUSTED_ORIGINS = ['https://staging.camera-trap.tw', 'https://camera-trap.tw']
+
+AVAILABLE_CLIENT_VERSIONS = env.list('AVAILABLE_CLIENT_VERSIONS')

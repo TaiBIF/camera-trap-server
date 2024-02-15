@@ -1140,3 +1140,9 @@ class NamedAreaBorder(models.Model):
     name = models.CharField(max_length=500)
     area_class = models.CharField(max_length=500)
     mpoly = gis_models.MultiPolygonField()
+
+# for debug
+class InfoLog(models.Model):
+    name = models.CharField(max_length=1000)
+    value = models.CharField(max_length=1000)
+    created = models.DateTimeField(auto_now_add=True)
