@@ -2,6 +2,7 @@
 {% endblock title %} {% block style %}
 <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
 {% endblock style %} {% block body %}
+{% if is_desktop_authorized %}
 <div class="main-box">
     <div class="main-title">
         <h2>上傳程式下載</h2>
@@ -40,4 +41,12 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="main-box">
+	<div class="main-title">
+		您的權限不足      
+	</div>		
+	<a class="return-btn" href="/"> < 返回</a>
+</div>
+{% endif %}
 {% endblock body %}
