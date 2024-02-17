@@ -1063,6 +1063,32 @@ def edit_project_members(request, pk):
                                                                     'study_area': study_area, 
                                                                     'is_authorized': is_authorized, 'return_message': return_message})
 
+def add_project_members(request, pk):
+    is_authorized = check_if_authorized(request, pk)
+    return_message = ''
+
+    if is_authorized:
+        if request.method == "POST":
+            data = dict(request.POST.items())     
+            # Add member
+            if data.get('action') == 'add':
+                           
+                member = Contact.objects.filter(Q(email=data['contact_query']) | Q(orcid=data['contact_query'])).first()
+                if member:
+                    # check: if not exists, create
+                    if not ProjectMember.objects.filter(member_id=member.id, project_id=pk):
+                        ProjectMember.objects.create(role=data['role'], member_id=member.id, project_id=pk)
+                    # check: if exists, update
+                    else:
+                        ProjectMember.objects.filter(member_id=member.id, project_id=pk).update(role=data['role'])
+                    # messages.success(request, '新增成功')
+                    return_message = '新增成功'
+                else:
+                    return_message = '查無使用者'
+                    # messages.error(request, '查無使用者')
+    return JsonResponse({'return_message': return_message})
+
+
 
 def edit_project_deployment(request, pk):
     is_authorized = check_if_authorized(request, pk)

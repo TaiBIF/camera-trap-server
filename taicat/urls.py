@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/check_login/', views.check_login, name='check_login'),
     path('api/project/overview', views.get_project_overview, name='get_project_overview'),
     path('download/<pk>', views.download_request, name='download'),
+    path('api/add/members/<pk>/', views.add_project_members, name='add_project_members'),
 
     path('api/get_image_info/', views.get_image_info, name='get_image_info'),
     path('update_line_chart/', views.update_line_chart, name='update_line_chart'),
