@@ -915,7 +915,8 @@ $(document).ready(function () {
 
   $('#edit_button').on('click', function () {
     if ($('#edit_button').attr('data-edit') == 'off') {
-      $('#edit_button').attr('data-edit', 'on');
+      // $('#edit_button').attr('data-edit', 'on');
+      updateDataEdit('on')
       // console.log($($.fn.dataTable.tables(true)).DataTable().column(0))
       // $($.fn.dataTable.tables(true)).DataTable().column(0).visible(true);
       $('#edit_button').html(`<svg id="Group_749" data-name="Group 749" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="19.999" viewBox="0 0 20 19.999">
@@ -928,7 +929,8 @@ $(document).ready(function () {
       // bind onclick event
       $('.del-check').removeClass('d-none')
     } else {
-      $('#edit_button').attr('data-edit', 'off');
+      // $('#edit_button').attr('data-edit', 'off');
+      updateDataEdit('off')
       $('.del-check').addClass('d-none')
       // uncheck all
       // $($.fn.dataTable.tables(true)).DataTable().column(0).visible(false);
@@ -1104,9 +1106,11 @@ $(document).ready(function () {
     if ((editable != true) || ($('#edit_button').data('edit') == 'off')) {
       $('.edit-content input').attr('disabled', 'disabled')
       $('.edit-footer').addClass('d-none')
+      console.log('NOT edit mode')
     } else {
       $('.edit-content input').prop("disabled", false)
       $('.edit-footer').removeClass('d-none')
+      console.log('edit mode')
     }
 
 
@@ -1222,6 +1226,10 @@ $(document).ready(function () {
 
 
 })
+
+function updateDataEdit(value) {
+  $('#edit_button').data('edit', value).attr('data-edit', value);
+}
 
 
 function changeEditContent(row) {
