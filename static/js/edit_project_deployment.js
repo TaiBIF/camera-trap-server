@@ -549,6 +549,7 @@ function getProtectedareaItem(){
 
 function getDep(id, sa_name){
     // clear previous select
+    $('.current_sa').removeClass('current_sa title-dark');
     $('#deployment').html('')
     $('#selected-sa-name').html(sa_name);
 
