@@ -43,7 +43,7 @@ def index(request):
     return render(request, 'index.html', {'project_list': project_list})
 
 # def project_detail(request, pk):
-#     dep_id = request.GET.get('deployment', '')
+#     dep_id = request.GETu.get('deployment', '')
 
 #     project = Project.objects.get(pk=pk)
 #     d = project.get_deployment_list()
@@ -199,6 +199,40 @@ def post_image_annotation(request):
             ret['error'] = 'ct-server: no deployment key'
 
     return JsonResponse(ret)
+
+@csrf_exempt
+def sync_upload(request, pk):
+    response = {}
+    '''
+    querystring:
+    - update # update UploadHistory
+    - has_storage # return has_storage data
+    '''
+    if dj := DeploymentJournal.objects.get(pk=pk):
+        to_update = request.GET.get('update', '')
+
+        not_uploaded_query = Image.objects.values('id', 'image_uuid').filter(deployment_journal_id=dj.id, has_storage='N')
+        num = not_uploaded_query.count()
+        response = {
+            'deployment_journal_id': dj.id,
+            'num_not_uploaded': num,
+        }
+
+        if num == 0:
+            if uh := UploadHistory.objects.filter(deployment_journal=dj.id).exclude(status='finished').first():
+                if to_update:
+                    uh.status = UploadHistory.STATUS_CHOICES[0][1]
+                    data = uh.data
+                    data['logs'].append({
+                        'datetime': str(datetime.now()),
+                        'action': 'sync-update-status',
+                    })
+
+        elif request.GET.get('has_storage'):
+            data = [x for x in not_uploaded_query.all()]
+            response['data'] = data
+
+    return JsonResponse(response)
 
 @csrf_exempt
 def check_deployment_journal_upload_status(request, pk):
