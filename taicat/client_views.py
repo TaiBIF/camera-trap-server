@@ -30,11 +30,13 @@ from taicat.models import (
 )
 from base.models import (
     Announcement,
+    UploadHistory,
 )
 from .utils import (
     set_image_annotation,
     set_deployment_journal,
     get_my_project_list,
+    check_and_update_image_storage,
 )
 from taicat.tasks import process_image_annotation_task
 
@@ -43,7 +45,7 @@ def index(request):
     return render(request, 'index.html', {'project_list': project_list})
 
 # def project_detail(request, pk):
-#     dep_id = request.GET.get('deployment', '')
+#     dep_id = request.GETu.get('deployment', '')
 
 #     project = Project.objects.get(pk=pk)
 #     d = project.get_deployment_list()
@@ -199,6 +201,49 @@ def post_image_annotation(request):
             ret['error'] = 'ct-server: no deployment key'
 
     return JsonResponse(ret)
+
+@csrf_exempt
+def sync_upload(request, pk):
+    response = {}
+    '''
+    querystring:
+    - has_storage # return has_storage data
+    - check_storage
+    actions:
+    - A: check storage status
+    - set UploadHistory status to 'finished'
+    '''
+    actions = request.GET.get('actions', '')
+    #action_map = a
+    if dj := DeploymentJournal.objects.get(pk=pk):
+        images = Image.objects.values('id', 'image_uuid', 'has_storage').filter(deployment_journal_id=dj.id).all()
+
+        #data = {
+        #    'deployment_journal_id': dj.id,
+        #    'not_uploaded_server_id': [x['id'] for x in images if x['has_storage'] == 'N'],
+        #}
+        #if 'A' in actions:
+        #  TODO wait too long
+        #    check_and_update_image_storage(not_uploaded)
+        # if 'B' in actions:
+        # NOT tested yet
+        #     if len(not_uploaded) == 0:
+        #         if uh := UploadHistory.objects.filter(deployment_journal=dj.id).exclude(status='finished').first():
+        #             uh.status = UploadHistory.STATUS_CHOICES[0][1]
+        #             if 'log' not in uh.data:
+        #                 uh.data['log'] = []
+
+        #             uh.data['log'].append({
+        #                 'datetime': str(datetime.now()),
+        #                 'action': 'sync-update-status',
+        #             })
+        #             uh.save()
+
+        response = {
+            'deployment_journal_id': dj.id,
+            'images': [[x['id'], x['has_storage']] for x in images]
+        }
+    return JsonResponse(response)
 
 @csrf_exempt
 def check_deployment_journal_upload_status(request, pk):

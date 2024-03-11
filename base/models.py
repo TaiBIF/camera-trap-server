@@ -14,7 +14,7 @@ class UploadHistory(models.Model):
     species_error = models.BooleanField(default=False, blank=True) # 物種欄位未完整填寫
     upload_error = models.BooleanField(default=False, blank=True) # 影像未成功上傳
     deployment_journal = models.ForeignKey(DeploymentJournal, on_delete=models.SET_NULL, null=True, blank=True) # 知道是那次上傳的
-
+    data = models.JSONField(default=dict, blank=True)
 
 class UploadNotification(models.Model):
     created = models.DateTimeField(auto_now_add=True, null=True, db_index=True)
