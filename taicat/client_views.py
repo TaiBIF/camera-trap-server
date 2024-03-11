@@ -30,11 +30,13 @@ from taicat.models import (
 )
 from base.models import (
     Announcement,
+    UploadHistory,
 )
 from .utils import (
     set_image_annotation,
     set_deployment_journal,
     get_my_project_list,
+    check_and_update_image_storage,
 )
 from taicat.tasks import process_image_annotation_task
 
@@ -205,33 +207,42 @@ def sync_upload(request, pk):
     response = {}
     '''
     querystring:
-    - update # update UploadHistory
     - has_storage # return has_storage data
+    - check_storage
+    actions:
+    - A: check storage status
+    - set UploadHistory status to 'finished'
     '''
+    actions = request.GET.get('actions', '')
+    #action_map = a
     if dj := DeploymentJournal.objects.get(pk=pk):
-        to_update = request.GET.get('update', '')
+        images = Image.objects.values('id', 'image_uuid', 'has_storage').filter(deployment_journal_id=dj.id).all()
 
-        not_uploaded_query = Image.objects.values('id', 'image_uuid').filter(deployment_journal_id=dj.id, has_storage='N')
-        num = not_uploaded_query.count()
+        #data = {
+        #    'deployment_journal_id': dj.id,
+        #    'not_uploaded_server_id': [x['id'] for x in images if x['has_storage'] == 'N'],
+        #}
+        #if 'A' in actions:
+        #  TODO wait too long
+        #    check_and_update_image_storage(not_uploaded)
+        # if 'B' in actions:
+        # NOT tested yet
+        #     if len(not_uploaded) == 0:
+        #         if uh := UploadHistory.objects.filter(deployment_journal=dj.id).exclude(status='finished').first():
+        #             uh.status = UploadHistory.STATUS_CHOICES[0][1]
+        #             if 'log' not in uh.data:
+        #                 uh.data['log'] = []
+
+        #             uh.data['log'].append({
+        #                 'datetime': str(datetime.now()),
+        #                 'action': 'sync-update-status',
+        #             })
+        #             uh.save()
+
         response = {
             'deployment_journal_id': dj.id,
-            'num_not_uploaded': num,
+            'images': [[x['id'], x['has_storage']] for x in images]
         }
-
-        if num == 0:
-            if uh := UploadHistory.objects.filter(deployment_journal=dj.id).exclude(status='finished').first():
-                if to_update:
-                    uh.status = UploadHistory.STATUS_CHOICES[0][1]
-                    data = uh.data
-                    data['logs'].append({
-                        'datetime': str(datetime.now()),
-                        'action': 'sync-update-status',
-                    })
-
-        elif request.GET.get('has_storage'):
-            data = [x for x in not_uploaded_query.all()]
-            response['data'] = data
-
     return JsonResponse(response)
 
 @csrf_exempt
