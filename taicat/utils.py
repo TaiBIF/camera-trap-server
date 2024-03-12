@@ -841,11 +841,11 @@ def apply_search_filter(filter_dict={}):
 
     if value := filter_dict.get('startDate'):
         dt = make_aware(datetime.strptime(value, '%Y-%m-%d'))
-        query_start = timezone_utc_to_tw(dt)
+        query_start = timezone_tw_to_utc(dt)
         query = query.filter(datetime__gte=dt)
     if value := filter_dict.get('endDate'):
         dt = make_aware(datetime.strptime(value, '%Y-%m-%d'))
-        query_end = timezone_utc_to_tw(dt)
+        query_end = timezone_tw_to_utc(dt)
         query = query.filter(datetime__lte=dt)
     #if values := filter_dict.get('deployments'):
     #    query = query.filter(deployment_id__in=values)
