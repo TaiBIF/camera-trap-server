@@ -197,6 +197,7 @@ def api_search(request):
                 calc_dict,
                 filter_dict.get('species'),
                 filter_dict.get('projects'),
+                [filter_dict.get('startDate'), filter_dict.get('endDate')]
             )
             if results == None:
                 return JsonResponse({
