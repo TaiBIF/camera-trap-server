@@ -24,6 +24,12 @@ def to_int(value):
 def get_env():
     return settings.ENV
 
+@register.simple_tag()
+def get_desktop_version():
+    announcement = Announcement.objects.order_by('-created').first()
+    desktop_version = announcement.version
+    return desktop_version
+
 @register.filter
 def get_value_in_qs(queryset, key):
     return queryset.values_list(key, flat=True)

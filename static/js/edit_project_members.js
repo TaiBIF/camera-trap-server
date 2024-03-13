@@ -11,8 +11,41 @@ $( function() {
         window.history.back();
       })
   
-      $('#submitAddForm').on('click', function(){
-        $('#addProjectMember').submit()
+      $('#submitAddForm').on('click', function(event){
+        // $('#addProjectMember').submit()
+        event.preventDefault();
+
+        var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+
+        const data = {
+          'contact_query': $('div.input-item input[name="contact_query"]').val(),
+          'role': $('div.input-item select[name="role"]').val(),
+          'action': 'add'
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: $('#addProjectMember').attr('action'),
+            headers: {
+              'X-CSRFToken': csrftoken
+            },
+            data: data,
+            success: function (response) {
+              if (response.return_message == '新增成功') {
+                $('.add-success-pop').removeClass('d-none')
+              } else {
+                $('.add-fail-pop').removeClass('d-none')
+              }
+            },
+            error: function (xhr, status, error) {
+              $('.add-fail-pop').removeClass('d-none')
+            }
+        });
+      })
+
+      $('.check-pop').on('click', function() {
+        $('.add-success-pop').addClass('d-none')
+        location.reload();
       })
 
       $('#submitEditForm').on('click',function(){

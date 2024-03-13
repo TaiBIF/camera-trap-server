@@ -36,6 +36,7 @@ from django.contrib.gis.geos import Point
 from django.db import connection
 from django.utils import timezone
 from django.utils.timezone import make_aware
+from django.conf import settings
 
 from openpyxl import Workbook
 import requests
@@ -64,7 +65,7 @@ from taicat.models import (
 )
 
 import geopandas as gpd
-
+import boto3
 
 # WIP
 def display_working_day_in_calendar_html(year, month, working_day):
@@ -840,11 +841,11 @@ def apply_search_filter(filter_dict={}):
 
     if value := filter_dict.get('startDate'):
         dt = make_aware(datetime.strptime(value, '%Y-%m-%d'))
-        query_start = timezone_utc_to_tw(dt)
+        query_start = timezone_tw_to_utc(dt)
         query = query.filter(datetime__gte=dt)
     if value := filter_dict.get('endDate'):
         dt = make_aware(datetime.strptime(value, '%Y-%m-%d'))
-        query_end = timezone_utc_to_tw(dt)
+        query_end = timezone_tw_to_utc(dt)
         query = query.filter(datetime__lte=dt)
     #if values := filter_dict.get('deployments'):
     #    query = query.filter(deployment_id__in=values)
@@ -1211,3 +1212,31 @@ def get_chunks(lst, n):
     '''modified via: https://stackoverflow.com/a/312464/644070'''
     for i in range(0, len(lst), n):
         yield (int(i/n), lst[i:i + n])
+
+
+def check_and_update_image_storage(data):
+    '''TODO
+    unfinish update image has_storage
+    should consider clone image, duplicated image_uuid
+    '''
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name='ap-northeast-1'
+    )
+
+    found = 0
+    not_found = 0
+    for i in data:
+        try:
+            response = s3_client.head_object(
+                Bucket=settings.AWS_S3_BUCKET,
+                Key=f"{i['image_uuid']}-m.jpg"
+            )
+            found += 1
+        except Exception as e:
+            print('not-found', not_found)
+            not_found += 1
+    #print(found, not_found)
+

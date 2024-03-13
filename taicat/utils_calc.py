@@ -1,3 +1,5 @@
+from django.utils.timezone import make_aware
+
 import statistics
 import math
 from datetime import datetime
@@ -15,15 +17,25 @@ from .utils import (
 from taicat.models import (
     Calculation,
     timezone_utc_to_tw,
+    timezone_tw_to_utc,
 )
 
-def calc_chart(calc_dict, species_list, project_filters):
+def calc_chart(calc_dict, species_list, project_filters, dateRange):
     #print(calc_dict, species_list)
+
     query = Calculation.objects.filter(
         species=species_list[0],
         image_interval=calc_dict.get('imageInterval'),
         event_interval=calc_dict.get('eventInterval')
     )
+
+    if dateRange[0] and dateRange[1]:
+        dtStart = timezone_tw_to_utc(datetime.strptime(dateRange[0], '%Y-%m-%d'))
+        dtEnd = timezone_tw_to_utc(datetime.strptime(dateRange[1], '%Y-%m-%d'))
+        query = query.filter(
+            datetime_from__gte=make_aware(dtStart),
+            datetime_to__lte=make_aware(dtEnd)
+        )
 
     rows_other = {}
     # data->5: OI3 value
@@ -97,7 +109,7 @@ def get_default_chart_data(part):
 
 def check_sanity(data):
     # TODO: only test fig1
-    print(data)
+    #print(data)
     oi3 = data.get('data__5', None)
     if oi3 is None or oi3 == 'N/A':
         return False

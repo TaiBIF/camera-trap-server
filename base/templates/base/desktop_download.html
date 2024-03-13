@@ -2,34 +2,22 @@
 {% endblock title %} {% block style %}
 <link href="{% static 'css/theme.css' %}" rel="stylesheet" />
 {% endblock style %} {% block body %}
+{% if is_desktop_authorized %}
 <div class="main-box">
     <div class="main-title">
         <h2>上傳程式下載</h2>
     </div>
 
     <div class="member-fucbox">
+        {% if announcement %}
         <div class="titlebox">
             <div class="line-g"></div>
-            <h2>版本號：v1.1.7</h2>
+            <h2>版本號：{{ announcement.version }}</h2>
         </div>
         <div class="cont-area dowload">
             <h3 class="light-green marb_10">版本更新說明</h3>
-            <p>1. 停止v1.1.2(含)以前的上傳功能服務</p>
-            <p>2. 連拍補齊設定功能調整為可設定到秒數</p>
-            <p>3. 物種下拉選單選項與鳥類清單選項更新</p>
-            <p>4. 因應防毒軟體阻擋問題更新相關程式碼</p>
-            <p>5. 其他操作與上傳功能優化及bug調整</p>
-
-            <br />
             <p>
-                如您有編輯中或預計會再調整欄位內容的舊資料，欲將資料移至新版上傳程式中編輯與上傳的話，
-                相關資料移動說明如下：<br /><br />
-            </p>
-            <p>
-                移動舊版上傳程式資料夾中的 thumbnails 資料夾(縮圖檔) 跟 ct.db
-                (資料庫檔)至新版上傳程式資料夾，如原本的資料庫檔名稱非「ct」，則一律更名為
-                ct。
-                若是已上傳的資料夾，則無法於新版上傳程式上再次上傳，建議先於舊版上傳程式完成上傳、尚未上傳之資料夾再於新版上傳程式上使用。
+                {{ announcement.description| linebreaksbr }}
             </p>
             <div class="dowload-area">
                 <p>下載連結</p>
@@ -38,6 +26,15 @@
                 >
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
+{% else %}
+<div class="main-box">
+	<div class="main-title">
+		您的權限不足      
+	</div>		
+	<a class="return-btn" href="/"> < 返回</a>
+</div>
+{% endif %}
 {% endblock body %}

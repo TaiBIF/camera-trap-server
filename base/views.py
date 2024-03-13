@@ -142,22 +142,23 @@ def desktop_login_verify(request):
 
 
 def desktop(request):
-    title = ''
-    version = 'v1'
-    description = '無'
-    try:
-        annoucement = Announcement.objects.latest('created')
-        title = annoucement.title
-        version = annoucement.version
-        description = annoucement.description
-    except :
-        pass
+    is_desktop_authorized = False
+    user_id = request.session.get('id', None)
+
+    if ProjectMember.objects.filter(member_id=user_id).exists():
+        is_desktop_authorized = True
+    elif Contact.objects.filter(Q(id=user_id, is_organization_admin=True)|Q(id=user_id, is_system_admin=True)).exists():
+        is_desktop_authorized = True
+    else:
+        is_desktop_authorized = False
+    
+    announcement = Announcement.objects.order_by('-created').first()
+
     context = {
-        'title':title,
-        'version':version,
-        'description':description,
+        'is_desktop_authorized':is_desktop_authorized,
+        'announcement':announcement
     }
-    return render(request, 'base/desktop_download.html',context)
+    return render(request, 'base/desktop_download.html', context)
 
 
 def update_is_read(request):
@@ -720,7 +721,11 @@ def personal_info(request):
 
 
 def home(request):
-    context = {'env': settings.ENV}
+    announcement = Announcement.objects.order_by('-created').first()
+    desktop_version = announcement.version
+    context = {'env': settings.ENV,
+               'desktop_version': desktop_version}
+
 
     return render(request, 'base/home.html',context)
 
