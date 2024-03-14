@@ -516,6 +516,19 @@
 									</select> 
 								</div>
 							</div>
+							<div class="item1">
+								<h4>備註</h4>
+								<div class="input-item">
+									<select id="select-remarks" name="remarks">
+										<option value='' selected>請選擇</option>
+										{% for item in remarks %}
+											{% if item.remarks %}
+												<option value="{{ item.remarks }}">{{ item.remarks }}</option>
+											{% endif %}
+										{% endfor %}
+									</select> 
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

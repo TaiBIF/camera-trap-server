@@ -1617,6 +1617,7 @@ def project_detail(request, pk):
     altitude__max = altitude_range['altitude__max'] if altitude_range['altitude__max'] != None else 0
     altitude__min = altitude_range['altitude__min'] if altitude_range['altitude__min'] != None else 0
 
+    remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
 
     return render(request, 'project/project_detail.html', {
         'project_info': project_info, 'species': species, 'pk': pk,
@@ -1627,6 +1628,7 @@ def project_detail(request, pk):
         'projects': project_list, 'is_project_authorized': is_project_authorized,'is_project_public':is_project_public,
         'county_list':county_list,'protectedarea_list':protectedarea_list,
         'altitude__min':altitude__min,'altitude__max':altitude__max, #'sa_list': list(sa_list),'sa_d_list': sa_d_list, 
+        'remarks': remarks
     })
 
 
@@ -1768,6 +1770,11 @@ def data(request):
     elif media_type == 'image': # 篩選 avi 跟 mp4 的檔案
         media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4')"
     
+    remarks_filter = ''
+    remarks = requests.get('remarks')
+    if remarks:
+        remarks_filter = f"AND remarks = '{remarks}'"
+    
     with connection.cursor() as cursor:
         if is_project_authorized:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
@@ -1775,7 +1782,7 @@ def data(request):
                             to_char(i.datetime AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.project_id = {} {} {} {} {} {} {}
+                            WHERE i.project_id = {} {} {} {} {} {} {} {}
                             ORDER BY {} {}, i.id ASC
                             LIMIT {} OFFSET {}"""
         else:
@@ -1785,11 +1792,11 @@ def data(request):
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') 
-                            and i.project_id = {} {} {} {} {} {} {}
+                            and i.project_id = {} {} {} {} {} {} {} {}
                             ORDER BY {} {}, i.id ASC
                             LIMIT {} OFFSET {}"""
         # set limit = 1000 to avoid bad psql query plan
-        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, orderby, sort, 1000, offset))
+        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, orderby, sort, 1000, offset))
         image_info = cursor.fetchall()
         # print(query.format(pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, 1000, _start))
     if image_info:
@@ -1808,13 +1815,13 @@ def data(request):
                 query = """SELECT COUNT(*)
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.project_id = {} {} {} {} {} {} {}"""
+                            WHERE i.project_id = {} {} {} {} {} {} {} {}"""
             else:
                 query = """SELECT COUNT(*)
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {}"""
-            cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter))
+                            WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {} {}"""
+            cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
             count = cursor.fetchone()
         total = count[0]
 
@@ -2093,6 +2100,18 @@ def generate_download_excel(request, pk):
         altitude_filter = f" AND altitude BETWEEN {start_altitude} AND {end_altitude}"
     tmp_deployment_sql = """SELECT * FROM taicat_deployment WHERE project_id = {}{}{}{}"""
     deployment_sql = tmp_deployment_sql.format(pk,county_filter,protectarea_filter,altitude_filter)
+
+    media_type_filter = ''
+    media_type = requests.get('media_type')
+    if media_type == 'video':
+        media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4')"
+    elif media_type == 'image': # 篩選 avi 跟 mp4 的檔案
+        media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4')"
+    
+    remarks_filter = ''
+    remarks = requests.get('remarks')
+    if remarks:
+        remarks_filter = f"AND remarks = '{remarks}'"
     
     
     n = f'download_{str(ObjectId())}_{datetime.datetime.now().strftime("%Y-%m-%d")}.csv'
@@ -2106,7 +2125,7 @@ def generate_download_excel(request, pk):
                             LEFT JOIN taicat_studyarea ssa ON sa.parent_id = ssa.id
                             JOIN ({deployment_sql}) d ON d.id = i.deployment_id
                             JOIN taicat_project p ON i.project_id = p.id
-                            WHERE i.project_id = {pk} {date_filter} {conditions} {spe_conditions} {time_filter} {folder_filter}
+                            WHERE i.project_id = {pk} {date_filter} {conditions} {spe_conditions} {time_filter} {folder_filter} {media_type_filter} {remarks_filter}
                             ORDER BY i.created DESC, i.project_id ASC ) to stdout with delimiter ',' csv header;"""
     
     with connection.cursor() as cursor:

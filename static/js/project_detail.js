@@ -194,7 +194,8 @@ function updateTable(page, page_from) {
       county_name: $('#select-county option:selected').val(),
       protectarea_name: $('#select-protectarea option:selected').val(),
       deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
-      media_type: $('#select-media-type option:selected').val()
+      media_type: $('#select-media-type option:selected').val(),
+      remarks: $('#select-remarks option:selected').val()
     },
     headers: { "X-CSRFToken": $csrf_token },
     success: function (response) {
@@ -701,6 +702,7 @@ $(document).ready(function () {
   $("#select-protectarea").select2({language: "zh-TW"})
   $("#select-county").select2({language: "zh-TW"})
   $("#select-media-type").select2({language: "zh-TW"})
+  $("#select-remarks").select2({language: "zh-TW"})
 
 
   /* 進來頁面後取得起始資料 */
@@ -852,7 +854,8 @@ $(document).ready(function () {
         protectarea_name: $('#select-protectarea option:selected').val(),
         deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
         sa: saArray,
-        media_type: $('#select-media-type option:selected').val()
+        media_type: $('#select-media-type option:selected').val(),
+        remarks: $('#select-remarks option:selected').val()
       },
       type: "POST",
       headers: { 'X-CSRFToken': $csrf_token },
