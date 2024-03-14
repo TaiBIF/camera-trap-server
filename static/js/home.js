@@ -174,7 +174,6 @@ $(function () {
             if (species_data_count.length > 10) {
                 yAxisData.push(remainingCount);
             }
-            // console.log(yAxisData);
 
             Highcharts.chart("species_data", {
                 chart: {
@@ -323,7 +322,6 @@ $(function () {
       dataType: "json",
       success: function(response) {
         //map.removeLayer(marker);
-        console.log(response);
         $('.myStudyAreaIcon').remove();
 
         response.studyarea.forEach(
@@ -347,7 +345,6 @@ $(function () {
                   data: {"said": i[4], 'county': county},
                   dataType: "json",
                   success: function(response) {
-                    console.log(response);
                     $('.loading-pop').addClass('d-none')
                     $('.city-box').addClass('d-none')
                     $('.pin-chartbox').removeClass('d-none')
@@ -466,10 +463,6 @@ $(function () {
             <div class="right-cont">${response.num_project}</div>
           </li>
           <ul class="inflist">
-          <li>
-            <div class="left-title">計畫總數</div>
-            <div class="right-cont">${response.num_deployment}</div>
-          </li>
           <li>
             <div class="left-title">相機位置</div>
             <div class="right-cont">${response.num_deployment}</div>
