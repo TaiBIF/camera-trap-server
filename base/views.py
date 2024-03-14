@@ -12,6 +12,8 @@ from django.core.cache import cache
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
+from conf.settings import BASE_DIR
+from shapely.geometry import Point, shape
 
 import requests
 
@@ -883,7 +885,11 @@ def stat_county(request):
 
 
 def stat_studyarea(request):
+    county_shapes = gpd.read_file(os.path.join(os.path.join(BASE_DIR, "static"),'map/COUNTY_MOI_1090820.shp'))
     if request.method == 'GET':
+        county = request.GET.get('county')
+        county = county.replace('台','臺')
+        print('縣市：', county)
         sa = []
         said = request.GET.get('said')
         query = """SELECT id, longitude, latitude, name, geodetic_datum FROM taicat_deployment WHERE study_area_id = %s"""
@@ -906,6 +912,14 @@ def stat_studyarea(request):
             else:
                 new_sa.append(s)
 
+        specific_county_geometry = county_shapes.loc[county_shapes['COUNTYNAME'] == county, 'geometry'].iloc[0]
+        updated_new_sa = []
+        for s in new_sa:
+            point = Point(s[1], s[2])
+            if specific_county_geometry.contains(point):
+                updated_new_sa.append(s)
+
+        for s in updated_new_sa:
             query = """
                     SELECT d.name, COUNT(DISTINCT(i.image_uuid))
                     FROM taicat_image i
@@ -931,8 +945,8 @@ def stat_studyarea(request):
                         WHERE sas.studyarea_id = (%s);"""
             cursor.execute(query, (said,))
             sa_center = cursor.fetchall()
-        response = {'name': name, 'count': count, 'deployment_points': new_sa, 'center': sa_center[0]}
 
+        response = {'name': name, 'count': count, 'deployment_points': updated_new_sa, 'center': sa_center[0]}
         return HttpResponse(json.dumps(response, cls=DecimalEncoder), content_type='application/json')
 
 def api_dashboard(request, chart):

@@ -247,7 +247,7 @@ $(function () {
   const StudyAreaIcon = L.icon({
     iconUrl: '/static/icon/marker-icon-error.png',
     iconSize: [33, 60],
-    iconAnchor: [33, 80],
+    // iconAnchor: [33, 80],
     popupAnchor: [-3, -76],
     shadowSize: [33, 60],
     shadowAnchor: [31, 77],
@@ -257,7 +257,7 @@ $(function () {
   const StudyAreaIconSelect = L.icon({
     iconUrl: '/static/icon/marker-icon-error-select.png',
     iconSize: [33, 60],
-    iconAnchor: [33, 80],
+    // iconAnchor: [33, 80],
     popupAnchor: [-3, -76],
     shadowSize: [33, 60],
     shadowAnchor: [31, 77],
@@ -268,7 +268,7 @@ $(function () {
   const DeploymentIcon = L.icon({
     iconUrl: '/static/icon/marker-icon.png',
     iconSize: [66, 120],
-    iconAnchor: [33, 80],
+    // iconAnchor: [33, 80],
     popupAnchor: [-3, -76],
     shadowSize: [66, 120],
     shadowAnchor: [31, 77],
@@ -323,6 +323,7 @@ $(function () {
       dataType: "json",
       success: function(response) {
         //map.removeLayer(marker);
+        console.log(response);
         $('.myStudyAreaIcon').remove();
 
         response.studyarea.forEach(
@@ -343,9 +344,10 @@ $(function () {
                 $('.loading-pop').removeClass('d-none')
                 $.ajax({
                   url: '/api/stat_studyarea',
-                  data: {"said": i[4]},
+                  data: {"said": i[4], 'county': county},
                   dataType: "json",
                   success: function(response) {
+                    console.log(response);
                     $('.loading-pop').addClass('d-none')
                     $('.city-box').addClass('d-none')
                     $('.pin-chartbox').removeClass('d-none')
