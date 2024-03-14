@@ -1737,8 +1737,6 @@ def data(request):
     elif calibration_end_time:
         time_filter = f"AND datetime::time AT TIME ZONE 'UTC' <= time '{calibration_end_time.strftime('%H:%M:%S')}'"
     
-
-
     folder_filter = ''
     folder_names = requests.getlist('folder_name[]')
     if folder_names:
@@ -1762,6 +1760,13 @@ def data(request):
         altitude_filter = f" AND altitude BETWEEN {start_altitude} AND {end_altitude}"
     tmp_deployment_sql = """SELECT * FROM taicat_deployment WHERE project_id = {}{}{}{}"""
     deployment_sql = tmp_deployment_sql.format(pk,county_filter,protectarea_filter,altitude_filter)
+
+    media_type_filter = ''
+    media_type = requests.get('media_type')
+    if media_type == 'video':
+        media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4')"
+    elif media_type == 'image': # 篩選 avi 跟 mp4 的檔案
+        media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4')"
     
     with connection.cursor() as cursor:
         if is_project_authorized:
@@ -1770,7 +1775,7 @@ def data(request):
                             to_char(i.datetime AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.project_id = {} {} {} {} {} {}
+                            WHERE i.project_id = {} {} {} {} {} {} {}
                             ORDER BY {} {}, i.id ASC
                             LIMIT {} OFFSET {}"""
         else:
@@ -1780,11 +1785,11 @@ def data(request):
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') 
-                            and i.project_id = {} {} {} {} {} {}
+                            and i.project_id = {} {} {} {} {} {} {}
                             ORDER BY {} {}, i.id ASC
                             LIMIT {} OFFSET {}"""
         # set limit = 1000 to avoid bad psql query plan
-        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, orderby, sort, 1000, offset))
+        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, orderby, sort, 1000, offset))
         image_info = cursor.fetchall()
         # print(query.format(pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, 1000, _start))
     if image_info:
@@ -1803,13 +1808,13 @@ def data(request):
                 query = """SELECT COUNT(*)
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.project_id = {} {} {} {} {} {}"""
+                            WHERE i.project_id = {} {} {} {} {} {} {}"""
             else:
                 query = """SELECT COUNT(*)
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {}"""
-            cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter))
+                            WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {}"""
+            cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter))
             count = cursor.fetchone()
         total = count[0]
 
