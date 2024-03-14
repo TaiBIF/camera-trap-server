@@ -459,28 +459,13 @@
 							<div class="item1">
 								<h4>拍攝時間</h4>
 								<div class="input-item">
-									<input type="time" id="times" name="times" step="2" class="timeclock">
-								 <button class="icon-clock" >
-									</button> 
+									<input type="time" id="start_time" name="start_time" step="2" class="timeclock">
+									<button class="icon-clock"></button> 
 								</div>
-
-								{% comment %} <div class="input-item right30">
-									<button class="icon-clock">
-										<input type="time" id="times" name="times" step="2" class="timeclock" />
-										<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-											<g id="Group_739" data-name="Group 739" transform="translate(-408 -2324)">
-												<g id="Ellipse_50" data-name="Ellipse 50" transform="translate(408 2324)" fill="#fff" stroke="#257455" stroke-width="1.5">
-													<circle cx="11" cy="11" r="11" stroke="none"/>
-													<circle cx="11" cy="11" r="10.25" fill="none"/>
-												</g>
-												<g id="Group_740" data-name="Group 740" transform="translate(419 2329.5)">
-													<line id="Line_16" data-name="Line 16" y2="4.998" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
-													<line id="Line_17" data-name="Line 17" x2="3.332" y2="3.332" transform="translate(0 4.998)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="1.5"/>
-												</g>
-											</g>
-										</svg>
-									</button>									
-								</div> {% endcomment %}
+								<div class="input-item">
+									<input type="time" id="end_times" name="end_time" step="2" class="timeclock">
+									<button class="icon-clock"></button> 
+								</div>
 							</div>
 							<div class="item1">
 								<h4>拍攝日期</h4>
@@ -639,6 +624,5 @@
 
 {% block script %}
 <script src="{% static 'js/air-datepicker.js' %}"></script>
-{% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/selectize.min.js" integrity="sha512-JiDSvppkBtWM1f9nPRajthdgTCZV3wtyngKUqVHlAs0d5q72n5zpM3QMOLmuNws2vkYmmLn4r1KfnPzgC/73Mw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> {% endcomment %}
 <script src="{% static 'js/project_detail.js' %}"></script>
 {% endblock script %}

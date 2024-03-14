@@ -172,9 +172,6 @@ function updateTable(page, page_from) {
     return $(this).val();
   }).get();
 
-  console.log(folder_names);
-
-
   $.ajax({
     type: "POST",
     url: "/api/data",
@@ -184,7 +181,8 @@ function updateTable(page, page_from) {
       page: page,
       orderby: $(".now-order").data("order"),
       sort: $(".now-order").hasClass("downar") ? "asc" : "desc",
-      times: $("input[name=times]").val(),
+      start_time: $("input[name=start_time]").val(),
+      end_time: $("input[name=end_time]").val(),
       // pk: $("input[name=pk]").val(),
       species: speciesArray,
       studyarea: saArray,
@@ -719,7 +717,17 @@ $(document).ready(function () {
 
   // 篩選按鈕
   $('#submitSelect').on('click', function () {
-    updateTable(1)
+    // 確保拍攝時間是一個區間
+    var startTime = $("input[name=start_time]").val();
+    var endTime = $("input[name=end_time]").val();
+
+    if (startTime === '' && endTime !== '') {
+        window.alert('拍攝開始時間不能為空!');
+    } else if (startTime !== '' && endTime === '') {
+        window.alert('拍攝結束時間不能為空!');
+    } else {
+        updateTable(1);
+    }
   })
 
   // 清除按鈕
@@ -750,7 +758,8 @@ $(document).ready(function () {
     $("#select-county").val(null).trigger('change');
 
     // 拍攝時間
-    $("input[name=times]").val('')
+    $("input[name=start_time]").val('')
+    $("input[name=end_time]").val('')
   });
 
 
@@ -828,7 +837,8 @@ $(document).ready(function () {
     $.ajax({
       data: {
         email: $("input[name=email]").val(),
-        times: $("input[name=times]").val(),
+        start_time: $("input[name=start_time]").val(),
+        end_time: $("input[name=end_time]").val(),
         species: speciesArray,
         start_altitude: $("input[name=start_altitude]").val(),
         end_altitude: $("input[name=end_altitude]").val(),

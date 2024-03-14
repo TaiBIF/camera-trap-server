@@ -1723,9 +1723,21 @@ def data(request):
             spe_conditions = "AND i.species NOT IN ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人')"
 
     time_filter = ''  # 要先減掉8的時差
-    if times := requests.get('times'):
-        result = datetime.datetime.strptime(f"1990-01-01 {times}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
-        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' = time '{result.strftime('%H:%M:%S')}'"
+    calibration_start_time = None
+    calibration_end_time = None
+    if start_time := requests.get('start_time'):
+        calibration_start_time = datetime.datetime.strptime(f"1990-01-01 {start_time}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
+    if end_time := requests.get('end_time'):
+        calibration_end_time = datetime.datetime.strptime(f"1990-01-01 {end_time}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
+    
+    if calibration_start_time and calibration_end_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' BETWEEN time '{calibration_start_time.strftime('%H:%M:%S')}' AND time '{calibration_end_time.strftime('%H:%M:%S')}'"
+    elif calibration_start_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' >= time '{calibration_start_time.strftime('%H:%M:%S')}'"
+    elif calibration_end_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' <= time '{calibration_end_time.strftime('%H:%M:%S')}'"
+    
+
 
     folder_filter = ''
     folder_names = requests.getlist('folder_name[]')
@@ -2037,9 +2049,19 @@ def generate_download_excel(request, pk):
             spe_conditions = "AND i.species NOT IN ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人')"
 
     time_filter = ''  # 要先減掉8的時差
-    if times := requests.get('times'):
-        result = datetime.datetime.strptime(f"1990-01-01 {times}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
-        time_filter = f" AND i.datetime::time AT TIME ZONE 'UTC' = time '{result.strftime('%H:%M:%S')}'"
+    calibration_start_time = None
+    calibration_end_time = None
+    if start_time := requests.get('start_time'):
+        calibration_start_time = datetime.datetime.strptime(f"1990-01-01 {start_time}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
+    if end_time := requests.get('end_time'):
+        calibration_end_time = datetime.datetime.strptime(f"1990-01-01 {end_time}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
+    
+    if calibration_start_time and calibration_end_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' BETWEEN time '{calibration_start_time.strftime('%H:%M:%S')}' AND time '{calibration_end_time.strftime('%H:%M:%S')}'"
+    elif calibration_start_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' >= time '{calibration_start_time.strftime('%H:%M:%S')}'"
+    elif calibration_end_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' <= time '{calibration_end_time.strftime('%H:%M:%S')}'"
 
     folder_filter = ''
     if folder_name := requests.get('folder_name'):
