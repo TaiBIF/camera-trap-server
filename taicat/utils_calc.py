@@ -634,7 +634,6 @@ def chart_fig3(rows):
     for m in months:
         oi3_mean = 0
         oi3_sem = 0
-
         if len(data[m]):
             oi3_mean = statistics.mean(data[m])
             oi3_sem = np.std(data[m], ddof=1) / np.sqrt(np.size(data[m]))
@@ -645,7 +644,6 @@ def chart_fig3(rows):
 
     series.append(by_month['main'])
     series.append(by_month['errorbar'])
-
     chart_data = {
         'yAxis': {
             'title': {
@@ -664,7 +662,7 @@ def chart_fig3(rows):
                 'label': {
                     'connectorAllowed': False,
                 },
-                'pointStart': 1,
+                'pointStart': 0,
             },
         },
         'series': series,
