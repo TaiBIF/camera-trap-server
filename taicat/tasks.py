@@ -1,6 +1,6 @@
 import pytz
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import csv
 from pathlib import Path
 
@@ -231,7 +231,9 @@ def process_download_data_task(email, filter_dict, member_id, host, verbose):
             ]
             row = i
             '''
-            spamwriter.writerow(row)
+            tw_tz = timezone(timedelta(hours=+8))
+            tz_row = [*row[:6], row[6].astimezone(tw_tz), *row[7:]]
+            spamwriter.writerow(tz_row)
 
     download_url = "https://{}{}{}".format(
         host,

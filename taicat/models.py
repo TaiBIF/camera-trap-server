@@ -33,6 +33,9 @@ from django.conf import settings
 from django.core.cache import cache, caches
 
 # put this function in utils will cause circular import
+## use python tzinfo is better?
+## tw_tz = timezone(timedelta(hours=+8))
+## ts.astimezone(tw_tz)
 def timezone_utc_to_tw(ts):
     '''apply +8 time delta
     '''
