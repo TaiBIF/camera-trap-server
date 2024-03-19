@@ -95,7 +95,7 @@ li .sa-title .arrup.close {
 
 
 
-#times::-webkit-calendar-picker-indicator {
+.timeclock::-webkit-calendar-picker-indicator {
   position: absolute;
   background: url("/static/icon/clock.svg") no-repeat top center !important;;
   width: 24px;
@@ -107,7 +107,7 @@ li .sa-title .arrup.close {
 
 
 .select2-container {
-  z-index: 1600;
+  z-index: 10;
 }
 
 .input-item .select2-container--default .select2-selection--single {

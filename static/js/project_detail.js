@@ -172,9 +172,6 @@ function updateTable(page, page_from) {
     return $(this).val();
   }).get();
 
-  console.log(folder_names);
-
-
   $.ajax({
     type: "POST",
     url: "/api/data",
@@ -184,7 +181,8 @@ function updateTable(page, page_from) {
       page: page,
       orderby: $(".now-order").data("order"),
       sort: $(".now-order").hasClass("downar") ? "asc" : "desc",
-      times: $("input[name=times]").val(),
+      start_time: $("input[name=start_time]").val(),
+      end_time: $("input[name=end_time]").val(),
       // pk: $("input[name=pk]").val(),
       species: speciesArray,
       studyarea: saArray,
@@ -196,6 +194,8 @@ function updateTable(page, page_from) {
       county_name: $('#select-county option:selected').val(),
       protectarea_name: $('#select-protectarea option:selected').val(),
       deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
+      media_type: $('#select-media-type option:selected').val(),
+      remarks: $('#select-remarks option:selected').val()
     },
     headers: { "X-CSRFToken": $csrf_token },
     success: function (response) {
@@ -701,6 +701,8 @@ $(document).ready(function () {
   $("#select-folder").select2({language: "zh-TW"})
   $("#select-protectarea").select2({language: "zh-TW"})
   $("#select-county").select2({language: "zh-TW"})
+  $("#select-media-type").select2({language: "zh-TW"})
+  $("#select-remarks").select2({language: "zh-TW"})
 
 
   /* 進來頁面後取得起始資料 */
@@ -719,7 +721,17 @@ $(document).ready(function () {
 
   // 篩選按鈕
   $('#submitSelect').on('click', function () {
-    updateTable(1)
+    // 確保拍攝時間是一個區間
+    var startTime = $("input[name=start_time]").val();
+    var endTime = $("input[name=end_time]").val();
+
+    if (startTime === '' && endTime !== '') {
+        window.alert('拍攝開始時間不能為空!');
+    } else if (startTime !== '' && endTime === '') {
+        window.alert('拍攝結束時間不能為空!');
+    } else {
+        updateTable(1);
+    }
   })
 
   // 清除按鈕
@@ -748,9 +760,11 @@ $(document).ready(function () {
     $("#select-folder").val(null).trigger('change');
     $("#select-protectarea").val(null).trigger('change');
     $("#select-county").val(null).trigger('change');
+    $("#select-media-type").val(null).trigger('change');
 
     // 拍攝時間
-    $("input[name=times]").val('')
+    $("input[name=start_time]").val('')
+    $("input[name=end_time]").val('')
   });
 
 
@@ -828,7 +842,8 @@ $(document).ready(function () {
     $.ajax({
       data: {
         email: $("input[name=email]").val(),
-        times: $("input[name=times]").val(),
+        start_time: $("input[name=start_time]").val(),
+        end_time: $("input[name=end_time]").val(),
         species: speciesArray,
         start_altitude: $("input[name=start_altitude]").val(),
         end_altitude: $("input[name=end_altitude]").val(),
@@ -838,7 +853,9 @@ $(document).ready(function () {
         county_name: $('#select-county option:selected').val(),
         protectarea_name: $('#select-protectarea option:selected').val(),
         deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
-        sa: saArray
+        sa: saArray,
+        media_type: $('#select-media-type option:selected').val(),
+        remarks: $('#select-remarks option:selected').val()
       },
       type: "POST",
       headers: { 'X-CSRFToken': $csrf_token },

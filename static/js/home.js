@@ -174,7 +174,6 @@ $(function () {
             if (species_data_count.length > 10) {
                 yAxisData.push(remainingCount);
             }
-            // console.log(yAxisData);
 
             Highcharts.chart("species_data", {
                 chart: {
@@ -247,7 +246,7 @@ $(function () {
   const StudyAreaIcon = L.icon({
     iconUrl: '/static/icon/marker-icon-error.png',
     iconSize: [33, 60],
-    iconAnchor: [33, 80],
+    // iconAnchor: [33, 80],
     popupAnchor: [-3, -76],
     shadowSize: [33, 60],
     shadowAnchor: [31, 77],
@@ -257,7 +256,7 @@ $(function () {
   const StudyAreaIconSelect = L.icon({
     iconUrl: '/static/icon/marker-icon-error-select.png',
     iconSize: [33, 60],
-    iconAnchor: [33, 80],
+    // iconAnchor: [33, 80],
     popupAnchor: [-3, -76],
     shadowSize: [33, 60],
     shadowAnchor: [31, 77],
@@ -268,7 +267,7 @@ $(function () {
   const DeploymentIcon = L.icon({
     iconUrl: '/static/icon/marker-icon.png',
     iconSize: [66, 120],
-    iconAnchor: [33, 80],
+    // iconAnchor: [33, 80],
     popupAnchor: [-3, -76],
     shadowSize: [66, 120],
     shadowAnchor: [31, 77],
@@ -343,7 +342,7 @@ $(function () {
                 $('.loading-pop').removeClass('d-none')
                 $.ajax({
                   url: '/api/stat_studyarea',
-                  data: {"said": i[4]},
+                  data: {"said": i[4], 'county': county},
                   dataType: "json",
                   success: function(response) {
                     $('.loading-pop').addClass('d-none')
@@ -464,10 +463,6 @@ $(function () {
             <div class="right-cont">${response.num_project}</div>
           </li>
           <ul class="inflist">
-          <li>
-            <div class="left-title">計畫總數</div>
-            <div class="right-cont">${response.num_deployment}</div>
-          </li>
           <li>
             <div class="left-title">相機位置</div>
             <div class="right-cont">${response.num_deployment}</div>
