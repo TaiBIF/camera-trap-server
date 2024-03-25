@@ -1691,16 +1691,22 @@ def data(request):
     start_date = requests.get('start_date')
     end_date = requests.get('end_date')
     date_filter = ''
-    if ((start_date and start_date != ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d")) or (end_date and end_date != ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"))):
-        if start_date:
-            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-        else:
-            start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d")
-        if end_date:
-            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)
-        else:
-            end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(days=1)
-        date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
+    if start_date:
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) # YYYY-MM-DD 00:00:00
+        calibration_start_date = start_date + datetime.timedelta(hours=-8) # 校正時區
+    else:
+        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0)
+        calibration_start_date = start_date + datetime.timedelta(hours=-8)
+    if end_date:
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
+        calibration_end_date = end_date + datetime.timedelta(hours=-8) # 校正時區
+    else:
+        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) + datetime.timedelta(hours=-8)
+        calibration_end_date = end_date + datetime.timedelta(hours=-8)
+    
+    date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(calibration_start_date, calibration_end_date)
+    print(date_filter)
+
 
     conditions = ''
     deployment = requests.getlist('deployment[]')
