@@ -719,20 +719,27 @@ $(document).ready(function () {
     $('input[name=times]').trigger('click')
   })
 
-  // 篩選按鈕
   $('#submitSelect').on('click', function () {
     // 確保拍攝時間是一個區間
     var startTime = $("input[name=start_time]").val();
     var endTime = $("input[name=end_time]").val();
 
+    // 確保拍攝日期有開始與結束
+    var startDate = $("input[name=start_date]").val();
+    var endDate = $("input[name=end_date]").val();
+
     if (startTime === '' && endTime !== '') {
-        window.alert('拍攝開始時間不能為空!');
+        window.alert('拍攝開始時間不能為空！');
     } else if (startTime !== '' && endTime === '') {
-        window.alert('拍攝結束時間不能為空!');
+        window.alert('拍攝結束時間不能為空！');
+    } else if (startDate === '' && endDate !== '') {
+        window.alert('拍攝開始日期不能為空！');
+    } else if (startDate !== '' && endDate === '') {
+        window.alert('拍攝結束日期不能為空！');
     } else {
         updateTable(1);
     }
-  })
+});
 
   // 清除按鈕
   $('.clear').on('click', function () {
