@@ -1032,6 +1032,22 @@ def check_if_authorized_delete(request, pk):
                     is_authorized = True
     return is_authorized
 
+# 使用者是否有 system_admin系統管理者 / organization_admin 計畫總管理人的權限
+# 權限範圍: 刪除計畫
+def check_if_authorized_delete_project(request, pk):
+    is_authorized = False
+    member_id = request.session.get('id', None)
+    if member_id:
+        # system_admin 系統管理員 
+        if Contact.objects.filter(id=member_id, is_system_admin=True):
+            is_authorized = True
+        else:
+            # organization_admin 計畫總管理人
+            if_organization_admin = Contact.objects.filter(id=member_id, is_organization_admin=True)
+            if if_organization_admin:
+                    is_authorized = True
+    return is_authorized
+
 
 # 是否可以看到計畫資訊/詳細內容(使用者是 系統管理者/團隊成員/總管理人，或公開資料)
 def check_if_authorized_project(request, pk):

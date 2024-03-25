@@ -58,7 +58,7 @@ from operator import itemgetter
 from dateutil import parser
 from django.test.utils import CaptureQueriesContext
 from base.utils import DecimalEncoder
-from taicat.utils import half_year_ago, get_project_member, delete_image_by_ids, check_if_authorized, check_if_authorized_create, check_if_authorized_project, check_if_authorized_delete, get_page_list
+from taicat.utils import half_year_ago, get_project_member, delete_image_by_ids, check_if_authorized, check_if_authorized_create, check_if_authorized_project, check_if_authorized_delete, get_page_list, check_if_authorized_delete_project
 
 from openpyxl import Workbook
 from bson.objectid import ObjectId
@@ -944,9 +944,18 @@ def create_project(request):
 
     return render(request, 'project/create_project.html', {'city_list': city_list, 'is_authorized_create': is_authorized_create})
 
+def delete_project(request):
+    if request.method == 'POST':
+        project_id = request.POST.get('pk')
+        Project.objects.filter(id=project_id).delete()
+        ProjectMember.objects.filter(project_id=project_id).delete()
+
+        response = {'status': 'Project was deleted successfully'}
+    return JsonResponse(response)
 
 def edit_project_basic(request, pk):
     is_authorized = check_if_authorized(request, pk)
+    is_authorized_delete = check_if_authorized_delete_project(request, pk)
     project = []
     # city_list = []
 
@@ -968,7 +977,7 @@ def edit_project_basic(request, pk):
         if project['region'] not in ['', None, []]:
             region = {'region': project['region'].split(',')}
             project.update(region)
-    return render(request, 'project/edit_project_basic.html', {'project': project, 'pk': pk,  'city_list': city_list, 'is_authorized': is_authorized})
+    return render(request, 'project/edit_project_basic.html', {'project': project, 'pk': pk,  'city_list': city_list, 'is_authorized': is_authorized, 'is_authorized_delete': is_authorized_delete})
 
 
 def edit_project_license(request, pk):

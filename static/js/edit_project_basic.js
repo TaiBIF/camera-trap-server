@@ -109,6 +109,38 @@ $(document).ready(function () {
         location.href = $(this).data('href')
     });
 
+    // 刪除計畫
+    $('#deleteProject').click(function (event) {
+        event.preventDefault();
+        $('.delete-project-pop').removeClass('d-none');
+    });
+
+    $('#cancel-delete').click(function() {
+        $('.delete-project-pop').addClass('d-none');
+    });
+
+    $('#confirm-delete').click(function () {
+        let pk = $('input[name=pk]').val();
+        let csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+        $.ajax({
+            type: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            mode: 'same-origin', // Do not send CSRF token to another domain.
+            url: '/delete_project',
+            data: {
+                pk: pk
+            },
+            success: function(response) {
+                console.log(response.status);
+            },
+        })
+        $('.delete-project-pop').addClass('d-none');
+        $('.delete-complete-pop').removeClass('d-none');
+    });
+
+    $('#complete-delete').click(function () {
+        window.location.href = '/project/overview'
+    });
 });
 
 
