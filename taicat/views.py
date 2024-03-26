@@ -52,7 +52,7 @@ from .utils import (
 from taicat.tasks import (
     process_project_annotation_download_task,
 )
-
+from taicat.models import DownloadLog
 import collections
 from operator import itemgetter
 from dateutil import parser
@@ -1980,7 +1980,6 @@ def download_request(request, pk):
                 args[k] = v
 
     member_id = request.session.get('id', None)
-    #print(args)
 
     # 有權限拿人的資料
     is_authorized = check_if_authorized(request, pk)

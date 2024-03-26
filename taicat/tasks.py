@@ -45,7 +45,6 @@ from .utils import (
 @shared_task
 def process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host):
     query = make_image_query_in_project(pk, args, is_authorized)
-
     # export to csv
     filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}.csv'
     download_dir = Path(settings.MEDIA_ROOT, 'download')
@@ -82,6 +81,7 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     email_subject = '[臺灣自動相機資訊系統] 下載資料'
     email_body = render_to_string('project/download.html', {'download_url': download_url, })
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
+
 
 
 @shared_task
