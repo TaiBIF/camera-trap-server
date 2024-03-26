@@ -1701,11 +1701,10 @@ def data(request):
         end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
         calibration_end_date = end_date + datetime.timedelta(hours=-8) # 校正時區
     else:
-        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) + datetime.timedelta(hours=-8)
+        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59)
         calibration_end_date = end_date + datetime.timedelta(hours=-8)
     
     date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(calibration_start_date, calibration_end_date)
-    print(date_filter)
 
 
     conditions = ''
@@ -1780,9 +1779,9 @@ def data(request):
 
     media_type_filter = ''
     media_type = requests.get('media_type')
-    if media_type == 'video':
+    if media_type == 'video': # 篩選 avi 跟 mp4 的檔案
         media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4')"
-    elif media_type == 'image': # 篩選 avi 跟 mp4 的檔案
+    elif media_type == 'image': 
         media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4')"
     
     remarks_filter = ''
@@ -1991,7 +1990,6 @@ def download_request(request, pk):
 
 
     user_role_name = ParameterCode.objects.get(parametername=Contact.objects.get(id=member_id).identity).name
-
     host = request.META['HTTP_HOST']
     process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host)
 

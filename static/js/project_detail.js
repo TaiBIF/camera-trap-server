@@ -846,6 +846,10 @@ $(document).ready(function () {
       }
     });
 
+    var selectedFoldeNames = $('#select-folder option:selected').map(function() {
+      return $(this).val();
+    }).get();
+
     $.ajax({
       data: {
         email: $("input[name=email]").val(),
@@ -856,7 +860,7 @@ $(document).ready(function () {
         end_altitude: $("input[name=end_altitude]").val(),
         start_date: $("input[name=start_date]").val(),
         end_date: $("input[name=end_date]").val(),
-        folder_name: $('#select-folder option:selected').val(),
+        folder_name: selectedFoldeNames,
         county_name: $('#select-county option:selected').val(),
         protectarea_name: $('#select-protectarea option:selected').val(),
         deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
