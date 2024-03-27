@@ -1991,6 +1991,8 @@ def download_request(request, pk):
     user_role_name = ParameterCode.objects.get(parametername=Contact.objects.get(id=member_id).identity).name
     host = request.META['HTTP_HOST']
     process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host)
+    # query = process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host)
+    # print(query)
 
     return JsonResponse({"status": 'success'}, safe=False)
 

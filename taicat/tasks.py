@@ -65,10 +65,10 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
 
     # a little bit slower then copy_expert
     with open(Path(download_dir, filename), 'w') as csvfile:
-         spamwriter = csv.writer(csvfile)
-         spamwriter.writerow(header)
-         for row in query.all():
-             spamwriter.writerow(row)
+        spamwriter = csv.writer(csvfile)
+        spamwriter.writerow(header)
+        for row in query.all():
+            spamwriter.writerow(row)
 
     download_url = "https://{}{}{}".format(
         host,
@@ -81,6 +81,8 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     email_subject = '[臺灣自動相機資訊系統] 下載資料'
     email_body = render_to_string('project/download.html', {'download_url': download_url, })
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
+
+    # return {'query': query}
 
 
 
