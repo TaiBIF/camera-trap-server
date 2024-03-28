@@ -1780,9 +1780,10 @@ def data(request):
     media_type_filter = ''
     media_type = requests.get('media_type')
     if media_type == 'video': # 篩選 avi 跟 mp4 的檔案
-        media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4')"
+        media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4' OR i.filename LIKE '%.avi' OR i.filename LIKE '%.mp4')"
     elif media_type == 'image': 
-        media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4')"
+        media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4' AND i.filename NOT LIKE '%.avi' AND i.filename NOT LIKE '%.mp4')"
+
     
     remarks_filter = ''
     remarks = requests.get('remarks')
