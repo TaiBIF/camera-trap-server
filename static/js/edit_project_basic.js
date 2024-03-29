@@ -120,8 +120,17 @@ $(document).ready(function () {
     });
 
     $('#confirm-delete').click(function () {
+        $('.delete-project-pop').addClass('d-none');
+        $(".loading-pop").removeClass("d-none");
         let pk = $('input[name=pk]').val();
         let csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
+        function handleDeleteSuccess(message) {
+            $('#delete-info').html('<p>' + message + '</p>');
+            $('.delete-project-pop').addClass('d-none');
+            $('.delete-complete-pop').removeClass('d-none');
+        }
+
         $.ajax({
             type: 'POST',
             headers: {'X-CSRFToken': csrftoken},
@@ -131,11 +140,14 @@ $(document).ready(function () {
                 pk: pk
             },
             success: function(response) {
-                console.log(response.status);
+                $(".loading-pop").addClass("d-none");
+                if (response.status === 'Error: Failed to delete project') {
+                    handleDeleteSuccess('發生錯誤，請聯繫管理員');
+                } else {
+                    handleDeleteSuccess('已成功刪除計畫');
+                };
             },
         })
-        $('.delete-project-pop').addClass('d-none');
-        $('.delete-complete-pop').removeClass('d-none');
     });
 
     $('#complete-delete').click(function () {

@@ -11,7 +11,7 @@ from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 from pandas.core.groupby.generic import DataFrameGroupBy
 from taicat.models import *
-from base.models import UploadNotification
+from base.models import UploadNotification, UploadHistory
 from django.db import connection  # for executing raw SQL
 import re
 import json
@@ -947,10 +947,43 @@ def create_project(request):
 def delete_project(request):
     if request.method == 'POST':
         project_id = request.POST.get('pk')
-        Project.objects.filter(id=project_id).delete()
-        ProjectMember.objects.filter(project_id=project_id).delete()
+        images = Image.objects.filter(project_id=project_id)
+        images_dict = images.values()
+        # 把 Image 的內容移到 DeletedImage
+        for i in images_dict:
+            deleted_images = DeletedImage(**i)
+            deleted_images.save()
 
-        response = {'status': 'Project was deleted successfully'}
+        if len(images) == DeletedImage.objects.filter(project_id=project_id).count():
+            # 從各相關的資料表刪除和 project_id 關聯的內容
+            p_memeber = ProjectMember.objects.filter(project_id=project_id)
+            p_memeber.delete()
+            d_stat = DeploymentStat.objects.filter(project_id=project_id)
+            d_stat.delete()
+            i_folder = ImageFolder.objects.filter(project_id=project_id)
+            i_folder.delete()
+            c = Calculation.objects.filter(project_id=project_id)
+            c.delete()
+            sa = StudyArea.objects.filter(project_id=project_id)
+            sa.delete()
+            d = Deployment.objects.filter(project_id=project_id)
+            d.delete()
+            p_stat = ProjectStat.objects.filter(project_id=project_id)
+            p_stat.delete()
+            p_species = ProjectSpecies.objects.filter(project_id=project_id)
+            p_species.delete()
+            d_journal = DeploymentJournal.objects.filter(project_id=project_id)
+            d_journal.delete()
+
+            # 刪除 Image 的內容
+            images.delete()
+            p = Project.objects.filter(id=project_id)
+            p.delete()
+            
+            response = {'status': 'Project was deleted successfully'}
+        else:
+            response = {'status': 'Error: Failed to delete project'}
+
     return JsonResponse(response)
 
 def edit_project_basic(request, pk):
