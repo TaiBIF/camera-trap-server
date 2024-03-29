@@ -956,6 +956,8 @@ def delete_project(request):
 
         if len(images) == DeletedImage.objects.filter(project_id=project_id).count():
             # 從各相關的資料表刪除和 project_id 關聯的內容
+            n = UploadNotification.objects.filter(project_id=project_id)
+            n.delete()
             p_memeber = ProjectMember.objects.filter(project_id=project_id)
             p_memeber.delete()
             d_stat = DeploymentStat.objects.filter(project_id=project_id)
