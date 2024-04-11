@@ -214,7 +214,7 @@ d_df_twd97 = d_df_twd97.set_crs(epsg=3826, inplace=True)
 d_df_twd97 = d_df_twd97.to_crs(epsg=3824)
 
 
-d_gdf = d_df_twd97.append(d_df_wgs84)
+d_gdf = d_df_twd97.concat(d_df_wgs84)
 
 join = gpd.sjoin(geo_df, d_gdf)
 
@@ -332,10 +332,15 @@ for i in sa_list:
         continue
 
     if tmp.geodetic_datum.values[0] == 'TWD97':
-        tmp = tmp.set_crs(epsg=3826, inplace=True)
+        tmp = tmp.set_crs(epsg=3826, allow_override=True)
         tmp = tmp.to_crs(epsg=4326)
-    long = tmp[tmp['said']==i].dissolve().centroid.x[0]
-    lat = tmp[tmp['said']==i].dissolve().centroid.y[0]
+    else: 
+        tmp = tmp.set_crs(epsg=4326, allow_override=True)
+    tmp = tmp.to_crs(epsg=3857) # 先轉換成 map projection 才能計算 centroid
+    centroid_point = tmp.dissolve().centroid
+    centroid_point_wgs84 = centroid_point.to_crs(epsg=4326) # 算完 centroid 再轉回 epsg:4325 畫到地圖上
+    long = centroid_point_wgs84.x[0]
+    lat = centroid_point_wgs84.y[0]
     if StudyAreaStat.objects.filter(studyarea_id=i).exists():
         StudyAreaStat.objects.filter(studyarea_id=i).update(
             longitude = long,
