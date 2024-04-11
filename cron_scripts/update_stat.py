@@ -212,9 +212,12 @@ d_df_twd97 = d_df_twd97.set_crs(epsg=3826, inplace=True)
 # moogoo: crs mismatch, 230726
 #d_df_twd97 = d_df_twd97.to_crs(epsg=4326)
 d_df_twd97 = d_df_twd97.to_crs(epsg=3824)
+d_df_wgs84 = d_df_wgs84.set_crs(epsg=4326, inplace=True)
+d_df_wgs84 = d_df_wgs84.to_crs(epsg=3824)
 
 
-d_gdf = d_df_twd97.concat(d_df_wgs84)
+merged_df = pd.concat([d_df_twd97, d_df_wgs84])
+d_gdf = gpd.GeoDataFrame(merged_df, crs=3824)
 
 join = gpd.sjoin(geo_df, d_gdf)
 
