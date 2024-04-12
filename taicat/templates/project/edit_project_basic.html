@@ -9,6 +9,57 @@
 
 {% block title %}計畫管理 | {% endblock title %}
 
+{% block pop %}
+
+<!-- 刪除計畫彈出視窗 -->
+<div class="pop-box delete-project-pop d-none">
+	<div class="center-box">
+		<div class="wbox">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+			<div class="titlebox">
+				刪除計畫
+			</div>
+			<div class="contentbox">
+				<p>當您選擇刪除計畫時，請注意此操作將永久移除該計畫的相關資訊，且無法復原。請您仔細考慮，確認是否要執行此刪除操作</p>
+        <div class="delete-project-pop-buttons">
+          <button class="btn-danger" id="confirm-delete">確認刪除</button>
+          <button class="btn-greeno" id="cancel-delete">取消</button>
+        </div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="pop-box delete-complete-pop d-none">
+	<div class="center-box">
+		<div class="wbox">
+			<div class="titlebox">
+				刪除計畫
+			</div>
+			<div class="contentbox">
+				<div id="delete-info"></div>
+        <div class="delete-project-pop-buttons">
+          <button class="btn-green" id="complete-delete">確認</button>
+        </div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock pop %}
 
 {% block body %} 
 
@@ -202,12 +253,17 @@
                     </div>
                 </div>
                 <div class="btn2-area">
-                    <button class="btn-greeno" href="{% url 'project_detail' pk %}">
-                        取消
+                    {% if is_authorized_delete %}
+                    <button class="btn-danger" id="deleteProject">
+                      刪除計畫
                     </button>
+                    {% endif %}
                     <button class="btn-green" id="submitForm">
                         確認儲存
                     </button>
+                    <button class="btn-greeno" href="{% url 'project_detail' pk %}">
+                      取消
+                  </button>
                 </div>
             </div>
         </div>

@@ -308,6 +308,9 @@ $(function () {
               $('.pin-chartbox').addClass('d-none')
               $('.inf-box').removeClass('d-block').addClass('d-none');
                 let county = e.target.feature.properties.COUNTYNAME;
+                if (county === '桃園縣') {
+                  county = '桃園市'
+                }
                 countyOnClick(county);
             },
             

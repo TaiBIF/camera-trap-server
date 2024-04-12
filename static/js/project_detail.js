@@ -719,20 +719,27 @@ $(document).ready(function () {
     $('input[name=times]').trigger('click')
   })
 
-  // 篩選按鈕
   $('#submitSelect').on('click', function () {
     // 確保拍攝時間是一個區間
     var startTime = $("input[name=start_time]").val();
     var endTime = $("input[name=end_time]").val();
 
+    // 確保拍攝日期有開始與結束
+    var startDate = $("input[name=start_date]").val();
+    var endDate = $("input[name=end_date]").val();
+
     if (startTime === '' && endTime !== '') {
-        window.alert('拍攝開始時間不能為空!');
+        window.alert('拍攝開始時間不能為空！');
     } else if (startTime !== '' && endTime === '') {
-        window.alert('拍攝結束時間不能為空!');
+        window.alert('拍攝結束時間不能為空！');
+    } else if (startDate === '' && endDate !== '') {
+        window.alert('拍攝開始日期不能為空！');
+    } else if (startDate !== '' && endDate === '') {
+        window.alert('拍攝結束日期不能為空！');
     } else {
         updateTable(1);
     }
-  })
+});
 
   // 清除按鈕
   $('.clear').on('click', function () {
@@ -839,6 +846,10 @@ $(document).ready(function () {
       }
     });
 
+    var selectedFoldeNames = $('#select-folder option:selected').map(function() {
+      return $(this).val();
+    }).get();
+
     $.ajax({
       data: {
         email: $("input[name=email]").val(),
@@ -849,7 +860,7 @@ $(document).ready(function () {
         end_altitude: $("input[name=end_altitude]").val(),
         start_date: $("input[name=start_date]").val(),
         end_date: $("input[name=end_date]").val(),
-        folder_name: $('#select-folder option:selected').val(),
+        folder_name: selectedFoldeNames,
         county_name: $('#select-county option:selected').val(),
         protectarea_name: $('#select-protectarea option:selected').val(),
         deployment: $('input[name="d-filter"]:checked').map(function () { return $(this).val(); }).get(),
@@ -875,7 +886,18 @@ $(document).ready(function () {
 
 
   // 編輯頁面的自動選項
-  var species = ['水鹿', '山羌', '獼猴', '山羊', '野豬', '鼬獾', '白鼻心', '食蟹獴', '松鼠', '飛鼠', '黃喉貂', '黃鼠狼', '小黃鼠狼', '麝香貓', '黑熊', '石虎', '穿山甲', '梅花鹿', '野兔', '蝙蝠', '無法辨識', '空拍', '工作照', '測試', '台灣山鷓鴣', '台灣竹雞', '黑長尾雉', '藍腹鷴', '黑冠麻鷺', '環頸雉', '山鷸', '灰林鴿', '金背鳩', '珠頸斑鳩', '翠翼鳩', '黃痣藪眉', '台灣噪眉', '台灣紫嘯鶇', '虎鶇', '白眉鶇', '白腹鶇', '赤腹鶇', '白頭鶇'].sort()
+  var species = [
+                // 物種清單
+                '工作照', '測試', '空拍', '無法辨識', '水鹿', '山羌', '獼猴', '山羊', '野豬', '鼬獾', '白鼻心', '食蟹獴', '鳥', '鼠或鼩形目', '赤腹松鼠', '條紋松鼠', '長吻松鼠',
+                '松鼠-無法辨識種類', '飛鼠-無法辨識種類', '大赤鼯鼠', '白面鼯鼠', '小鼯鼠', '黃喉貂', '黃鼠狼', '小黃鼠狼', '麝香貓', '黑熊', '石虎', '穿山甲', '狗', '貓',
+                '梅花鹿', '野兔', '蝙蝠', '人', '獵人', '其他',
+                // 鳥類清單
+                '台灣山鷓鴣', '台灣竹雞', '黑長尾雉', '藍腹鷴', '黑冠麻鷺', '大冠鷲', '鳳頭蒼鷹', '灰林鴿', '金背鳩', '珠頸斑鳩', '翠翼鳩', '台灣擬啄木', '台灣藍鵲', '樹鵲',
+                '暗綠繡眼', '小彎嘴', '大彎嘴', '頭烏線', '繡眼畫眉', '黃痣藪眉', '台灣噪眉', '台灣棕噪眉', '紅頭山雀', '青背山雀', '黃胸青鶲', '白尾鴝', '白眉林鴝', '白腰鵲鴝',
+                '栗背林鴝', '台灣紫嘯鶇', '虎鶇', '白眉鶇', '白腹鶇', '赤腹鶇', '白頭鶇', '山鷸', '灰腳秧雞', '白腹秧雞', '松鴉', '星鴉', '棕耳鵯', '棕面鶯', '山紅頭', '紋翼畫眉',
+                '台灣白喉噪眉', '中國畫眉', '白耳畫眉', '灰背鶇', '山鶺鴒', '環頸雉', '夜鷺', '池鷺', '中白鷺', '松雀鷹', '蘭嶼角鴞', '領角鴞', '東方灰林鴞', '小啄木', '大赤啄木',
+                '綠啄木', '八色鳥', '紅尾伯勞', '巨嘴鴉', '極北柳鶯', '方尾鶲', '黃腹琉璃', '白腹琉璃', '琉球歌鴝', '小翼鶇', '黑臉鵐', '灰鷽', '白腰文鳥'
+              ]
   var antler = ['初茸', '茸角一尖', '茸角一岔二尖', '茸角二岔三尖', '茸角三岔四尖', '硬角一尖', '硬角一岔二尖', '硬角二岔三尖', '硬角三岔四尖', '解角']
   var sex = ['雄性', '雌性', '無法判定']
   var life_stage = ['成體', '亞成體', '幼體', '無法判定']

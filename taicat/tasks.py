@@ -41,13 +41,18 @@ from .utils import (
     calc_output_file,
 )
 
+import pandas as pd
+from openpyxl import Workbook
+
 
 @shared_task
 def process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host):
     query = make_image_query_in_project(pk, args, is_authorized)
-
     # export to csv
-    filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}.csv'
+    base_filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}'
+    csv_filename = f'{base_filename}.csv'
+    xlsx_filename = f'{base_filename}.xlsx'
+
     download_dir = Path(settings.MEDIA_ROOT, 'download')
     header = ['計畫ID', '計畫名稱', '影像ID', '樣區/子樣區', '相機位置', '檔名', '拍攝時間', '物種', '年齡', '性別', '角況', '個體ID', '備註']
 
@@ -65,23 +70,40 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     #         cursor.copy_expert(sql, fp)
 
     # a little bit slower then copy_expert
-    with open(Path(download_dir, filename), 'w') as csvfile:
-         spamwriter = csv.writer(csvfile)
-         spamwriter.writerow(header)
-         for row in query.all():
-             spamwriter.writerow(row)
+    with open(Path(download_dir, csv_filename), 'w') as csvfile:
+        spamwriter = csv.writer(csvfile)
+        spamwriter.writerow(header)
+        for row in query.all():
+            spamwriter.writerow(row)
 
-    download_url = "https://{}{}{}".format(
+    csv_download_url = "https://{}{}{}".format(
         host,
         settings.MEDIA_URL,
-        Path('download', filename))
+        Path('download', csv_filename))
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.append(header)
+    for row in query.all():
+        # Excel is not able to deal with timezones in datetime 
+        row = [str(dt.replace(tzinfo=None)) if isinstance(dt, datetime) else dt for dt in row]
+        ws.append(row)
+    wb.save(Path(download_dir, xlsx_filename))
 
-    download_log = DownloadLog(user_role=user_role_name, condition=str(args)[:1000], file_link=download_url)
+    xlsx_download_url = "https://{}{}{}".format(
+        host,
+        settings.MEDIA_URL,
+        Path('download', xlsx_filename))
+
+    download_log = DownloadLog(user_role=user_role_name, condition=str(args)[:1000], file_link=csv_download_url)
     download_log.save()
 
     email_subject = '[臺灣自動相機資訊系統] 下載資料'
-    email_body = render_to_string('project/download.html', {'download_url': download_url, })
+    email_body = render_to_string('project/download.html', {'download_url': csv_download_url, 'xlsx_download_url': xlsx_download_url})
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
+
+    # return {'query': query}
+
 
 
 @shared_task

@@ -11,7 +11,7 @@ from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 from pandas.core.groupby.generic import DataFrameGroupBy
 from taicat.models import *
-from base.models import UploadNotification
+from base.models import UploadNotification, UploadHistory
 from django.db import connection  # for executing raw SQL
 import re
 import json
@@ -52,13 +52,13 @@ from .utils import (
 from taicat.tasks import (
     process_project_annotation_download_task,
 )
-
+from taicat.models import DownloadLog
 import collections
 from operator import itemgetter
 from dateutil import parser
 from django.test.utils import CaptureQueriesContext
 from base.utils import DecimalEncoder
-from taicat.utils import half_year_ago, get_project_member, delete_image_by_ids, check_if_authorized, check_if_authorized_create, check_if_authorized_project, check_if_authorized_delete, get_page_list
+from taicat.utils import half_year_ago, get_project_member, delete_image_by_ids, check_if_authorized, check_if_authorized_create, check_if_authorized_project, check_if_authorized_delete, get_page_list, check_if_authorized_delete_project
 
 from openpyxl import Workbook
 from bson.objectid import ObjectId
@@ -944,9 +944,53 @@ def create_project(request):
 
     return render(request, 'project/create_project.html', {'city_list': city_list, 'is_authorized_create': is_authorized_create})
 
+def delete_project(request):
+    if request.method == 'POST':
+        project_id = request.POST.get('pk')
+        images = Image.objects.filter(project_id=project_id)
+        images_dict = images.values()
+        # 把 Image 的內容移到 DeletedImage
+        for i in images_dict:
+            deleted_images = DeletedImage(**i)
+            deleted_images.save()
+
+        if len(images) == DeletedImage.objects.filter(project_id=project_id).count():
+            # 從各相關的資料表刪除和 project_id 關聯的內容
+            n = UploadNotification.objects.filter(project_id=project_id)
+            n.delete()
+            p_memeber = ProjectMember.objects.filter(project_id=project_id)
+            p_memeber.delete()
+            d_stat = DeploymentStat.objects.filter(project_id=project_id)
+            d_stat.delete()
+            i_folder = ImageFolder.objects.filter(project_id=project_id)
+            i_folder.delete()
+            c = Calculation.objects.filter(project_id=project_id)
+            c.delete()
+            sa = StudyArea.objects.filter(project_id=project_id)
+            sa.delete()
+            d = Deployment.objects.filter(project_id=project_id)
+            d.delete()
+            p_stat = ProjectStat.objects.filter(project_id=project_id)
+            p_stat.delete()
+            p_species = ProjectSpecies.objects.filter(project_id=project_id)
+            p_species.delete()
+            d_journal = DeploymentJournal.objects.filter(project_id=project_id)
+            d_journal.delete()
+
+            # 刪除 Image 的內容
+            images.delete()
+            p = Project.objects.filter(id=project_id)
+            p.delete()
+            
+            response = {'status': 'Project was deleted successfully'}
+        else:
+            response = {'status': 'Error: Failed to delete project'}
+
+    return JsonResponse(response)
 
 def edit_project_basic(request, pk):
     is_authorized = check_if_authorized(request, pk)
+    is_authorized_delete = check_if_authorized_delete_project(request, pk)
     project = []
     # city_list = []
 
@@ -968,7 +1012,7 @@ def edit_project_basic(request, pk):
         if project['region'] not in ['', None, []]:
             region = {'region': project['region'].split(',')}
             project.update(region)
-    return render(request, 'project/edit_project_basic.html', {'project': project, 'pk': pk,  'city_list': city_list, 'is_authorized': is_authorized})
+    return render(request, 'project/edit_project_basic.html', {'project': project, 'pk': pk,  'city_list': city_list, 'is_authorized': is_authorized, 'is_authorized_delete': is_authorized_delete})
 
 
 def edit_project_license(request, pk):
@@ -1682,16 +1726,21 @@ def data(request):
     start_date = requests.get('start_date')
     end_date = requests.get('end_date')
     date_filter = ''
-    if ((start_date and start_date != ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d")) or (end_date and end_date != ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"))):
-        if start_date:
-            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-        else:
-            start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d")
-        if end_date:
-            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)
-        else:
-            end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(days=1)
-        date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
+    if start_date:
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) # YYYY-MM-DD 00:00:00
+        calibration_start_date = start_date + datetime.timedelta(hours=-8) # 校正時區
+    else:
+        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0)
+        calibration_start_date = start_date + datetime.timedelta(hours=-8)
+    if end_date:
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
+        calibration_end_date = end_date + datetime.timedelta(hours=-8) # 校正時區
+    else:
+        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59)
+        calibration_end_date = end_date + datetime.timedelta(hours=-8)
+    
+    date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(calibration_start_date, calibration_end_date)
+
 
     conditions = ''
     deployment = requests.getlist('deployment[]')
@@ -1765,10 +1814,11 @@ def data(request):
 
     media_type_filter = ''
     media_type = requests.get('media_type')
-    if media_type == 'video':
-        media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4')"
-    elif media_type == 'image': # 篩選 avi 跟 mp4 的檔案
-        media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4')"
+    if media_type == 'video': # 篩選 avi 跟 mp4 的檔案
+        media_type_filter = "AND (i.filename LIKE '%.AVI' OR i.filename LIKE '%.MP4' OR i.filename LIKE '%.avi' OR i.filename LIKE '%.mp4')"
+    elif media_type == 'image': 
+        media_type_filter = "AND (i.filename NOT LIKE '%.AVI' AND i.filename NOT LIKE '%.MP4' AND i.filename NOT LIKE '%.avi' AND i.filename NOT LIKE '%.mp4')"
+
     
     remarks_filter = ''
     remarks = requests.get('remarks')
@@ -1966,7 +2016,6 @@ def download_request(request, pk):
                 args[k] = v
 
     member_id = request.session.get('id', None)
-    #print(args)
 
     # 有權限拿人的資料
     is_authorized = check_if_authorized(request, pk)
@@ -1976,9 +2025,10 @@ def download_request(request, pk):
 
 
     user_role_name = ParameterCode.objects.get(parametername=Contact.objects.get(id=member_id).identity).name
-
     host = request.META['HTTP_HOST']
     process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host)
+    # query = process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host)
+    # print(query)
 
     return JsonResponse({"status": 'success'}, safe=False)
 

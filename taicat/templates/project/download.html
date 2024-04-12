@@ -1,5 +1,12 @@
-您好： 
+您在臺灣自動相機資訊系統所篩選的資料已處理完成，請點擊下方連結下載：
 
-您在臺灣自動相機資訊系統所篩選的資料已處理完成，請點擊下方連結下載： 
+{% if xlsx_download_url %}
+以下提供兩種格式的下載連結，請依需求選擇：
 
+CSV 格式下載連結：{{ download_url|safe }}
+
+XLSX 格式下載連結：{{ xlsx_download_url }}
+
+{% else %}
 {{ download_url|safe }}
+{% endif %}

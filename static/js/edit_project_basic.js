@@ -109,6 +109,50 @@ $(document).ready(function () {
         location.href = $(this).data('href')
     });
 
+    // 刪除計畫
+    $('#deleteProject').click(function (event) {
+        event.preventDefault();
+        $('.delete-project-pop').removeClass('d-none');
+    });
+
+    $('#cancel-delete').click(function() {
+        $('.delete-project-pop').addClass('d-none');
+    });
+
+    $('#confirm-delete').click(function () {
+        $('.delete-project-pop').addClass('d-none');
+        $(".loading-pop").removeClass("d-none");
+        let pk = $('input[name=pk]').val();
+        let csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
+        function handleDeleteSuccess(message) {
+            $('#delete-info').html('<p>' + message + '</p>');
+            $('.delete-project-pop').addClass('d-none');
+            $('.delete-complete-pop').removeClass('d-none');
+        }
+
+        $.ajax({
+            type: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            mode: 'same-origin', // Do not send CSRF token to another domain.
+            url: '/delete_project',
+            data: {
+                pk: pk
+            },
+            success: function(response) {
+                $(".loading-pop").addClass("d-none");
+                if (response.status === 'Error: Failed to delete project') {
+                    handleDeleteSuccess('發生錯誤，請聯繫管理員');
+                } else {
+                    handleDeleteSuccess('已成功刪除計畫');
+                };
+            },
+        })
+    });
+
+    $('#complete-delete').click(function () {
+        window.location.href = '/project/overview'
+    });
 });
 
 
