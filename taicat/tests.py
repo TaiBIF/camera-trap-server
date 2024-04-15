@@ -2,7 +2,7 @@ from django.test import TestCase
 from http import HTTPStatus
 
 from taicat.models import Project
-# Create your tests here.
+#Create your tests here.
 class FooTest(TestCase):
     def setUp(self):
         Project.objects.create(id='')

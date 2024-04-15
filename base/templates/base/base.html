@@ -89,6 +89,7 @@
               <a href="{% url 'login_for_test' %}?role=個別計畫承辦人&next={{ request.path }}"> 計畫承辦人 </a>
               <a href="{% url 'login_for_test' %}?role=資料上傳者&next={{ request.path }}"> 資料上傳者 </a>
               <a href="{% url 'login_for_test' %}?role=系統管理員&next={{ request.path }}"> 系統管理員 </a>
+              <a href="{% url 'login_for_test' %}?role=受委託單位&next={{ request.path }}"> 受委託單位 </a>
               {% endif %}
             </div>         
             <hr class="mt-5" />

@@ -1171,7 +1171,7 @@ def find_year_month_range(items):
     return year_month_range
 
 
-def make_image_query_in_project(project_id, args, is_authorized):
+def make_image_query_in_project(project_id, args, is_authorized, is_contractor, sa_list):
     project = Project.objects.get(pk=project_id)
     project_stat = ProjectStat.objects.filter(project_id=project_id).first()
     project_name = project.name
@@ -1207,9 +1207,16 @@ def make_image_query_in_project(project_id, args, is_authorized):
         calibration_end_time = '23:59:59'
     query = query.filter(datetime__time__gte=calibration_start_time, datetime__time__lte=calibration_end_time)
 
-    if sa := args.get('sa[]'):
-        sa = [s for s in sa if s != 'all']
-        query = query.filter(studyarea_id__in=sa)
+    if is_contractor and sa_list:
+        if sa := args.get('sa[]'):
+            sa = [s for s in sa if s != 'all']
+            query = query.filter(studyarea_id__in=sa)
+        else:
+            query = query.filter(studyarea_id__in=sa_list)
+    else:
+        if sa := args.get('sa[]'):
+            sa = [s for s in sa if s != 'all']
+            query = query.filter(studyarea_id__in=sa)
 
     if deployment := args.get('deployment[]'):
         deployment = [int(i) for i in deployment if i != 'all']
@@ -1218,7 +1225,7 @@ def make_image_query_in_project(project_id, args, is_authorized):
     if species := args.get('species[]'):
         query = query.filter(species__in=species)
         if not is_authorized:
-            query = query.exclude(species__in=Species.EXCLUDE_LIST)
+            query = query.exclude(species__in=Species.EXCLUDE_LIST)  
 
     # deployment related
     if county_name_code := args.get('county_name'):

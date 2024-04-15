@@ -89,10 +89,16 @@ def get_project_info_web(request):
         is_project_authorized = True
     else:
         is_project_authorized = False
+    
+    # 檢查是否為受委託廠商
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
 
     response = {}
     # project = Project.objects.get(id=pk)
-    sa = StudyArea.objects.filter(project_id=pk, parent_id__isnull=True)
+    if is_contractor:
+        sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+    else:
+        sa = StudyArea.objects.filter(project_id=pk, parent_id__isnull=True)
     sa_list = [str(s.id) for s in sa]
     response['sa_list'] = sa_list
     sa_center = [23.5, 121.2]
@@ -118,6 +124,7 @@ def get_project_info_web(request):
     species_count = 0
     species_last_updated = None
 
+    
     query = "select sum(count) from taicat_projectspecies where project_id= %s;"
     with connection.cursor() as cursor:
         cursor.execute(query, (pk, ))
@@ -129,31 +136,54 @@ def get_project_info_web(request):
     other_data = []
     # 取前8名，剩下的統一成其他
     if species_total_count:
-        if ProjectSpecies.objects.filter(project_id=pk).exists():
-            species_count = ProjectSpecies.objects.filter(project_id=pk).exclude(name='').values('name').distinct().count()
-            species_last_updated = ProjectSpecies.objects.filter(project_id=pk).annotate(
-                last_updated_8=ExpressionWrapper(
-                    F('last_updated') + timedelta(hours=8),
-                    output_field=DateTimeField()
-                )).latest('last_updated_8').last_updated_8
+        if is_contractor:
+            species_count = 0
+            others = {'name': '其他物種', 'count': 0, 'y': 0}
+            # 取前8名，剩下的統一成其他
+
+            query = Image.objects.filter(studyarea__in=sa_list).values('species').annotate(total=Count('species')).order_by('-total')
             c = 0
-            for i in ProjectSpecies.objects.filter(project_id=pk).order_by('-count'):
-                s_name = '未填寫' if i.name == '' else i.name
+            for i in query:
+                if i['species'] == '':
+                    s_name = '未填寫'
+                else:
+                    s_name = i['species']
+                    species_count += 1
                 c += 1
                 if c < 9:
-                    pie_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                    pie_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
                 else:
-                    if is_project_authorized:
-                        other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
-                        others.update({'count': others['count']+i.count})
-                    else:
-                        if not re.search("人",s_name):
-                            other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
-                            others.update({'count': others['count']+i.count})
-                        
+                    other_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
+                    others.update({'count': others['count']+i['total']})
             if others['count'] > 0:
                 others.update({'y': round(others['count']/species_total_count*100, 2)})
                 pie_data += [others]
+        else:
+            if ProjectSpecies.objects.filter(project_id=pk).exists():
+                species_count = ProjectSpecies.objects.filter(project_id=pk).exclude(name='').values('name').distinct().count()
+                species_last_updated = ProjectSpecies.objects.filter(project_id=pk).annotate(
+                    last_updated_8=ExpressionWrapper(
+                        F('last_updated') + timedelta(hours=8),
+                        output_field=DateTimeField()
+                    )).latest('last_updated_8').last_updated_8
+                c = 0
+                for i in ProjectSpecies.objects.filter(project_id=pk).order_by('-count'):
+                    s_name = '未填寫' if i.name == '' else i.name
+                    c += 1
+                    if c < 9:
+                        pie_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                    else:
+                        if is_project_authorized:
+                            other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                            others.update({'count': others['count']+i.count})
+                        else:
+                            if not re.search("人",s_name):
+                                other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                                others.update({'count': others['count']+i.count})
+                            
+                if others['count'] > 0:
+                    others.update({'y': round(others['count']/species_total_count*100, 2)})
+                    pie_data += [others]
     response['pie_data'] = pie_data
     response['other_data'] = other_data
     response['zoom'] = zoom
@@ -272,7 +302,10 @@ def get_project_detail(request):
 
 
 def update_species_map(request):
+    member_id = request.session.get('id', None)
+    pk = request.GET.get('pk')
 
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
     # 根據filter (樣區,子樣區, 行程) 更新物種地圖
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -327,8 +360,12 @@ def update_species_map(request):
     elif pk := request.GET.get('said[project]'):
         type = '樣區'
         # 抓樣區中心點 group by 樣區
-        sas = StudyArea.objects.filter(project_id=pk)
-        sa_list = [int(s.id) for s in sas]
+        if is_contractor:
+            sas = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+            sa_list = [int(s.id) for s in sas]
+        else:
+            sas = StudyArea.objects.filter(project_id=pk)
+            sa_list = [int(s.id) for s in sas]
         # sa = StudyAreaStat.objects.filter(studyarea_id__in=sa_list)
         if sa_list:
             if last_updated := StudyAreaStat.objects.filter(studyarea_id__in=sa_list).aggregate(Min('last_updated'))['last_updated__min']:
@@ -347,6 +384,10 @@ def update_species_map(request):
                     JOIN taicat_studyareastat sas ON i.studyarea_id = sas.studyarea_id
                     JOIN taicat_studyarea sa ON i.studyarea_id = sa.id
                     WHERE i.species = %s AND i.studyarea_id  = ANY (%s)"""
+    # if is_contractor:
+    #     sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+    #     sa_list = [s.id for s in sa]
+    #     print(f'sa_list:{sa_list}')
     if query:
         if date_filter:
             query += date_filter
@@ -638,12 +679,18 @@ def project_info(request, pk):
         is_project_authorized = True
     else:
         is_project_authorized = False
+
+    # 檢查是否為受委託廠商
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
     
     # 是否為公開計畫
     is_project_public = Project.objects.filter(id=pk, is_public=True).exists()
     
     # 排除子樣區的母樣區
-    sa = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
+    if is_contractor:
+        sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+    else:
+        sa = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
     sa_list = [str(s.id) for s in sa]
     sa_center = [23.5, 121.2]
     zoom = 6
@@ -680,34 +727,60 @@ def project_info(request, pk):
     other_data = []
     # 取前8名，剩下的統一成其他
     if species_total_count:
-        if ProjectSpecies.objects.filter(project_id=pk).exists():
-            species_count = ProjectSpecies.objects.filter(project_id=pk).exclude(name='').values('name').distinct().count()
-            species_last_updated = ProjectSpecies.objects.filter(project_id=pk).annotate(
-                last_updated_8=ExpressionWrapper(
-                    F('last_updated') + timedelta(hours=8),
-                    output_field=DateTimeField()
-                )).latest('last_updated_8').last_updated_8
+        if is_contractor:
+            species_count = 0
+            others = {'name': '其他物種', 'count': 0, 'y': 0}
+            # 取前8名，剩下的統一成其他
+
+            query = Image.objects.filter(studyarea__in=sa_list).values('species').annotate(total=Count('species')).order_by('-total')
             c = 0
-            for i in ProjectSpecies.objects.filter(project_id=pk).order_by('-count'):
-                s_name = '未填寫' if i.name == '' else i.name
+            for i in query:
+                if i['species'] == '':
+                    s_name = '未填寫'
+                else:
+                    s_name = i['species']
+                    species_count += 1
                 c += 1
                 if c < 9:
-                    pie_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                    pie_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
                 else:
-                    if is_project_authorized:
-                        other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
-                        others.update({'count': others['count']+i.count})
-                    else:
-                        if not re.search("人",s_name):
-                            other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
-                            others.update({'count': others['count']+i.count})
-                           
+                    other_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
+                    others.update({'count': others['count']+i['total']})
             if others['count'] > 0:
                 others.update({'y': round(others['count']/species_total_count*100, 2)})
                 pie_data += [others]
+        else:
+            if ProjectSpecies.objects.filter(project_id=pk).exists():
+                species_count = ProjectSpecies.objects.filter(project_id=pk).exclude(name='').values('name').distinct().count()
+                species_last_updated = ProjectSpecies.objects.filter(project_id=pk).annotate(
+                    last_updated_8=ExpressionWrapper(
+                        F('last_updated') + timedelta(hours=8),
+                        output_field=DateTimeField()
+                    )).latest('last_updated_8').last_updated_8
+                c = 0
+                for i in ProjectSpecies.objects.filter(project_id=pk).order_by('-count'):
+                    s_name = '未填寫' if i.name == '' else i.name
+                    c += 1
+                    if c < 9:
+                        pie_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                    else:
+                        if is_project_authorized:
+                            other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                            others.update({'count': others['count']+i.count})
+                        else:
+                            if not re.search("人",s_name):
+                                other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                                others.update({'count': others['count']+i.count})
+                            
+                if others['count'] > 0:
+                    others.update({'y': round(others['count']/species_total_count*100, 2)})
+                    pie_data += [others]
 
     # Image Info
-    image_count = Image.objects.filter(project_id=pk).values('species').count()
+    if is_contractor:
+        image_count = Image.objects.filter(studyarea__in=sa_list).values('species').count()
+    else:
+        image_count = Image.objects.filter(project_id=pk).values('species').count()
 
 
     return render(request, 'project/project_info.html', {'pk': pk, 'project': project, 'is_authorized': is_authorized,
@@ -2023,11 +2096,13 @@ def download_request(request, pk):
     if is_authorized or (member_id in member_list):
         is_authorized = True
 
-
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
+    sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+    sa_list = [int(s.id) for s in sa]
     user_role_name = ParameterCode.objects.get(parametername=Contact.objects.get(id=member_id).identity).name
     host = request.META['HTTP_HOST']
-    process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host)
-    # query = process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host)
+    process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host, is_contractor, sa_list)
+    # query = process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host, is_contractor, sa_list)
     # print(query)
 
     return JsonResponse({"status": 'success'}, safe=False)
@@ -2548,8 +2623,17 @@ def get_image_info(request):
     else:
         is_project_authorized = False
 
+    # 檢查是否為受委託廠商
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
+
     response = {}
-    image_data = Image.objects.filter(project_id=pk).values('datetime', 'species', 'studyarea')
+    if is_contractor:
+        sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+        sa_list = [str(s.id) for s in sa]
+        image_data = Image.objects.filter(studyarea__in=sa_list).values('datetime', 'species', 'studyarea')
+    else:
+        image_data = Image.objects.filter(project_id=pk).values('datetime', 'species', 'studyarea')
+
     datetime = [str(item['datetime']) for item in image_data]
     species = [str(item['species']) for item in image_data]
     studyarea = [str(item['studyarea']) for item in image_data]
@@ -2564,7 +2648,6 @@ def get_image_info(request):
     df['timestamp'] = df['year-month'].astype(int) / 10**6
 
     df2 = df.groupby(['timestamp']).size().reset_index(name='counts')
-
     line_chart_data = df2[['timestamp', 'counts']].values.tolist()
     image_counts = df2['counts'].sum()
     response['line_chart_data'] = line_chart_data
@@ -2573,17 +2656,25 @@ def get_image_info(request):
     return HttpResponse(json.dumps(response, default=str), content_type='application/json')
 
 def update_line_chart(request):
+    member_id = request.session.get('id', None)
+    pk = request.GET.get('pk')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     said = request.GET.get('said')
     selected_species = request.GET.get('species')
 
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
+
     response = {}
 
     if said:
-        sa = int(said)
-        # Check if sa is studyarea_id or project_id and grab the image data based on studyarea_id or project_id
-        image_data = Image.objects.filter(studyarea_id=sa) if StudyArea.objects.filter(id=sa) else Image.objects.filter(project_id=sa)
+        if is_contractor:
+            sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+            image_data = Image.objects.filter(studyarea_id__in=sa)
+        else:
+            sa = int(said)
+            # Check if sa is studyarea_id or project_id and grab the image data based on studyarea_id or project_id
+            image_data = Image.objects.filter(studyarea_id=sa) if StudyArea.objects.filter(id=sa) else Image.objects.filter(project_id=sa)
         
         # Deal with datetime 
         if start_date:

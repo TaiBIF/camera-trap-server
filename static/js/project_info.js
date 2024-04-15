@@ -565,7 +565,7 @@ function updateSpeciesMap(species){
 
         $('.loading-pop').removeClass('d-none')
         $.ajax({
-            data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species},            
+            data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species, 'pk': pk},            
             url: "/update_species_map",
             success: function(response){
                 // 先把所有地圖上的移除
@@ -711,6 +711,7 @@ function updateImageLineChart(species){
     $('.species-pie,#species-pie,#species-percentage').removeClass('d-none')
     $('.species-map').addClass('d-none')
     // 樣區 子樣區 日期
+    let pk = $('input[name=pk]').val();
     let said;
     // 子樣區優先
     let subsa_select = $('.subsa-select option:selected').val();
@@ -740,7 +741,7 @@ function updateImageLineChart(species){
     } else {
         $('.loading-pop').removeClass('d-none')
         $.ajax({
-            data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species},            
+            data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species, 'pk': pk},            
             url: "/update_line_chart",
             success: function(response){
                 setImageLineChart(response.line_chart_data);
