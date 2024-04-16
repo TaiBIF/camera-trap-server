@@ -32,6 +32,7 @@ from taicat.models import (
     Species,
     ParameterCode,
     Calculation,
+    ProjectMember
 )
 from .utils import (
     get_species_list,
@@ -145,13 +146,21 @@ def api_get_projects(request):
     })
 
 def api_deployments(request):
+    member_id = request.session.get('id', None)
     query = StudyArea.objects.filter()
     resp = {
         'data': [],
     }
     if project_id := request.GET.get('project_id'):
+        is_contractor = ProjectMember.objects.filter(project_id=project_id, member_id=member_id, role='contractor').exists()
+        contractor_sa = StudyArea.objects.filter(projectmember__project_id=project_id, projectmember__member_id=member_id, projectmember__role='contractor')
+        contractor_sa_list = [int(s.id) for s in contractor_sa]
+
         proj = Project.objects.get(id=project_id)
-        project_deployment_list = proj.get_deployment_list()
+        if is_contractor:
+            project_deployment_list = proj.get_deployment_list(False, contractor_sa_list)
+        else:
+            project_deployment_list = proj.get_deployment_list()
         query = query.filter(project_id=project_id)
         resp['data'] = project_deployment_list
     return JsonResponse(resp)
@@ -248,8 +257,8 @@ def api_search(request):
                 host = request.META['HTTP_HOST']
                 verbose_log = humen_readable_filter(filter_dict)
                 process_download_calculated_data_task.delay(email, filter_dict, calc_dict, calc_type, out_format, calc_data, host, member_id, verbose_log, available_project_ids)
-                #results = calculated_data(filter_dict, calc_dict, available_project_ids)
-                #print(results)
+                # results = calculated_data(filter_dict, calc_dict, available_project_ids)
+                # print(results)
             else:
                 message = 'no member_id'
 
