@@ -1557,6 +1557,8 @@ def project_detail(request, pk):
     if Project.objects.filter(id=pk, is_public=True).exists():
         is_project_public = True
 
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
+    sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
     # with connection.cursor() as cursor:
     #     query = """SELECT name, funding_agency, code, principal_investigator, 
     #                     to_char(start_date, 'YYYY-MM-DD'), to_char(end_date, 'YYYY-MM-DD') 
@@ -1666,8 +1668,11 @@ def project_detail(request, pk):
                 img_f.save()
     if is_authorized:
         species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count')
+    elif is_contractor:
+        species_queryset = Image.objects.filter(studyarea_id__in=sa).exclude(species__iregex=r'人').values('species').annotate(count=Count('species'))
+        species = [(item['count'], item['species']) for item in species_queryset]
     else:
-        species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count').exclude(name__iregex=r'人')
+           species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count').exclude(name__iregex=r'人')
 
     if ProjectStat.objects.filter(project_id=pk).first().latest_date and ProjectStat.objects.filter(project_id=pk).first().earliest_date:
         latest_date = ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d")
@@ -1704,8 +1709,12 @@ def project_detail(request, pk):
             organization_id = Contact.objects.filter(id=user_id, is_organization_admin=True).values('organization').first()['organization']
             if Organization.objects.filter(id=organization_id, projects=pk):
                 editable = True
-                
-    study_area = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
+
+    if is_contractor:
+        study_area = StudyArea.objects.filter(project_id=pk, id__in=sa).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
+        print(f'study_area:{study_area}')
+    else:        
+        study_area = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
     # sa_list = Project.objects.get(pk=pk).get_sa_list()
     # sa_d_list = Project.objects.get(pk=pk).get_sa_d_list()
     if editable:
