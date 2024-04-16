@@ -90,7 +90,7 @@ def get_project_info_web(request):
     else:
         is_project_authorized = False
     
-    # 檢查是否為受委託廠商
+    # 檢查是否為受委託單位
     is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
 
     response = {}
@@ -680,7 +680,7 @@ def project_info(request, pk):
     else:
         is_project_authorized = False
 
-    # 檢查是否為受委託廠商
+    # 檢查是否為受委託單位
     is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
     
     # 是否為公開計畫
@@ -2634,7 +2634,7 @@ def get_image_info(request):
     else:
         is_project_authorized = False
 
-    # 檢查是否為受委託廠商
+    # 檢查是否為受委託單位
     is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
 
     response = {}

@@ -256,7 +256,8 @@ def api_search(request):
             if member_id := request.session.get('id', None):
                 host = request.META['HTTP_HOST']
                 verbose_log = humen_readable_filter(filter_dict)
-                process_download_calculated_data_task.delay(email, filter_dict, calc_dict, calc_type, out_format, calc_data, host, member_id, verbose_log, available_project_ids)
+                # process_download_calculated_data_task.delay(email, filter_dict, calc_dict, calc_type, out_format, calc_data, host, member_id, verbose_log, available_project_ids)
+                process_download_calculated_data_task(email, filter_dict, calc_dict, calc_type, out_format, calc_data, host, member_id, verbose_log, available_project_ids)
                 # results = calculated_data(filter_dict, calc_dict, available_project_ids)
                 # print(results)
             else:
