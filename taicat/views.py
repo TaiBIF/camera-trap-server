@@ -776,19 +776,12 @@ def project_info(request, pk):
                     others.update({'y': round(others['count']/species_total_count*100, 2)})
                     pie_data += [others]
 
-    # Image Info
-    if is_contractor:
-        image_count = Image.objects.filter(studyarea__in=sa_list).values('species').count()
-    else:
-        image_count = Image.objects.filter(project_id=pk).values('species').count()
-
 
     return render(request, 'project/project_info.html', {'pk': pk, 'project': project, 'is_authorized': is_authorized,
                                                         'sa_point': sa_center, 'species_count': species_count, 'sa': sa,
                                                         'species_last_updated': species_last_updated, 'pie_data': pie_data,
                                                         'other_data': other_data, 'sa_list': sa_list, 'zoom':zoom, 
-                                                        'is_project_authorized': is_project_authorized,'is_project_public':is_project_public,
-                                                        'image_count': image_count})
+                                                        'is_project_authorized': is_project_authorized,'is_project_public':is_project_public})
 
 
 def delete_data(request, pk):
@@ -2674,19 +2667,17 @@ def update_line_chart(request):
     said = request.GET.get('said')
     selected_species = request.GET.get('species')
 
-    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
-
     response = {}
 
     if said:
+        is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
         if is_contractor:
             sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
-            image_data = Image.objects.filter(studyarea_id__in=sa)
-        else:
-            sa = int(said)
-            # Check if sa is studyarea_id or project_id and grab the image data based on studyarea_id or project_id
-            image_data = Image.objects.filter(studyarea_id=sa) if StudyArea.objects.filter(id=sa) else Image.objects.filter(project_id=sa)
-        
+            contractor_sa_list = [int(s.id) for s in sa]
+
+        # Check if sa is studyarea_id or project_id and grab the image data based on studyarea_id or project_id
+        image_data = Image.objects.filter(studyarea_id=said) if StudyArea.objects.filter(id=said, project_id=pk) else Image.objects.filter(project_id=said, studyarea_id__in=contractor_sa_list) if is_contractor else Image.objects.filter(project_id=said)
+
         # Deal with datetime 
         if start_date:
             image_data = image_data.filter(datetime__gte=start_date)
@@ -2720,4 +2711,4 @@ def update_line_chart(request):
         response['image_counts'] = image_counts
 
     return HttpResponse(json.dumps(response, default=str), content_type='application/json')
-    
+

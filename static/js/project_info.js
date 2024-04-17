@@ -30,17 +30,19 @@ $( document ).ready(function() {
         type: 'GET',
         url: `/api/get_image_info/?pk=${pk}`,
         success: function (response) {  
-            setImageLineChart(response.line_chart_data);
-
+            // Initialize line chart related data
             window.line_chart_data = response.line_chart_data;
             window.image_counts = response.image_counts;
+
+            setImageLineChart(window.line_chart_data, window.image_counts);
         }}
     )
 
 
+    // '返回' in species pie chart
     $('#updateSpeciesPie').on('click',function(){
         updateSpeciesPie()
-        updateImageLineChart()
+        setImageLineChart(window.line_chart_data, window.image_counts, '', '');
     })
 
 
@@ -64,7 +66,7 @@ $( document ).ready(function() {
                         .addTo(map);
                     });
                     $('.loading-pop').addClass('d-none')
-                  });
+                });
             }
         } else {
             $('.forestPoly').addClass('d-none');
@@ -381,7 +383,6 @@ function setSpeciesPie(pie_data, other_data, deployment_points){
                                 alert('請由下方「其他物種」折疊選單選擇物種')
                             } else {
                                 updateSpeciesMap(this.name)
-                                console.log(this.name)
                                 updateImageLineChart(this.name);
                             }
                             // 修改右側統計圖
@@ -660,7 +661,12 @@ function pointToLayer(count, latlng) {
         }) // Change marker to circle
 }
 
-function setImageLineChart(line_chart_data){
+function setImageLineChart(line_chart_data, image_counts, studyarea_title, selected_species){
+    studyarea_title = studyarea_title ? studyarea_title : '全部樣區'
+    $('#sa-title').text(studyarea_title);
+    $('#image_counts').text(image_counts);
+    $('#species_name').text(selected_species);
+
     Highcharts.chart('line-chart', {
         chart: {
             backgroundColor: 'transparent',
@@ -668,7 +674,7 @@ function setImageLineChart(line_chart_data){
             plotBorderWidth: null,
             plotShadow: false,
             height: 340,
-          },
+        },
         exporting: { enabled: false },
         credits: { enabled: false },
         legend: {
@@ -681,19 +687,19 @@ function setImageLineChart(line_chart_data){
                 },
             },
         },
-        title: { text: "" },
+        title: { text: '' },
         xAxis:[{
             type:'datetime',
             labels: {
                 format: '{value:%Y-%b}',
                 rotation: -45,
                 align: 'right',
-              },
+            },
         }],
         yAxis:[{
             title: {
                 text: '照片張數',
-              },
+            },
         }],
         series: [{
             name: '照片張數',
@@ -713,19 +719,15 @@ function updateImageLineChart(species){
     // 樣區 子樣區 日期
     let pk = $('input[name=pk]').val();
     let said;
-    // 子樣區優先
-    let subsa_select = $('.subsa-select option:selected').val();
     let sa_select = $('.sa-select option:selected').val();
     let title;
-    if ((subsa_select!='all') & (subsa_select!=undefined) ){
-        said = subsa_select
-        title = $( ".subsa-select option:selected" ).text()
-    } else if ((sa_select!='all') & (sa_select!=undefined) ) {
+    if ((sa_select!='all') & (sa_select!=undefined) ) {
         said = sa_select
-        title = $( ".sa-select option:selected" ).text()
-    } else {
+        title = $('.sa-select option:selected').text()
+    } 
+    else {
         said = $('input[name=pk]').val()
-        title = '全部'
+        title = '全部樣區'
     }
 
     let start_date = $('input[name="start_date"]').val()
@@ -733,31 +735,20 @@ function updateImageLineChart(species){
 
     // Reset the title of line chart
     $('#species_name').text('');
-    if ((!start_date) && (!end_date) && (title == '全部') && (!species)){
-        // If there is no selected filter, show the overview line chart
-        setImageLineChart(window.line_chart_data)
-        $('#sa-title').text('全部樣區');
-        $('#image_counts').text(window.image_counts);
-    } else {
-        $('.loading-pop').removeClass('d-none')
-        $.ajax({
-            data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species, 'pk': pk},            
-            url: "/update_line_chart",
-            success: function(response){
-                setImageLineChart(response.line_chart_data);
-                var selectedSa = $('.sa-select').find("option:selected").text()
-                $('#sa-title').text(selectedSa);
-                $('#image_counts').text(response.image_counts);
-                $('#species_name').text(species);
+    $('.loading-pop').removeClass('d-none')
+    $.ajax({
+        data: {'said': said, 'start_date': start_date, 'end_date': end_date, 'species': species, 'pk': pk},            
+        url: "/update_line_chart",
+        success: function(response){
+            setImageLineChart(response.line_chart_data, response.image_counts, title, species);
 
-                // Reset species
-                species = undefined;
-            },
-            error: function(){
-                alert('未知錯誤，請聯繫管理員');
-                $('.loading-pop').addClass('d-none')
+            // Reset species
+            species = undefined;
+        },
+        error: function(){
+            alert('未知錯誤，請聯繫管理員');
+            $('.loading-pop').addClass('d-none')
 
-            }
-        })
-    }
+        }
+    })
 }
