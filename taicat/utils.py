@@ -1174,38 +1174,28 @@ def find_year_month_range(items):
 def make_image_query_in_project(project_id, args, is_authorized, is_contractor, sa_list):
     project = Project.objects.get(pk=project_id)
     project_stat = ProjectStat.objects.filter(project_id=project_id).first()
-    project_name = project.name
 
     query = Image.objects.filter(project_id=project_id).values_list('project_id', 'project__name', 'image_uuid', 'studyarea__name', 'deployment__name', 'filename', 'datetime', 'species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks')
 
     if start_date := args.get('start_date'):
         start_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(hours=0) # YYYY-MM-DD 00:00:00
-        calibration_start_date = start_date + timedelta(hours=-8) # 校正時區
     else:
         start_date = project_stat.earliest_date + timedelta(hours=0)
-        calibration_start_date = start_date + timedelta(hours=-8)
     if end_date := args.get('end_date'):
         end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
-        calibration_end_date = end_date + timedelta(hours=-8) # 校正時區
     else:
-        end_date = project_stat.latest_date
-        calibration_end_date = end_date + timedelta(hours=-8)
-        calibration_end_date = end_date + timedelta(hours=-8)
-    query = query.filter(datetime__gte=calibration_start_date, datetime__lte=calibration_end_date)
+        end_date = project_stat.latest_date + timedelta(hours=23, minutes=59, seconds=59)
+    query = query.filter(datetime__gte=start_date, datetime__lte=end_date)
     
     if start_time := args.get('start_time'):
-        start_time = datetime.strptime(f"1990-01-01 {start_time}", "%Y-%m-%d %H:%M:%S") 
-        calibration_start_time = start_time + timedelta(hours=-8)
-        calibration_start_time = calibration_start_time.strftime('%H:%M:%S')
+        start_time = datetime.strptime(start_time, "%H:%M:%S").time()
     else:
-        calibration_start_time = '00:00:00'
+        start_time = datetime.strptime('00:00:00', "%H:%M:%S").time()
     if end_time := args.get('end_time'):
-        end_time = datetime.strptime(f"1990-01-01 {end_time}", "%Y-%m-%d %H:%M:%S")
-        calibration_end_time = end_time + timedelta(hours=-8)
-        calibration_end_time = calibration_end_time.strftime('%H:%M:%S')
+        end_time = datetime.strptime(end_time, "%H:%M:%S").time()
     else:
-        calibration_end_time = '23:59:59'
-    query = query.filter(datetime__time__gte=calibration_start_time, datetime__time__lte=calibration_end_time)
+        end_time = datetime.strptime('23:59:59', "%H:%M:%S").time()
+    query = query.filter(datetime__time__gte=start_time, datetime__time__lte=end_time)
 
     if is_contractor and sa_list:
         if sa := args.get('sa[]'):

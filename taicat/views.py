@@ -1805,18 +1805,15 @@ def data(request):
     date_filter = ''
     if start_date:
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) # YYYY-MM-DD 00:00:00
-        calibration_start_date = start_date + datetime.timedelta(hours=-8) # 校正時區
     else:
         start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0)
-        calibration_start_date = start_date + datetime.timedelta(hours=-8)
+    
     if end_date:
         end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
-        calibration_end_date = end_date + datetime.timedelta(hours=-8) # 校正時區
     else:
         end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59)
-        calibration_end_date = end_date + datetime.timedelta(hours=-8)
     
-    date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(calibration_start_date, calibration_end_date)
+    date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
 
 
     conditions = ''
@@ -1850,20 +1847,12 @@ def data(request):
         if not is_project_authorized:
             spe_conditions = "AND i.species NOT IN ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人')"
 
-    time_filter = ''  # 要先減掉8的時差
-    calibration_start_time = None
-    calibration_end_time = None
-    if start_time := requests.get('start_time'):
-        calibration_start_time = datetime.datetime.strptime(f"1990-01-01 {start_time}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
-    if end_time := requests.get('end_time'):
-        calibration_end_time = datetime.datetime.strptime(f"1990-01-01 {end_time}", "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=-8)
-    
-    if calibration_start_time and calibration_end_time:
-        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' BETWEEN time '{calibration_start_time.strftime('%H:%M:%S')}' AND time '{calibration_end_time.strftime('%H:%M:%S')}'"
-    elif calibration_start_time:
-        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' >= time '{calibration_start_time.strftime('%H:%M:%S')}'"
-    elif calibration_end_time:
-        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' <= time '{calibration_end_time.strftime('%H:%M:%S')}'"
+    time_filter = ''  
+
+    start_time = requests.get('start_time')
+    end_time = requests.get('end_time')
+    if start_time and end_time:
+        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' >= '{start_time}' AND datetime::time AT TIME ZONE 'UTC' <= time '{end_time}'"
     
     folder_filter = ''
     folder_names = requests.getlist('folder_name[]')
@@ -1906,7 +1895,7 @@ def data(request):
         if is_project_authorized:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
                             i.life_stage, i.sex, i.antler, i.animal_id, i.remarks, i.file_url, i.image_uuid, i.from_mongo,
-                            to_char(i.datetime AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
+                            to_char(i.datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.project_id = {} {} {} {} {} {} {} {}
@@ -1915,7 +1904,7 @@ def data(request):
         else:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
                             i.life_stage, i.sex, i.antler, i.animal_id, i.remarks, i.file_url, i.image_uuid, i.from_mongo,
-                            to_char(i.datetime AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
+                            to_char(i.datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') 
@@ -1930,7 +1919,7 @@ def data(request):
 
         df = pd.DataFrame(image_info, columns=['image_id', 'studyarea_id', 'deployment_id', 'filename', 'species', 'life_stage', 'sex', 'antler',
                                                'animal_id', 'remarks', 'file_url', 'image_uuid', 'from_mongo', 'datetime', 'memo', 'specific_bucket'])[:int(limit)]
-        # print(df)
+        # print(df['datetime'])
         # print('b', time.time()-t)
         sa_names = pd.DataFrame(StudyArea.objects.filter(id__in=df.studyarea_id.unique()).values('id', 'name', 'parent_id')
                                 ).rename(columns={'id': 'studyarea_id', 'name': 'saname', 'parent_id': 'saparent'})

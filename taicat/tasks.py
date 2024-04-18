@@ -50,7 +50,7 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     if is_contractor:
         query = make_image_query_in_project(pk, args, is_authorized, is_contractor, sa_list)
     else:
-        query = make_image_query_in_project(pk, args, is_authorized)
+        query = make_image_query_in_project(pk, args, is_authorized ,'', '')
     # export to csv
     base_filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}'
     csv_filename = f'{base_filename}.csv'
