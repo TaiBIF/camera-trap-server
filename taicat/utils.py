@@ -67,6 +67,7 @@ from taicat.models import (
 import geopandas as gpd
 import boto3
 
+
 # WIP
 def display_working_day_in_calendar_html(year, month, working_day):
     month_cal = monthcalendar(year, month)
@@ -1189,10 +1190,14 @@ def make_image_query_in_project(project_id, args, is_authorized, is_contractor, 
     
     if start_time := args.get('start_time'):
         start_time = datetime.strptime(start_time, "%H:%M:%S").time()
+        start_time = timezone.make_aware(datetime.combine(timezone.now().date(), start_time), timezone=timezone.utc)
+        start_time -= timedelta(hours=8)
     else:
         start_time = datetime.strptime('00:00:00', "%H:%M:%S").time()
     if end_time := args.get('end_time'):
         end_time = datetime.strptime(end_time, "%H:%M:%S").time()
+        end_time = timezone.make_aware(datetime.combine(timezone.now().date(), end_time), timezone=timezone.utc)
+        end_time -= timedelta(hours=8)
     else:
         end_time = datetime.strptime('23:59:59', "%H:%M:%S").time()
     query = query.filter(datetime__time__gte=start_time, datetime__time__lte=end_time)
@@ -1246,7 +1251,9 @@ def make_image_query_in_project(project_id, args, is_authorized, is_contractor, 
 
     query = query.order_by('-created', 'project_id')
 
+    # print(query)
     return query
+
 
 def get_chunks(lst, n):
     '''modified via: https://stackoverflow.com/a/312464/644070'''
