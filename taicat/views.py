@@ -1852,7 +1852,7 @@ def data(request):
     start_time = requests.get('start_time')
     end_time = requests.get('end_time')
     if start_time and end_time:
-        time_filter = f"AND datetime::time AT TIME ZONE 'UTC' >= '{start_time}' AND datetime::time AT TIME ZONE 'UTC' <= time '{end_time}'"
+        time_filter = f"AND (datetime AT TIME ZONE 'Asia/Taipei')::time >= '{start_time}' AND (datetime AT TIME ZONE 'Asia/Taipei')::time <= '{end_time}'"
     
     folder_filter = ''
     folder_names = requests.getlist('folder_name[]')
@@ -1895,7 +1895,7 @@ def data(request):
         if is_project_authorized:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
                             i.life_stage, i.sex, i.antler, i.animal_id, i.remarks, i.file_url, i.image_uuid, i.from_mongo,
-                            to_char(i.datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
+                            to_char(i.datetime AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.project_id = {} {} {} {} {} {} {} {}
@@ -1904,7 +1904,7 @@ def data(request):
         else:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
                             i.life_stage, i.sex, i.antler, i.animal_id, i.remarks, i.file_url, i.image_uuid, i.from_mongo,
-                            to_char(i.datetime AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
+                            to_char(i.datetime AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS datetime, i.memo, i.specific_bucket
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') 
@@ -2096,7 +2096,7 @@ def download_request(request, pk):
     host = request.META['HTTP_HOST']
     process_project_annotation_download_task.delay(pk, email, is_authorized, args, user_role_name, host, is_contractor, sa_list)
     # query = process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host, is_contractor, sa_list)
-    # print(query)
+    print(query)
 
     return JsonResponse({"status": 'success'}, safe=False)
 
