@@ -2346,13 +2346,26 @@ def project_oversight(request, pk):
     相機有運作天數 / 當月天數
     '''
 
+    member_id = request.session.get('id', None)
+    # 檢查是否為受委託單位
+    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
     is_authorized = check_if_authorized(request, pk)
     public_ids = Project.published_objects.values_list('id', flat=True).all()
     pk = int(pk)
-    if (pk in list(public_ids)) or is_authorized:
+
+    if is_contractor:
         project = Project.objects.get(pk=pk)
+        sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+    elif (pk in list(public_ids)) or is_authorized:
+        project = Project.objects.get(pk=pk)
+        sa = StudyArea.objects.filter(project_id=pk, parent_id__isnull=True)
     else:
         return HttpResponse('no auth')
+    
+    # if (pk in list(public_ids)) or is_authorized:
+    #     project = Project.objects.get(pk=pk)
+    # else:
+    #     return HttpResponse('no auth')
 
     if request.method == 'GET':
         year = request.GET.get('year')
@@ -2368,30 +2381,35 @@ def project_oversight(request, pk):
         year_list = list(range(mn['working_start__min'].year, mn['working_end__max'].year+1))
 
     data = {}
-    if year or studyarea:
-        # deps = project.get_deployment_list(as_object=True)
-        if year and studyarea:
-            data = project.count_deployment_journal(year_list=[int(year)], studyarea_ids=[int(studyarea)])
-        elif year and not studyarea:
-            data = project.count_deployment_journal(year_list=[int(year)])
-        elif not year and studyarea:
-            data = project.count_deployment_journal(year_list=year_list, studyarea_ids=[int(studyarea)])
+    try:
+        if year or studyarea:
+            # deps = project.get_deployment_list(as_object=True)
+            if year and studyarea:
+                data = project.count_deployment_journal(year_list=[int(year)], studyarea_ids=[int(studyarea)])
+            elif year and not studyarea:
+                data = project.count_deployment_journal(year_list=[int(year)])
+            elif not year and studyarea:
+                data = project.count_deployment_journal(year_list=year_list, studyarea_ids=[int(studyarea)])
+            
+            return render(request, 'project/project_oversight.html', {
+                'project': project,
+                'study_areas': sa,
+                'gap_caused_choices': DeploymentJournal.GAP_CHOICES,
+                'month_label_list': [f'{x}月'for x in range(1, 13)],
+                'result': data, #data[year] if year else [],
+                'year_list': year_list,
+            })
+    except:
+        return HttpResponse('404')
         #for sa in data[year]:
         #    for d in sa['items']:
         # print (sa['name'], d['id'], d['name'])
         #        dep_obj = Deployment.objects.get(pk=d['id'])
         #        d['gaps'] = dep_obj.find_deployment_journal_gaps(year_int)
-        return render(request, 'project/project_oversight.html', {
-            'project': project,
-            'gap_caused_choices': DeploymentJournal.GAP_CHOICES,
-            'month_label_list': [f'{x}月'for x in range(1, 13)],
-            'result': data, #data[year] if year else [],
-            'year_list': year_list,
-        })
-    #else:
 
     return render(request, 'project/project_oversight.html', {
         'project': project,
+        'study_areas': sa,
         'year_list': year_list
     })
 
