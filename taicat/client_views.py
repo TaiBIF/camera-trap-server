@@ -27,6 +27,8 @@ from taicat.models import (
     Image_info,
     Contact,
     InfoLog,
+    ProjectMember,
+    StudyArea
 )
 from base.models import (
     Announcement,
@@ -83,11 +85,21 @@ def get_user_info(request, user_id):
         }
     }
     for p in projects:
-        item = {
-            'project_id': p.id,
-            'name': p.name,
-            'studyareas': p.get_deployment_list(),
-        }
+        is_contractor = ProjectMember.objects.filter(project_id=p.id, member_id=user_id, role='contractor').exists()
+        contractor_sa = StudyArea.objects.filter(projectmember__project_id=p.id, projectmember__member_id=user_id, projectmember__role='contractor')
+        contractor_sa_list = [int(s.id) for s in contractor_sa]
+        if is_contractor:
+            item = {
+                'project_id': p.id,
+                'name': p.name,
+                'studyareas': p.get_deployment_list(False, contractor_sa_list),
+            }
+        else:
+            item = {
+                'project_id': p.id,
+                'name': p.name,
+                'studyareas': p.get_deployment_list(),
+            }
         ret['results']['projects'].append(item)
 
     return JsonResponse(ret)

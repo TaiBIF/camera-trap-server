@@ -3,7 +3,7 @@ from django.http import response
 from django.shortcuts import render, HttpResponse, redirect
 import json
 from django.db import connection
-from taicat.models import Deployment, GeoStat, HomePageStat, Image, Contact, Organization, Project, Species, StudyAreaStat, ProjectMember,ParameterCode, ProjectStat
+from taicat.models import Deployment, GeoStat, HomePageStat, Image, Contact, Organization, Project, Species, StudyAreaStat, ProjectMember,ParameterCode, ProjectStat, StudyArea
 from django.db.models import Count, Window, F, Sum, Min, Q, Max, DateTimeField, ExpressionWrapper
 from django.db.models.functions import ExtractYear
 from django.template import loader
@@ -360,14 +360,25 @@ def upload_history(request):
     if request.method == 'GET':
 
         if member_id := request.session.get('id', None):
+            is_contractor = ProjectMember.objects.filter(member_id=member_id, role='contractor').exists()
             my_project_list = get_my_project_list(member_id)
             q = request.GET.get('q', '')
             page_number = request.GET.get('page', 1)
 
-            query = UploadHistory.objects.filter(deployment_journal__project_id__in=my_project_list).annotate(
-                created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),                
-                last_updated_8=ExpressionWrapper(F('last_updated') + timedelta(hours=8),output_field=DateTimeField()
-                )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error').order_by('-created')
+            if is_contractor:
+                # 先找到樣區 id，再從樣區 id 回推 deploymentJournal id，最後得到對應的 UploadHistory 資訊
+                sa = StudyArea.objects.filter(projectmember__project_id__in=my_project_list, projectmember__member_id=member_id, projectmember__role='contractor').values_list('id', flat=True)
+                deployment_journal_list = DeploymentJournal.objects.filter(studyarea_id__in=sa)
+                print(f'deployment_journal_list:{deployment_journal_list}')
+                query = UploadHistory.objects.filter(deployment_journal_id__in=deployment_journal_list).annotate(
+                    created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),                
+                    last_updated_8=ExpressionWrapper(F('last_updated') + timedelta(hours=8),output_field=DateTimeField()
+                    )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error').order_by('-created')
+            else:
+                query = UploadHistory.objects.filter(deployment_journal__project_id__in=my_project_list).annotate(
+                    created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),                
+                    last_updated_8=ExpressionWrapper(F('last_updated') + timedelta(hours=8),output_field=DateTimeField()
+                    )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error').order_by('-created')
 
             if q:
                 query = query.filter(Q(deployment_journal__project__name__icontains=q) |
@@ -1044,3 +1055,7 @@ def api_dashboard(request, chart):
             res = {'data': data, 'labels': [f'{x[0]} {x[1]}' for x in labels], 'data_has_storage': data_has_storage}
 
     return JsonResponse(res)
+
+def test_crontab():
+
+    return 

@@ -46,8 +46,11 @@ from openpyxl import Workbook
 
 
 @shared_task
-def process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host):
-    query = make_image_query_in_project(pk, args, is_authorized)
+def process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host, is_contractor, sa_list):
+    if is_contractor:
+        query = make_image_query_in_project(pk, args, is_authorized, is_contractor, sa_list)
+    else:
+        query = make_image_query_in_project(pk, args, is_authorized ,'', '')
     # export to csv
     base_filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}'
     csv_filename = f'{base_filename}.csv'
@@ -71,10 +74,13 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
 
     # a little bit slower then copy_expert
     with open(Path(download_dir, csv_filename), 'w') as csvfile:
+    # with open(Path(csv_filename), 'w') as csvfile:
         spamwriter = csv.writer(csvfile)
         spamwriter.writerow(header)
         for row in query.all():
-            spamwriter.writerow(row)
+            # Convert time zone into utc+8
+            modified_row = [dt.astimezone(timezone(timedelta(hours=8))) if isinstance(dt, datetime) else dt for dt in row]
+            spamwriter.writerow(modified_row)
 
     csv_download_url = "https://{}{}{}".format(
         host,
@@ -85,10 +91,12 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     ws = wb.active
     ws.append(header)
     for row in query.all():
+        # Convert time zone into utc+8
         # Excel is not able to deal with timezones in datetime 
-        row = [str(dt.replace(tzinfo=None)) if isinstance(dt, datetime) else dt for dt in row]
-        ws.append(row)
+        modified_row = [str(dt.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None)) if isinstance(dt, datetime) else dt for dt in row]
+        ws.append(modified_row)
     wb.save(Path(download_dir, xlsx_filename))
+    # wb.save(Path(xlsx_filename))
 
     xlsx_download_url = "https://{}{}{}".format(
         host,
@@ -102,7 +110,7 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
     email_body = render_to_string('project/download.html', {'download_url': csv_download_url, 'xlsx_download_url': xlsx_download_url})
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
 
-    # return {'query': query}
+    return {'query': query}
 
 
 

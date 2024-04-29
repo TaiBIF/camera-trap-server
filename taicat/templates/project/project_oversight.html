@@ -147,10 +147,13 @@
 	<div class="input-item">
 	  <p>樣區</p>
 	  <select name="studyarea" id="studyarea-selector">
-	    <option value="">全部</option>
-            {% for sa in project.studyareas.all %}
+		<option value="">全部</option>
+            <!-- {% for sa in project.studyareas.all %}
             <option value="{{ sa.id }}"{% if sa.id|to_int == request.GET.studyarea|to_int %} selected{% endif %}>{{ sa.name }}</option>
-            {% endfor %}
+            {% endfor %} -->
+			{% for sa in study_areas %}
+			<option value="{{ sa.id }}"{% if sa.id|to_int == request.GET.studyarea|to_int %} selected{% endif %}>{{ sa.name }}</option>
+			{% endfor %}
 	  </select>
 	</div>
       </div>

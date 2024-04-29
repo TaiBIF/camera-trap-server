@@ -161,6 +161,7 @@
                                 <select name="role">
                                     <option value="project_admin">個別計畫承辦人</option>
                                     <option value="uploader" selected>資料上傳者</option>
+                                    <option value="contractor">受委託單位</option>
                                 </select>
                             </div>
                             <button class="add-btn" id="submitAddForm">
@@ -211,6 +212,7 @@
                                             <select name="{{ i.member_id }}" id="{{ i.member_id }}" {% if request.session.name == i.member.name %} disabled {% endif %}>
                                                 <option value="project_admin" {% if i.role == 'project_admin' %} selected {% endif %}>個別計畫承辦人</option>
                                                 <option value="uploader" {% if i.role == 'uploader' %} selected {% endif %}>資料上傳者</option>
+                                                <option value="contractor" {% if i.role == 'contractor' %} selected {% endif %}>受委託單位</option>
                                             </select>
                                         </div>
                                     </td>
