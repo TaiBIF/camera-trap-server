@@ -351,13 +351,14 @@
 								<p>全部</p>
 							</li>
 							{% for i in species %}
-							<li class="now" data-species="{{ i.1 }}">
+							<li class="now d-none" data-species="{{ i.1 }}">
 								<div class="cir-checkbox">
 									<img class="coricon" src="/static/image/correct.svg">
 								</div>
-								<p>{{ i.1 }} ({{i.0}})</p>
+								<p class="species_list_from_django">{{ i.1 }} ({{i.0}})</p>
 							</li>
 							{% endfor %} 
+							<div id="speciesListContainer"></div>
 							</ul>
 						</div>
 						<div class="item-set1">

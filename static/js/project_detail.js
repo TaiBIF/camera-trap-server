@@ -397,6 +397,53 @@ function updateTable(page, page_from) {
 
 $(document).ready(function () {
 
+    // 物種篩選清單依照筆畫排序
+    var speciesElements = document.querySelectorAll('.species_list_from_django');
+
+    var speciesData = [];
+
+    speciesElements.forEach(function(element) {
+        var text = element.textContent;
+        var match = text.match(/^(.*) \((\d+)\)$/);
+        if (match) {
+            var species = match[1];
+            var count = parseInt(match[2]);
+            
+            speciesData.push({
+                species: species,
+                count: count
+            });
+        }
+    });
+
+    speciesData.sort(function(a, b) {
+        return a.species.localeCompare(b.species, 'zh-Hans', {sensitivity: 'base'}); // 筆畫排序
+    });
+
+    // 排序完之後渲染到 html 上
+    speciesData.forEach(function(item) {
+        var li = document.createElement('li');
+        li.classList.add('now');
+        li.setAttribute('data-species', item.species);
+    
+        var div = document.createElement('div');
+        div.classList.add('cir-checkbox');
+    
+        var img = document.createElement('img');
+        img.classList.add('coricon');
+        img.setAttribute('src', '/static/image/correct.svg');
+    
+        var p = document.createElement('p');
+        p.textContent = item.species + ' (' + item.count + ')';
+    
+        div.appendChild(img);
+    
+        li.appendChild(div);
+        li.appendChild(p);
+    
+        speciesListContainer.appendChild(li);
+    });
+
     // Parse the parameters in the URL
     const urlParams = new URLSearchParams(window.location.search);
     const speciesValue = urlParams.get('species');
