@@ -3,6 +3,7 @@ from datetime import datetime
 import pytz
 import zipfile
 import io
+import re
 
 from django.shortcuts import render
 from django.http import (
@@ -360,8 +361,11 @@ def check_update(request, version=''):
     latest_version = Announcement.objects.order_by('-created').values_list('version', flat=True).first()
     latest_version = latest_version.replace('v', '')
     res['version']['latest'] = latest_version
-    if latest_version == version:
-        res['is_latest'] = True
+    if m := re.match(r'([0-9]+\.[0-9]+\.[0-9]+)', version):
+        version_number = m.group(1)
+        if latest_version == version_number:
+            res['is_latest'] = True
+
     return JsonResponse(res)
 
 @csrf_exempt
