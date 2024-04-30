@@ -47,6 +47,38 @@
 	</div>
 </div>
 
+<!-- 取消新增計畫彈出視窗 -->
+<div class="pop-box cancel-create-pop d-none">
+	<div class="center-box">
+		<div class="wbox">
+			<div class="xx">
+				<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+					<g id="Group_789" data-name="Group 789" transform="translate(-1679 -599)">
+						<g id="Ellipse_4" data-name="Ellipse 4" transform="translate(1679 599)" fill="none" stroke="#257455" stroke-width="2">
+							<circle cx="20" cy="20" r="20" stroke="none"/>
+							<circle cx="20" cy="20" r="19" fill="none"/>
+						</g>
+						<g id="Group_712" data-name="Group 712" transform="translate(-133.5 164.5)">
+							<line id="Line_1" data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+							<line id="Line_2" data-name="Line 2" x2="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+						</g>
+					</g>
+				</svg>
+			</div>
+      <div class="titlebox">
+				取消新增計畫
+			</div>
+			<div class="contentbox">
+				<p>請確認是否取消新增計畫。點擊「確認」將返回至計畫總覽，點擊「取消」將繼續進行新增計畫。</p>
+        <div class="cancel-project-pop-buttons">
+          <button class="btn-danger" id="confirm-cancel">確認</button>
+          <button class="btn-greeno" id="cancel">取消</button>
+        </div>
+			</div>
+		</div>
+	</div>
+</div>
+
 
 {% endblock pop %}
 
@@ -233,9 +265,9 @@
             </div>
     
             <div class="btn2-area">
-                <button class="btn-greeno" href="{% url 'project_overview' %}">
+                <a class="btn-greeno cancel-create-project">
                     取消
-                </button>
+                </a>
                 <a id="validateForm" class="btn-green">
                     下一步
                 </a>
@@ -389,9 +421,9 @@
 				</div>
 			</div>
             <div class="btn2-area">
-                <button class="btn-greeno">
+                <a class="btn-greeno cancel-create-project">
                     取消
-                </button>
+                </a>
                 <a class="btn-green" id="submitForm">
                     確認送出
                 </a>
