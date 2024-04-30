@@ -1056,6 +1056,5 @@ def api_dashboard(request, chart):
 
     return JsonResponse(res)
 
-def test_crontab():
-
-    return 
+def page_404(request):
+    return render(request, 'base/404.html')
