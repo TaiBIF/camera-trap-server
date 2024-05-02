@@ -1135,7 +1135,7 @@ $(document).ready(function () {
     if (allEqual(imguuid_array)) {
 
       $('#edit-filename').html(current_row.data('filename'))
-      $('#edit-datetime').html(current_row.data('datetime'))
+      // $('#edit-datetime').html(current_row.data('datetime'))
       $('#edit-image').html(current_row.find('td').last().html())
       // 上下張按鈕控制
       $('.photode-pop .arl, .photode-pop .arr').removeClass('d-none')
@@ -1158,7 +1158,7 @@ $(document).ready(function () {
       })
     } else {
       $('#edit-filename').html('')
-      $('#edit-datetime').html('')
+      // $('#edit-datetime').html('')
       $('#edit-image').html('')
       // 隱藏上下張按鈕
       $('.photode-pop .arl, .photode-pop .arr').addClass('d-none')
@@ -1205,6 +1205,7 @@ $(document).ready(function () {
   // 編輯後送出按鈕
 
   $('.edit-submit').on('click', function () {
+    console.log($('#editForm').serialize());
     // // 記錄原本在什麼folder
     // let selected_folder = $('#select-folder option:selected').val();
 
@@ -1319,7 +1320,8 @@ function updateDataEdit(value) {
 
 
 function changeEditContent(row) {
-
+  const date = row.data('datetime').split(' ')[0];
+  const time = row.data('datetime').split(' ')[1];
   // console.log(row)
   // remove notice info
   $('#edit-studyarea, #edit-deployment, #edit-project').removeClass('notice-border')
@@ -1337,7 +1339,9 @@ function changeEditContent(row) {
   $('#edit-studyarea').val(row.data('saname'))
   $('#edit-deployment').val(row.data('dname'))
   $('#edit-filename').html(row.data('filename'))
-  $('#edit-datetime').html(row.data('datetime'))
+  // $('#edit-datetime').val(row.data('datetime'))
+  $('#edit-date').val(date)
+  $('#edit-time').val(time)
   //$('#edit-datetime').val(row['datetime'].replace(' ','T'))
   $('#edit-species').val(row.data('species'))
   $('#edit-life_stage').val(row.data('life_stage'))

@@ -852,6 +852,15 @@ def edit_image(request, pk):
             updated_dict.update({'studyarea_id': requests.get('studyarea_id')})
         if requests.get('deployment_id'):
             updated_dict.update({'deployment_id': requests.get('deployment_id')})
+        
+        date = requests.get('date')
+        time = requests.get('time')
+        if date and time:
+            datetime_str = f'{date} {time}'
+            datetime_object = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+            datetime_object = datetime_object - datetime.timedelta(hours=8)
+            datetime_object = timezone.make_aware(datetime_object, timezone=timezone.utc)
+            updated_dict.update({'datetime': datetime_object})
 
         obj = Image.objects.filter(id__in=image_id)
         # obj_ori = obj
