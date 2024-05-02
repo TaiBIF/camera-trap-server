@@ -417,7 +417,7 @@ $(document).ready(function () {
     });
 
     speciesData.sort(function(a, b) {
-        return a.species.localeCompare(b.species, 'zh-Hans', {sensitivity: 'base'}); // 筆畫排序
+        return a.species.localeCompare(b.species, 'zh-Hant-TW', {sensitivity: 'base'}); // 筆畫排序
     });
 
     // 排序完之後渲染到 html 上
