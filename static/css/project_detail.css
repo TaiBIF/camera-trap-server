@@ -1,4 +1,18 @@
 /* 2023 new veriosn UI */
+.air-datepicker {
+  z-index: 999 !important;
+}
+
+#edit-date {
+  position: relative;
+}
+
+.edit-date-cal {
+  position: absolute;
+  right: 22px;
+  top: 38px;
+  background-color: transparent;
+}
 
 
 /* select2: fixes word text wrap issues on long select values */
@@ -102,6 +116,16 @@ li .sa-title .arrup.close {
   height: 24px;
   cursor: pointer;
   top: 12px;
+  right: 15px;
+}
+
+.edit-timeclock::-webkit-calendar-picker-indicator {
+  position: absolute;
+  background: url("/static/icon/clock.svg") no-repeat top center !important;;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  top: 40px;
   right: 15px;
 }
 
