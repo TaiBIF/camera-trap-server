@@ -1220,6 +1220,12 @@ $(document).ready(function () {
       if (!allEqual(time_array)) { // 如果選擇一個以上的資料列，無法編緝時間欄位
         $('#edit-time').attr('disabled', 'disabled');
       };
+      if (!allEqual(date_array)) { // 如果選擇一個以上的資料列，無法編緝時間欄位
+        $('.edit-date-cal').addClass('d-none');
+        $('#edit-date').attr('disabled', 'disabled');
+      } else {
+        $('.edit-date-cal').removeClass('d-none');
+      };
       console.log('edit mode')
     }
 
