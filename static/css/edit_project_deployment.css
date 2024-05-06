@@ -72,3 +72,7 @@
 .is-invalid {
     border-color: #CB5757 !important;
 }
+
+.warning-text {
+    padding-bottom: 30px;
+}

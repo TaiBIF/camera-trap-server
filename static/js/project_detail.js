@@ -394,8 +394,59 @@ function updateTable(page, page_from) {
 
 }
 
+function sortSpeciesFilter() {
+  // 隱藏原先的物種篩選清單，重做一個新的清單依照筆畫排序
+
+  var speciesElements = document.querySelectorAll('.species_list_from_django'); // 清單來源
+  var speciesData = [];
+
+  speciesElements.forEach(function(element) {
+      var text = element.textContent;
+      var match = text.match(/^(.*) \((\d+)\)$/);
+      if (match) {
+          var species = match[1];
+          var count = parseInt(match[2]);
+          
+          speciesData.push({
+              species: species,
+              count: count
+          });
+      }
+  });
+
+  speciesData.sort(function(a, b) {
+      return a.species.localeCompare(b.species, 'zh-Hant-TW', {sensitivity: 'base'}); // 筆畫排序
+  });
+
+  // 排序完之後渲染到 html 上
+  speciesData.forEach(function(item) {
+      var li = document.createElement('li');
+      li.classList.add('now');
+      li.setAttribute('data-species', item.species);
+  
+      var div = document.createElement('div');
+      div.classList.add('cir-checkbox');
+  
+      var img = document.createElement('img');
+      img.classList.add('coricon');
+      img.setAttribute('src', '/static/image/correct.svg');
+  
+      var p = document.createElement('p');
+      p.textContent = item.species + ' (' + item.count + ')';
+  
+      div.appendChild(img);
+  
+      li.appendChild(div);
+      li.appendChild(p);
+
+      var speciesListContainer = document.getElementById('speciesListContainer');
+      speciesListContainer.appendChild(li);
+  });
+};
+
 
 $(document).ready(function () {
+    sortSpeciesFilter();
 
     // Parse the parameters in the URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -558,6 +609,7 @@ $(document).ready(function () {
 
   let start_date_picker = new AirDatepicker('#start_date', { locale: date_locale });
   let end_date_picker = new AirDatepicker('#end_date', { locale: date_locale });
+  let edit_date_picker = new AirDatepicker('#edit-date', { locale: date_locale });
 
 
   $('.show_start').on('click', function () {
@@ -573,6 +625,14 @@ $(document).ready(function () {
       end_date_picker.hide();
     } else {
       end_date_picker.show();
+    }
+  })
+
+  $('.edit-date-cal').on('click', function () {
+    if (edit_date_picker.visible) {
+      edit_date_picker.hide();
+    } else {
+      edit_date_picker.show();
     }
   })
 
@@ -953,6 +1013,9 @@ $(document).ready(function () {
 
 
   $('#edit_button').on('click', function () {
+
+    $('.edit-date-cal').toggleClass('d-none');
+
     if ($('#edit_button').attr('data-edit') == 'off') {
       // $('#edit_button').attr('data-edit', 'on');
       updateDataEdit('on')
@@ -1025,6 +1088,8 @@ $(document).ready(function () {
     let antler_array = []
     let animal_id_array = []
     let remarks_array = []
+    let date_array = []
+    let time_array = []
 
 
     // TODO 這邊還沒做完
@@ -1041,7 +1106,8 @@ $(document).ready(function () {
       antler_array.push(current_row.data('antler'))
       animal_id_array.push(current_row.data('animal_id'))
       remarks_array.push(current_row.data('remarks'))
-
+      date_array.push(current_row.data('datetime').split(' ')[0])
+      time_array.push(current_row.data('datetime').split(' ')[1])
     });
 
     // if (img_array.length > 1) { // TODO 或是直接按row
@@ -1083,12 +1149,14 @@ $(document).ready(function () {
     allEqual(antler_array) ? $('#edit-antler').val(antler_array[0]) : $('#edit-antler').val('');
     allEqual(animal_id_array) ? $('#edit-animal_id').val(animal_id_array[0]) : $('#edit-animal_id').val('');
     allEqual(remarks_array) ? $('#edit-remarks').val(remarks_array[0]) : $('#edit-remarks').val('');
+    allEqual(date_array) ? $('#edit-date').val(date_array[0]) : $('#edit-date').val('');
+    allEqual(time_array) ? $('#edit-time').val(time_array[0]) : $('#edit-time').val('');
 
     // image or videos
     if (allEqual(imguuid_array)) {
 
       $('#edit-filename').html(current_row.data('filename'))
-      $('#edit-datetime').html(current_row.data('datetime'))
+      // $('#edit-datetime').html(current_row.data('datetime'))
       $('#edit-image').html(current_row.find('td').last().html())
       // 上下張按鈕控制
       $('.photode-pop .arl, .photode-pop .arr').removeClass('d-none')
@@ -1111,7 +1179,7 @@ $(document).ready(function () {
       })
     } else {
       $('#edit-filename').html('')
-      $('#edit-datetime').html('')
+      // $('#edit-datetime').html('')
       $('#edit-image').html('')
       // 隱藏上下張按鈕
       $('.photode-pop .arl, .photode-pop .arr').addClass('d-none')
@@ -1149,6 +1217,15 @@ $(document).ready(function () {
     } else {
       $('.edit-content input').prop("disabled", false)
       $('.edit-footer').removeClass('d-none')
+      if (!allEqual(time_array)) { // 如果選擇一個以上的資料列，無法編緝時間欄位
+        $('#edit-time').attr('disabled', 'disabled');
+      };
+      if (!allEqual(date_array)) { // 如果選擇一個以上的資料列，且日期不同，無法日期時間欄位
+        $('.edit-date-cal').addClass('d-none');
+        $('#edit-date').attr('disabled', 'disabled');
+      } else {
+        $('.edit-date-cal').removeClass('d-none');
+      };
       console.log('edit mode')
     }
 
@@ -1238,11 +1315,11 @@ $(document).ready(function () {
               now_str = 'now'
             }
             $('.species-check-list li.all').after(`
-            <li class="${now_str}" data-species="${data['species'][i]['name']}">
+            <li class="${now_str} d-none" data-species="${data['species'][i]['name']}">
             <div class="cir-checkbox">
               <img class="coricon" src="/static/image/correct.svg">
             </div>
-            <p>${data['species'][i]['name']} (${data['species'][i]['count']})</p>
+            <p class="species_list_from_django">${data['species'][i]['name']} (${data['species'][i]['count']})</p>
             </li>
           `)
           }
@@ -1252,6 +1329,8 @@ $(document).ready(function () {
             $(this).toggleClass("now");
             $(`.species-check-list li.all`).removeClass("now");
           });
+
+          sortSpeciesFilter();
 
 
         },
@@ -1272,7 +1351,8 @@ function updateDataEdit(value) {
 
 
 function changeEditContent(row) {
-
+  const date = row.data('datetime').split(' ')[0];
+  const time = row.data('datetime').split(' ')[1];
   // console.log(row)
   // remove notice info
   $('#edit-studyarea, #edit-deployment, #edit-project').removeClass('notice-border')
@@ -1290,7 +1370,9 @@ function changeEditContent(row) {
   $('#edit-studyarea').val(row.data('saname'))
   $('#edit-deployment').val(row.data('dname'))
   $('#edit-filename').html(row.data('filename'))
-  $('#edit-datetime').html(row.data('datetime'))
+  // $('#edit-datetime').val(row.data('datetime'))
+  $('#edit-date').val(date)
+  $('#edit-time').val(time)
   //$('#edit-datetime').val(row['datetime'].replace(' ','T'))
   $('#edit-species').val(row.data('species'))
   $('#edit-life_stage').val(row.data('life_stage'))

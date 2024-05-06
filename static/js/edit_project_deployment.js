@@ -2,6 +2,24 @@ var $csrf_token = $('[name="csrfmiddlewaretoken"]').attr('value');
 let pk = $('input[name=pk]').val();
 
 $( function() {
+    $('#geodetic_datum').on('change', function() {
+        var datumOptions = ['WGS84', 'TWD97']
+        var selectedOption = this.value;
+        var previousOption = datumOptions.filter(function(option) {
+            return option !== selectedOption;
+        })[0];
+
+        $('.edit-datum-pop').removeClass('d-none');
+
+        $('#cancel-change-datum').on('click', function() { // 取消修改，恢復選項、關閉彈出視窗
+            $('#geodetic_datum').val(previousOption);
+            $('.edit-datum-pop').addClass('d-none');
+        });
+
+        $('#confirm-change-datum').on('click', function() { // 取消修改，關閉彈出視窗
+            $('.edit-datum-pop').addClass('d-none');
+        });
+    });
 
     $('.management-box .left-menu-area li:not(.now)').on('click', function(){
         location.href = $(this).data('href')

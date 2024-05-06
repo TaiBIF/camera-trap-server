@@ -196,6 +196,16 @@ $(document).ready(function () {
     if (!$(".is-invalid").length) {
       $("#createProjectForm").submit();
     };
-
 })
 
+$('.cancel-create-project').on('click', function() {
+  $('.cancel-create-pop').removeClass('d-none');
+});
+
+$('#confirm-cancel').on('click', function() {
+  window.location.href = 'overview';
+});
+
+$('#cancel').on('click', function() {
+  $('.cancel-create-pop').addClass('d-none');
+});

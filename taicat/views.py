@@ -664,125 +664,127 @@ def update_species_pie(request):
 
 
 def project_info(request, pk):
-    project = Project.objects.get(id=pk)
-    # 使用者是否有系統管理者/project_admin/總管理人的權限
-    is_authorized = check_if_authorized(request, pk)
-    is_project_authorized = False
-    
-    # 系統管理員
-    member_id = request.session.get('id', None)
-    # system_admin = Contact.objects.filter(id=member_id, is_system_admin=True).exists()
-    
-    # 團隊成員名單
-    pm_list = get_project_member(pk)
-    if (member_id in pm_list) or is_authorized:
-        is_project_authorized = True
-    else:
+    try:
+        project = Project.objects.get(id=pk)
+        # 使用者是否有系統管理者/project_admin/總管理人的權限
+        is_authorized = check_if_authorized(request, pk)
         is_project_authorized = False
-
-    # 檢查是否為受委託單位
-    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
-    
-    # 是否為公開計畫
-    is_project_public = Project.objects.filter(id=pk, is_public=True).exists()
-    
-    # 排除子樣區的母樣區
-    if is_contractor:
-        sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
-    else:
-        sa = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
-    sa_list = [str(s.id) for s in sa]
-    sa_center = [23.5, 121.2]
-    zoom = 6
-    if sa:
-        sa_point = Deployment.objects.filter(study_area_id__in=sa_list, latitude__isnull = False, longitude__isnull = False).order_by('-latitude').values('latitude', 'longitude','geodetic_datum').first()
-        if sa_point:
-            if sa_point['geodetic_datum'] == 'WGS84':
-                sa_center = [float(sa_point['latitude']),float(sa_point['longitude'])]
-            else:
-                df = pd.DataFrame({
-                            'Lat':[int(sa_point['latitude'])],
-                            'Lon':[int(sa_point['longitude'])]})
-
-                geometry = [Point(xy) for xy in zip(df.Lon, df.Lat)]
-                gdf = gpd.GeoDataFrame(df, geometry=geometry)
-
-                gdf = gdf.set_crs(epsg=3826, inplace=True)
-                gdf = gdf.to_crs(epsg=4326)
-                sa_center = [gdf.geometry.y[0],gdf.geometry.x[0]]
-
-            zoom = 8
-
-    species_count = 0
-    species_last_updated = None
-
-    query = f"SELECT SUM(count) FROM taicat_projectspecies WHERE project_id = %s;"
-    with connection.cursor() as cursor:
-        cursor.execute(query, (pk, ))
-        species_total_count = cursor.fetchall()
-        species_total_count = species_total_count[0][0]
-
-    pie_data = []
-    others = {'name': '其他物種', 'count': 0, 'y': 0}
-    other_data = []
-    # 取前8名，剩下的統一成其他
-    if species_total_count:
-        if is_contractor:
-            species_count = 0
-            others = {'name': '其他物種', 'count': 0, 'y': 0}
-            # 取前8名，剩下的統一成其他
-
-            query = Image.objects.filter(studyarea__in=sa_list).values('species').annotate(total=Count('species')).order_by('-total')
-            c = 0
-            for i in query:
-                if i['species'] == '':
-                    s_name = '未填寫'
-                else:
-                    s_name = i['species']
-                    species_count += 1
-                c += 1
-                if c < 9:
-                    pie_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
-                else:
-                    other_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
-                    others.update({'count': others['count']+i['total']})
-            if others['count'] > 0:
-                others.update({'y': round(others['count']/species_total_count*100, 2)})
-                pie_data += [others]
+        
+        # 系統管理員
+        member_id = request.session.get('id', None)
+        # system_admin = Contact.objects.filter(id=member_id, is_system_admin=True).exists()
+        
+        # 團隊成員名單
+        pm_list = get_project_member(pk)
+        if (member_id in pm_list) or is_authorized:
+            is_project_authorized = True
         else:
-            if ProjectSpecies.objects.filter(project_id=pk).exists():
-                species_count = ProjectSpecies.objects.filter(project_id=pk).exclude(name='').values('name').distinct().count()
-                species_last_updated = ProjectSpecies.objects.filter(project_id=pk).annotate(
-                    last_updated_8=ExpressionWrapper(
-                        F('last_updated') + timedelta(hours=8),
-                        output_field=DateTimeField()
-                    )).latest('last_updated_8').last_updated_8
+            is_project_authorized = False
+
+        # 檢查是否為受委託單位
+        is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
+        
+        # 是否為公開計畫
+        is_project_public = Project.objects.filter(id=pk, is_public=True).exists()
+        
+        # 排除子樣區的母樣區
+        if is_contractor:
+            sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+        else:
+            sa = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
+        sa_list = [str(s.id) for s in sa]
+        sa_center = [23.5, 121.2]
+        zoom = 6
+        if sa:
+            sa_point = Deployment.objects.filter(study_area_id__in=sa_list, latitude__isnull = False, longitude__isnull = False).order_by('-latitude').values('latitude', 'longitude','geodetic_datum').first()
+            if sa_point:
+                if sa_point['geodetic_datum'] == 'WGS84':
+                    sa_center = [float(sa_point['latitude']),float(sa_point['longitude'])]
+                else:
+                    df = pd.DataFrame({
+                                'Lat':[int(sa_point['latitude'])],
+                                'Lon':[int(sa_point['longitude'])]})
+
+                    geometry = [Point(xy) for xy in zip(df.Lon, df.Lat)]
+                    gdf = gpd.GeoDataFrame(df, geometry=geometry)
+
+                    gdf = gdf.set_crs(epsg=3826, inplace=True)
+                    gdf = gdf.to_crs(epsg=4326)
+                    sa_center = [gdf.geometry.y[0],gdf.geometry.x[0]]
+
+                zoom = 8
+
+        species_count = 0
+        species_last_updated = None
+
+        query = f"SELECT SUM(count) FROM taicat_projectspecies WHERE project_id = %s;"
+        with connection.cursor() as cursor:
+            cursor.execute(query, (pk, ))
+            species_total_count = cursor.fetchall()
+            species_total_count = species_total_count[0][0]
+
+        pie_data = []
+        others = {'name': '其他物種', 'count': 0, 'y': 0}
+        other_data = []
+        # 取前8名，剩下的統一成其他
+        if species_total_count:
+            if is_contractor:
+                species_count = 0
+                others = {'name': '其他物種', 'count': 0, 'y': 0}
+                # 取前8名，剩下的統一成其他
+
+                query = Image.objects.filter(studyarea__in=sa_list).values('species').annotate(total=Count('species')).order_by('-total')
                 c = 0
-                for i in ProjectSpecies.objects.filter(project_id=pk).order_by('-count'):
-                    s_name = '未填寫' if i.name == '' else i.name
+                for i in query:
+                    if i['species'] == '':
+                        s_name = '未填寫'
+                    else:
+                        s_name = i['species']
+                        species_count += 1
                     c += 1
                     if c < 9:
-                        pie_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                        pie_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
                     else:
-                        if is_project_authorized:
-                            other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
-                            others.update({'count': others['count']+i.count})
-                        else:
-                            if not re.search("人",s_name):
-                                other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
-                                others.update({'count': others['count']+i.count})
-                            
+                        other_data += [{'name': s_name, 'y': round(i['total']/species_total_count*100, 2), 'count': i['total']}]
+                        others.update({'count': others['count']+i['total']})
                 if others['count'] > 0:
                     others.update({'y': round(others['count']/species_total_count*100, 2)})
                     pie_data += [others]
+            else:
+                if ProjectSpecies.objects.filter(project_id=pk).exists():
+                    species_count = ProjectSpecies.objects.filter(project_id=pk).exclude(name='').values('name').distinct().count()
+                    species_last_updated = ProjectSpecies.objects.filter(project_id=pk).annotate(
+                        last_updated_8=ExpressionWrapper(
+                            F('last_updated') + timedelta(hours=8),
+                            output_field=DateTimeField()
+                        )).latest('last_updated_8').last_updated_8
+                    c = 0
+                    for i in ProjectSpecies.objects.filter(project_id=pk).order_by('-count'):
+                        s_name = '未填寫' if i.name == '' else i.name
+                        c += 1
+                        if c < 9:
+                            pie_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                        else:
+                            if is_project_authorized:
+                                other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                                others.update({'count': others['count']+i.count})
+                            else:
+                                if not re.search("人",s_name):
+                                    other_data += [{'name': s_name, 'y': round(i.count/species_total_count*100, 2), 'count': i.count}]
+                                    others.update({'count': others['count']+i.count})
+                                
+                    if others['count'] > 0:
+                        others.update({'y': round(others['count']/species_total_count*100, 2)})
+                        pie_data += [others]
 
 
-    return render(request, 'project/project_info.html', {'pk': pk, 'project': project, 'is_authorized': is_authorized,
-                                                        'sa_point': sa_center, 'species_count': species_count, 'sa': sa,
-                                                        'species_last_updated': species_last_updated, 'pie_data': pie_data,
-                                                        'other_data': other_data, 'sa_list': sa_list, 'zoom':zoom, 
-                                                        'is_project_authorized': is_project_authorized,'is_project_public':is_project_public})
-
+        return render(request, 'project/project_info.html', {'pk': pk, 'project': project, 'is_authorized': is_authorized,
+                                                            'sa_point': sa_center, 'species_count': species_count, 'sa': sa,
+                                                            'species_last_updated': species_last_updated, 'pie_data': pie_data,
+                                                            'other_data': other_data, 'sa_list': sa_list, 'zoom':zoom, 
+                                                            'is_project_authorized': is_project_authorized,'is_project_public':is_project_public})
+    except:
+        return render(request, 'base/404.html')
 
 def delete_data(request, pk):
     species_list = []
@@ -850,6 +852,15 @@ def edit_image(request, pk):
             updated_dict.update({'studyarea_id': requests.get('studyarea_id')})
         if requests.get('deployment_id'):
             updated_dict.update({'deployment_id': requests.get('deployment_id')})
+        
+        date = requests.get('date')
+        time = requests.get('time')
+        if date and time:
+            datetime_str = f'{date} {time}'
+            datetime_object = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+            datetime_object = datetime_object - datetime.timedelta(hours=8)
+            datetime_object = timezone.make_aware(datetime_object, timezone=timezone.utc)
+            updated_dict.update({'datetime': datetime_object})
 
         obj = Image.objects.filter(id__in=image_id)
         # obj_ori = obj
@@ -984,6 +995,24 @@ def edit_image(request, pk):
                 for i, col in enumerate(columns):
                     row_dict[col.name] = row[i]
                 results.append(row_dict)
+        
+        # taicat_projectstat 修改
+        if project_id == pk:
+            image_latest_date = Image.objects.filter(project_id=pk).latest('datetime').datetime
+            image_earliest_date = Image.objects.filter(project_id=pk).earliest('datetime').datetime
+
+            print(f'image_latest_date:{image_latest_date}')
+
+            image_latest_date += datetime.timedelta(days=1)
+            image_earliest_date -= datetime.timedelta(days=1)
+
+            ProjectStat.objects.filter(project_id=pk).update(latest_date=image_latest_date, earliest_date=image_earliest_date, last_updated=now)
+
+            # 如果修改的日期超出計畫原先計算的最早以及最晚日期，直接改掉 taicat_projectstat 中的日期
+            # if datetime_object > project_stat.latest_date:
+            #     ProjectStat.objects.filter(project_id=pk).update(latest_date=datetime_object, last_updated=now)
+            # elif datetime_object < project_stat.earliest_date:
+            #     ProjectStat.objects.filter(project_id=pk).update(earliest_date=datetime_object, last_updated=now)
 
         response = {'species': list(species), 'folder_list': results}
         return JsonResponse(response, safe=False)  # or JsonResponse({'data': data})
@@ -1515,242 +1544,245 @@ def project_overview(request):
 
 
 def project_detail(request, pk):
-    folder = request.GET.get('folder')
+    try:
+        folder = request.GET.get('folder')
 
 
-    folder_list = []
-    with connection.cursor() as cursor:
-        query = f"""SELECT folder_name,
+        folder_list = []
+        with connection.cursor() as cursor:
+            query = f"""SELECT folder_name,
+                            to_char(folder_last_updated AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS folder_last_updated
+                            FROM taicat_imagefolder
+                            WHERE project_id = %s
+                            ORDER BY folder_last_updated desc"""
+            cursor.execute(query, (pk, ))
+            rows = cursor.fetchall()
+            columns = list(cursor.description)
+            for row in rows:
+                row_dict = {}
+                for i, col in enumerate(columns):
+                    row_dict[col.name] = row[i]
+                folder_list.append(row_dict)
+
+
+        # 使用者是否有系統管理者/project_admin/總管理人的權限
+        is_authorized = check_if_authorized(request, pk)
+        is_project_authorized = False
+        is_project_public = False
+
+        member_id = request.session.get('id', None)
+
+        # 團隊成員
+        member_list = get_project_member(pk)
+        if is_authorized or (member_id in member_list):
+            is_project_authorized = True
+        # 公開
+        if Project.objects.filter(id=pk, is_public=True).exists():
+            is_project_public = True
+
+        # 檢查是否為受委托廠商，是的話限制 species, studay_area 回傳的內容
+        is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
+        contractor_sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
+        
+        # with connection.cursor() as cursor:
+        #     query = """SELECT name, funding_agency, code, principal_investigator, 
+        #                     to_char(start_date, 'YYYY-MM-DD'), to_char(end_date, 'YYYY-MM-DD') 
+        #                     FROM taicat_project WHERE id= %s"""
+        #     cursor.execute(query, (pk, ))
+        #     project_info = cursor.fetchone()
+        # project_info = list(project_info)
+        project_info = Project.objects.get(id=pk)
+        deployment = Deployment.objects.filter(project_id=pk).order_by('name')
+        # folder name takes long time
+        # folder_list = Image.objects.filter(project_id=pk).order_by('folder_name').distinct('folder_name')
+        now = timezone.now()
+        # 是否跟新原始資料的紀錄
+        update = False
+        last_updated = ProjectStat.objects.filter(project_id=pk).aggregate(Min('last_updated'))['last_updated__min']
+        if last_updated:
+            if Image.objects.filter(created__gte=last_updated, project_id=pk).exists():
+                update = True
+        else:
+            update = True
+        if update:
+            # update project stat
+            ProjectStat.objects.filter(project_id=pk).update(last_updated=now)
+            c = Image.objects.filter(project_id=pk).count()
+            if last_updated:
+                image_objects = Image.objects.filter(project_id=pk, created__gte=last_updated)
+            else:
+                image_objects = Image.objects.filter(project_id=pk)
+            latest_date = image_objects.latest('datetime').datetime
+            earliest_date = image_objects.earliest('datetime').datetime
+            if ProjectStat.objects.filter(project_id=pk).exists():
+                p = ProjectStat.objects.get(project_id=pk)
+                p.num_sa = StudyArea.objects.filter(project_id=pk).count()
+                p.num_deployment = Deployment.objects.filter(project_id=pk).count()
+                p.num_data = c
+                p.last_updated = now
+                if not ProjectStat.objects.get(project_id=pk).latest_date or latest_date > ProjectStat.objects.get(project_id=pk).latest_date:
+                    p.latest_date = latest_date
+                if not ProjectStat.objects.get(project_id=pk).earliest_date or earliest_date < ProjectStat.objects.get(project_id=pk).earliest_date:
+                    p.earliest_date = earliest_date
+                p.save()
+            else:
+                p = ProjectStat(
+                    project_id=pk,
+                    num_sa=StudyArea.objects.filter(project_id=pk).count(),
+                    num_deployment=Deployment.objects.filter(project_id=pk).count(),
+                    num_data=c,
+                    last_updated=now,
+                    latest_date=latest_date,
+                    earliest_date=earliest_date)
+                p.save()
+        # update project species
+        update = False
+        last_updated = ProjectSpecies.objects.filter(project_id=pk).aggregate(Min('last_updated'))['last_updated__min']
+        if last_updated:
+            if Image.objects.filter(last_updated__gte=last_updated, project_id=pk).exists():
+                update = True
+        else:
+            update = True
+        if update:
+            ProjectSpecies.objects.filter(project_id=pk).update(last_updated=now)
+            query = Image.objects.filter(project_id=pk).values('species').annotate(total=Count('species')).order_by('-total')
+            for q in query:
+                # print(q['species'], q['total'])
+                if p_sp := ProjectSpecies.objects.filter(name=q['species'], project_id=pk).first():
+                    p_sp.count = q['total']
+                    p_sp.last_updated = now
+                    p_sp.save()
+                else:
+                    q_species = q['species'] if q['species'] else ''
+                    if q['total']:
+                        p_sp = ProjectSpecies(
+                            name=q_species,
+                            last_updated=now,
+                            count=q['total'],
+                            project_id=pk)
+                        p_sp.save()
+                        
+        # update imagefolder table
+        # update = False
+        last_updated = ImageFolder.objects.filter(project_id=pk).aggregate(Min('last_updated'))['last_updated__min']
+        # has_new = Image.objects.exclude(folder_name='').filter(last_updated__gte=last_updated, project_id=pk)
+        if last_updated:
+            has_new = Image.objects.exclude(folder_name='').filter(last_updated__gte=last_updated, project_id=pk)
+        else:
+            has_new = Image.objects.exclude(folder_name='').filter(project_id=pk)
+        if has_new.exists():
+            ImageFolder.objects.filter(project_id=pk).update(last_updated=now)
+            if last_updated:
+                query = Image.objects.exclude(folder_name='').filter(last_updated__gte=last_updated, project_id=pk).order_by('folder_name').distinct('folder_name').values('folder_name')
+            else:
+                query = Image.objects.exclude(folder_name='').filter(project_id=pk).order_by('folder_name').distinct('folder_name').values('folder_name')
+            for q in query:
+                if last_updated:
+                    f_last_updated = Image.objects.filter(last_updated__gte=last_updated, project_id=pk, folder_name=q['folder_name']).aggregate(Max('last_updated'))['last_updated__max']
+                else:
+                    f_last_updated = Image.objects.filter(project_id=pk, folder_name=q['folder_name']).aggregate(Max('last_updated'))['last_updated__max']
+                if img_f := ImageFolder.objects.filter(folder_name=q['folder_name'], project_id=pk).first():
+                    img_f.folder_last_updated = f_last_updated
+                    img_f.last_updated = now
+                    img_f.save()
+                else:
+                    img_f = ImageFolder(
+                        folder_name=q['folder_name'],
+                        folder_last_updated=f_last_updated,
+                        project_id=pk)
+                    img_f.save()
+        if is_authorized:
+            species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count')
+        elif is_contractor:
+            species_queryset = Image.objects.filter(studyarea_id__in=contractor_sa).exclude(species__iregex=r'人').values('species').annotate(count=Count('species'))
+            species = [(item['count'], item['species']) for item in species_queryset]
+        else:
+            species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count').exclude(name__iregex=r'人')
+
+        if ProjectStat.objects.filter(project_id=pk).first().latest_date and ProjectStat.objects.filter(project_id=pk).first().earliest_date:
+            latest_date = ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d")
+            earliest_date = ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d")
+        else:
+            latest_date, earliest_date = None, None
+
+        with connection.cursor() as cursor:
+            query = """SELECT folder_name,
                         to_char(folder_last_updated AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS folder_last_updated
                         FROM taicat_imagefolder
                         WHERE project_id = %s
                         ORDER BY folder_last_updated desc"""
-        cursor.execute(query, (pk, ))
-        rows = cursor.fetchall()
-        columns = list(cursor.description)
-        for row in rows:
-            row_dict = {}
-            for i, col in enumerate(columns):
-                row_dict[col.name] = row[i]
-            folder_list.append(row_dict)
-
-
-    # 使用者是否有系統管理者/project_admin/總管理人的權限
-    is_authorized = check_if_authorized(request, pk)
-    is_project_authorized = False
-    is_project_public = False
-
-    member_id = request.session.get('id', None)
-
-    # 團隊成員
-    member_list = get_project_member(pk)
-    if is_authorized or (member_id in member_list):
-        is_project_authorized = True
-    # 公開
-    if Project.objects.filter(id=pk, is_public=True).exists():
-        is_project_public = True
-
-    # 檢查是否為受委托廠商，是的話限制 species, studay_area 回傳的內容
-    is_contractor = ProjectMember.objects.filter(project_id=pk, member_id=member_id, role='contractor').exists()
-    contractor_sa = StudyArea.objects.filter(projectmember__project_id=pk, projectmember__member_id=member_id, projectmember__role='contractor')
-    
-    # with connection.cursor() as cursor:
-    #     query = """SELECT name, funding_agency, code, principal_investigator, 
-    #                     to_char(start_date, 'YYYY-MM-DD'), to_char(end_date, 'YYYY-MM-DD') 
-    #                     FROM taicat_project WHERE id= %s"""
-    #     cursor.execute(query, (pk, ))
-    #     project_info = cursor.fetchone()
-    # project_info = list(project_info)
-    project_info = Project.objects.get(id=pk)
-    deployment = Deployment.objects.filter(project_id=pk).order_by('name')
-    # folder name takes long time
-    # folder_list = Image.objects.filter(project_id=pk).order_by('folder_name').distinct('folder_name')
-    now = timezone.now()
-    # 是否跟新原始資料的紀錄
-    update = False
-    last_updated = ProjectStat.objects.filter(project_id=pk).aggregate(Min('last_updated'))['last_updated__min']
-    if last_updated:
-        if Image.objects.filter(created__gte=last_updated, project_id=pk).exists():
-            update = True
-    else:
-        update = True
-    if update:
-        # update project stat
-        ProjectStat.objects.filter(project_id=pk).update(last_updated=now)
-        c = Image.objects.filter(project_id=pk).count()
-        if last_updated:
-            image_objects = Image.objects.filter(project_id=pk, created__gte=last_updated)
-        else:
-            image_objects = Image.objects.filter(project_id=pk)
-        latest_date = image_objects.latest('datetime').datetime
-        earliest_date = image_objects.earliest('datetime').datetime
-        if ProjectStat.objects.filter(project_id=pk).exists():
-            p = ProjectStat.objects.get(project_id=pk)
-            p.num_sa = StudyArea.objects.filter(project_id=pk).count()
-            p.num_deployment = Deployment.objects.filter(project_id=pk).count()
-            p.num_data = c
-            p.last_updated = now
-            if not ProjectStat.objects.get(project_id=pk).latest_date or latest_date > ProjectStat.objects.get(project_id=pk).latest_date:
-                p.latest_date = latest_date
-            if not ProjectStat.objects.get(project_id=pk).earliest_date or earliest_date < ProjectStat.objects.get(project_id=pk).earliest_date:
-                p.earliest_date = earliest_date
-            p.save()
-        else:
-            p = ProjectStat(
-                project_id=pk,
-                num_sa=StudyArea.objects.filter(project_id=pk).count(),
-                num_deployment=Deployment.objects.filter(project_id=pk).count(),
-                num_data=c,
-                last_updated=now,
-                latest_date=latest_date,
-                earliest_date=earliest_date)
-            p.save()
-    # update project species
-    update = False
-    last_updated = ProjectSpecies.objects.filter(project_id=pk).aggregate(Min('last_updated'))['last_updated__min']
-    if last_updated:
-        if Image.objects.filter(last_updated__gte=last_updated, project_id=pk).exists():
-            update = True
-    else:
-        update = True
-    if update:
-        ProjectSpecies.objects.filter(project_id=pk).update(last_updated=now)
-        query = Image.objects.filter(project_id=pk).values('species').annotate(total=Count('species')).order_by('-total')
-        for q in query:
-            # print(q['species'], q['total'])
-            if p_sp := ProjectSpecies.objects.filter(name=q['species'], project_id=pk).first():
-                p_sp.count = q['total']
-                p_sp.last_updated = now
-                p_sp.save()
-            else:
-                q_species = q['species'] if q['species'] else ''
-                if q['total']:
-                    p_sp = ProjectSpecies(
-                        name=q_species,
-                        last_updated=now,
-                        count=q['total'],
-                        project_id=pk)
-                    p_sp.save()
-                    
-    # update imagefolder table
-    # update = False
-    last_updated = ImageFolder.objects.filter(project_id=pk).aggregate(Min('last_updated'))['last_updated__min']
-    # has_new = Image.objects.exclude(folder_name='').filter(last_updated__gte=last_updated, project_id=pk)
-    if last_updated:
-        has_new = Image.objects.exclude(folder_name='').filter(last_updated__gte=last_updated, project_id=pk)
-    else:
-        has_new = Image.objects.exclude(folder_name='').filter(project_id=pk)
-    if has_new.exists():
-        ImageFolder.objects.filter(project_id=pk).update(last_updated=now)
-        if last_updated:
-            query = Image.objects.exclude(folder_name='').filter(last_updated__gte=last_updated, project_id=pk).order_by('folder_name').distinct('folder_name').values('folder_name')
-        else:
-            query = Image.objects.exclude(folder_name='').filter(project_id=pk).order_by('folder_name').distinct('folder_name').values('folder_name')
-        for q in query:
-            if last_updated:
-                f_last_updated = Image.objects.filter(last_updated__gte=last_updated, project_id=pk, folder_name=q['folder_name']).aggregate(Max('last_updated'))['last_updated__max']
-            else:
-                f_last_updated = Image.objects.filter(project_id=pk, folder_name=q['folder_name']).aggregate(Max('last_updated'))['last_updated__max']
-            if img_f := ImageFolder.objects.filter(folder_name=q['folder_name'], project_id=pk).first():
-                img_f.folder_last_updated = f_last_updated
-                img_f.last_updated = now
-                img_f.save()
-            else:
-                img_f = ImageFolder(
-                    folder_name=q['folder_name'],
-                    folder_last_updated=f_last_updated,
-                    project_id=pk)
-                img_f.save()
-    if is_authorized:
-        species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count')
-    elif is_contractor:
-        species_queryset = Image.objects.filter(studyarea_id__in=contractor_sa).exclude(species__iregex=r'人').values('species').annotate(count=Count('species'))
-        species = [(item['count'], item['species']) for item in species_queryset]
-    else:
-        species = ProjectSpecies.objects.filter(project_id=pk).values_list('count', 'name').order_by('count').exclude(name__iregex=r'人')
-
-    if ProjectStat.objects.filter(project_id=pk).first().latest_date and ProjectStat.objects.filter(project_id=pk).first().earliest_date:
-        latest_date = ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d")
-        earliest_date = ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d")
-    else:
-        latest_date, earliest_date = None, None
-
-    with connection.cursor() as cursor:
-        query = """SELECT folder_name,
-                    to_char(folder_last_updated AT TIME ZONE 'Asia/Taipei', 'YYYY-MM-DD HH24:MI:SS') AS folder_last_updated
-                    FROM taicat_imagefolder
-                    WHERE project_id = %s
-                    ORDER BY folder_last_updated desc"""
-        cursor.execute(query, (pk, ))
-        folder_list = cursor.fetchall()
-        columns = list(cursor.description)
-        results = []
-        for row in folder_list:
-            row_dict = {}
-            for i, col in enumerate(columns):
-                row_dict[col.name] = row[i]
-            results.append(row_dict)
-    # edit permission
-    user_id = request.session.get('id', None)
-    
-    # 系統管理員 / 個別計畫承辦人 / 計畫總管理人 跟 check_if_authorized (系統管理者/project_admin/總管理人的權限)結果一樣
-    editable = False
-    if user_id:
-        # 系統管理員 / 個別計畫承辦人
-        if Contact.objects.filter(id=user_id, is_system_admin=True).first() or ProjectMember.objects.filter(member_id=user_id, role="project_admin", project_id=pk):
-            editable = True
-        # 計畫總管理人
-        elif Contact.objects.filter(id=user_id, is_organization_admin=True):
-            organization_id = Contact.objects.filter(id=user_id, is_organization_admin=True).values('organization').first()['organization']
-            if Organization.objects.filter(id=organization_id, projects=pk):
+            cursor.execute(query, (pk, ))
+            folder_list = cursor.fetchall()
+            columns = list(cursor.description)
+            results = []
+            for row in folder_list:
+                row_dict = {}
+                for i, col in enumerate(columns):
+                    row_dict[col.name] = row[i]
+                results.append(row_dict)
+        # edit permission
+        user_id = request.session.get('id', None)
+        
+        # 系統管理員 / 個別計畫承辦人 / 計畫總管理人 跟 check_if_authorized (系統管理者/project_admin/總管理人的權限)結果一樣
+        editable = False
+        if user_id:
+            # 系統管理員 / 個別計畫承辦人
+            if Contact.objects.filter(id=user_id, is_system_admin=True).first() or ProjectMember.objects.filter(member_id=user_id, role="project_admin", project_id=pk):
                 editable = True
+            # 計畫總管理人
+            elif Contact.objects.filter(id=user_id, is_organization_admin=True):
+                organization_id = Contact.objects.filter(id=user_id, is_organization_admin=True).values('organization').first()['organization']
+                if Organization.objects.filter(id=organization_id, projects=pk):
+                    editable = True
 
-    if is_contractor:
-        study_area = StudyArea.objects.filter(project_id=pk, id__in=contractor_sa).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
-        print(f'study_area:{study_area}')
-    else:        
-        study_area = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
-    # sa_list = Project.objects.get(pk=pk).get_sa_list()
-    # sa_d_list = Project.objects.get(pk=pk).get_sa_d_list()
-    if editable:
-        pid_list = get_my_project_list(user_id)
-        projects = Project.objects.filter(pk__in=pid_list)
-        project_list = []
-        for p in projects:
-            project_list += [{'label': p.name, 'value': p.id}]
-    else:
-        project_list = []
-    tmp_county_list = Deployment.objects.filter(project=pk).values("county").distinct("county").exclude(county__exact='').exclude(county__exact=None)
-    tmp=[]
-    for i in tmp_county_list:
-        tmp.append(i['county'])
-    county_list = ParameterCode.objects.filter(type='county',parametername__in= tmp).values("name","type","parametername")
-    
-    tmp_protectedarea_list = Deployment.objects.filter(project=pk).values("protectedarea").distinct("protectedarea").exclude(protectedarea__exact='').exclude(protectedarea__exact=None)
-    tmp_protectedarea = set()
-    for i in tmp_protectedarea_list:
-        item = i['protectedarea'].split(',')
-        for j in item:
-            tmp_protectedarea.add(j)
-    protectedarea_list = ParameterCode.objects.filter(type='protectedarea',parametername__in= tmp_protectedarea).order_by('parametername').values("name","type","parametername")
+        if is_contractor:
+            study_area = StudyArea.objects.filter(project_id=pk, id__in=contractor_sa).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
+            print(f'study_area:{study_area}')
+        else:        
+            study_area = StudyArea.objects.filter(project_id=pk).exclude(id__in=StudyArea.objects.filter(parent_id__isnull=False).values_list('parent_id', flat=True)).order_by('name')
+        # sa_list = Project.objects.get(pk=pk).get_sa_list()
+        # sa_d_list = Project.objects.get(pk=pk).get_sa_d_list()
+        if editable:
+            pid_list = get_my_project_list(user_id)
+            projects = Project.objects.filter(pk__in=pid_list)
+            project_list = []
+            for p in projects:
+                project_list += [{'label': p.name, 'value': p.id}]
+        else:
+            project_list = []
+        tmp_county_list = Deployment.objects.filter(project=pk).values("county").distinct("county").exclude(county__exact='').exclude(county__exact=None)
+        tmp=[]
+        for i in tmp_county_list:
+            tmp.append(i['county'])
+        county_list = ParameterCode.objects.filter(type='county',parametername__in= tmp).values("name","type","parametername")
+        
+        tmp_protectedarea_list = Deployment.objects.filter(project=pk).values("protectedarea").distinct("protectedarea").exclude(protectedarea__exact='').exclude(protectedarea__exact=None)
+        tmp_protectedarea = set()
+        for i in tmp_protectedarea_list:
+            item = i['protectedarea'].split(',')
+            for j in item:
+                tmp_protectedarea.add(j)
+        protectedarea_list = ParameterCode.objects.filter(type='protectedarea',parametername__in= tmp_protectedarea).order_by('parametername').values("name","type","parametername")
 
-    altitude_range = Deployment.objects.filter(project_id=pk,deprecated=False).aggregate(Max("altitude"), Min("altitude"))
-    altitude__max = altitude_range['altitude__max'] if altitude_range['altitude__max'] != None else 0
-    altitude__min = altitude_range['altitude__min'] if altitude_range['altitude__min'] != None else 0
+        altitude_range = Deployment.objects.filter(project_id=pk,deprecated=False).aggregate(Max("altitude"), Min("altitude"))
+        altitude__max = altitude_range['altitude__max'] if altitude_range['altitude__max'] != None else 0
+        altitude__min = altitude_range['altitude__min'] if altitude_range['altitude__min'] != None else 0
 
-    remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
+        remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
 
-    return render(request, 'project/project_detail.html', {
-        'project_info': project_info, 'species': species, 'pk': pk,
-        'study_area': study_area, 'deployment': deployment, 'folder': folder,
-        'earliest_date': earliest_date, 'latest_date': latest_date,
-        'editable': editable, 'is_authorized': is_authorized,
-        'folder_list': results, 
-        'projects': project_list, 'is_project_authorized': is_project_authorized,'is_project_public':is_project_public,
-        'county_list':county_list,'protectedarea_list':protectedarea_list,
-        'altitude__min':altitude__min,'altitude__max':altitude__max, #'sa_list': list(sa_list),'sa_d_list': sa_d_list, 
-        'remarks': remarks
-    })
+        return render(request, 'project/project_detail.html', {
+            'project_info': project_info, 'species': species, 'pk': pk,
+            'study_area': study_area, 'deployment': deployment, 'folder': folder,
+            'earliest_date': earliest_date, 'latest_date': latest_date,
+            'editable': editable, 'is_authorized': is_authorized,
+            'folder_list': results, 
+            'projects': project_list, 'is_project_authorized': is_project_authorized,'is_project_public':is_project_public,
+            'county_list':county_list,'protectedarea_list':protectedarea_list,
+            'altitude__min':altitude__min,'altitude__max':altitude__max, #'sa_list': list(sa_list),'sa_d_list': sa_d_list, 
+            'remarks': remarks
+        })
+    except:
+        return render(request, 'base/404.html')
 
 
 def update_edit_autocomplete(request):
@@ -2400,7 +2432,7 @@ def project_oversight(request, pk):
                 'year_list': year_list,
             })
     except:
-        return HttpResponse('404')
+        return render(request, 'base/404.html')
         #for sa in data[year]:
         #    for d in sa['items']:
         # print (sa['name'], d['id'], d['name'])

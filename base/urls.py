@@ -34,4 +34,5 @@ urlpatterns = [
     path('desktop_login_verify/', views.desktop_login_verify, name='desktop-login-verify'),
     path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('api/dashboard/<chart>/', views.api_dashboard, name='api-dashboard'),
+    path('404', views.page_404, name='page_404'),
 ]

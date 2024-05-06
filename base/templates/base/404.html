@@ -1,0 +1,31 @@
+{% extends 'base/base.html' %} {% block head %} {% load static %} {% endblock head %} {% block style %}
+<link href="{% static 'css/404.css' %}" rel="stylesheet">
+{% endblock %} 
+
+{% block title %}404 | {% endblock title %}
+
+
+{% block body %}
+<div class="main-box">
+    <div class="main-title flex-spb">
+        <div class="flex-boxleft">
+            <h2>抱歉，頁面未找到</h2>
+        </div>
+    </div>
+
+    <div class="w-100box">
+        <h3 class="light-green">我們很抱歉，您請求的頁面不存在。可能是由於以下原因之一：</h3>
+        <ol>
+            <li>您輸入的網址有誤。請檢查您的網址是否正確，並確保拼寫無誤。</li>
+            <li>您訪問的頁面已被移動、刪除或暫時無法使用。</li>
+        </ol>
+        <h3 class="light-green">您可以嘗試以下方法解決這個問題：</h3>
+        <ol>
+            <li>檢查並修正您的網址，然後再次嘗試。</li>
+            <li>返回<a href="{% url 'home' %}">首頁</a>，並嘗試從頭尋找您需要的內容。</li>
+            <li>使用網站上的搜尋功能來尋找您需要的內容。</li>
+        </ol>
+        <div>如果您對此仍有疑問，請隨時<a href="{% url 'contact-us' %}">聯絡我們</a>。感謝您的理解與支持。</div>
+    </div>
+</div>
+{% endblock body %}
