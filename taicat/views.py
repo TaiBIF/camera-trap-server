@@ -1001,8 +1001,10 @@ def edit_image(request, pk):
             project_stat = ProjectStat.objects.filter(project_id=pk).first()
             image_latest_date = Image.objects.latest('datetime').datetime
             image_earliest_date = Image.objects.earliest('datetime').datetime
-            print(f'image_latest_date:{image_latest_date}')
-            print(f'image_earliest_date:{image_earliest_date}')
+
+            image_latest_date = Image.objects.latest('datetime').datetime + datetime.timedelta(days=1)
+            image_earliest_date = Image.objects.earliest('datetime').datetime - datetime.timedelta(days=1)
+            
             ProjectStat.objects.filter(project_id=pk).update(latest_date=image_latest_date, earliest_date=image_earliest_date, last_updated=now)
 
             # 如果修改的日期超出計畫原先計算的最早以及最晚日期，直接改掉 taicat_projectstat 中的日期
