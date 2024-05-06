@@ -928,6 +928,16 @@ def edit_image(request, pk):
                     project_id=project_id)
                 p_sp.save()
 
+        # taicat_projectstat 修改
+        if project_id == pk:
+            project_stat = ProjectStat.objects.filter(project_id=pk).first()
+
+            # 如果修改的日期超出計畫原先計算的最早以及最晚日期，直接改掉 taicat_projectstat 中的日期
+            if datetime_object > project_stat.latest_date:
+                ProjectStat.objects.filter(project_id=pk).update(latest_date=datetime_object, last_updated=now)
+            elif datetime_object < project_stat.earliest_date:
+                ProjectStat.objects.filter(project_id=pk).update(earliest_date=datetime_object, last_updated=now)
+
         if project_id and project_id != pk:
             # project_stat
             latest_date = obj.latest('datetime').datetime
