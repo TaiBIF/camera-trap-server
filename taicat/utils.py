@@ -811,9 +811,25 @@ def apply_search_filter_projects(projects, query):
         if sa_s := proj.get('studyareas'):
             studyarea_ids = [x['id'] for x in sa_s]
             qlist.append(Q(studyarea_id__in=studyarea_ids))
-        if len(qlist) == 0:
-            if p := proj.get('project'):
-                qlist.append(Q(project_id=p['id']))
+
+        if sa_s := proj.get('mix'):
+            mix_ids = [x['id'] for x in sa_s]
+            sa_ids = []
+            dep_ids = []
+            for mix_id in mix_ids:
+                if '[studyarea]' in mix_id:
+                    sa_ids.append(mix_id.replace('[studyarea]', ''))
+                else:
+                    dep_ids.append(mix_id)
+
+            if len(sa_ids):
+                qlist.append(Q(studyarea_id__in=sa_ids))
+            if len(dep_ids):
+                qlist.append(Q(deployment_id__in=dep_ids))
+
+            if len(mix_ids) == 0:
+                if p := proj.get('project'):
+                    qlist.append(Q(project_id=p['id']))
 
     if len(qlist) > 0:
         query = query.filter(reduce(operator.or_, qlist))
