@@ -366,16 +366,27 @@ function ValidateEmail(inputText){
         let mixID = `filter-project${k[1]}-mix`;
         //let saID = `filter-project${k[1]}-studyareas`;
         //let depID = `filter-project${k[1]}-deployments`;
+        let studyareas = [];
+        let deployments = [];
+        $(`#${mixID}`).select2('data').forEach((mix) =>{
+          if (mix.id.indexOf('[studyarea]') >= 0) {
+            studyareas.push({id: mix.id.replace('[studyarea]', ''), name: mix.text});
+          } else {
+            deployments.push({id: mix.id, name: mix.text});
+          }
+        });
+
         cd['projects'].push({
           project: projectMap[obj[name]].project,
-          mix: $(`#${mixID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
           //studyareas: $(`#${saID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
           //deployments: $(`#${depID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
+          studyareas: studyareas,
+          deployments: deployments,
         });
       }
     }
-    //console.log('cleaned:', cd);
 
+    //console.log('cleaned:', cd);
     return cd;
   };
 
@@ -392,7 +403,6 @@ function ValidateEmail(inputText){
     });
 
     let url = `/api/search?filter=${filterDumps}&pagination=${paginationDumps}`;
-    console.log('fetch:', url);
 
     setLoading(true);
 
