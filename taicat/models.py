@@ -662,9 +662,8 @@ class Deployment(models.Model):
             #datetime__year=year,
             #datetime__month=month,
             datetime__range=[day_start, day_end],
-            species=species
-        ).order_by('datetime')
-        # print(day_start, day_end)
+            species=species,
+        ).exclude(is_duplicated='Y').order_by('datetime')
         # by_species = query_ym.values('species').annotate(count=Count('species'))
         last_datetime = None
         image_count = 0 # OI3
@@ -674,7 +673,11 @@ class Deployment(models.Model):
         delta_count = 0
         delta_count_oi1 = 0
         exist_animals = []
-        rows = list(query_ym_sp.values('id', 'datetime', 'animal_id').all())
+
+        rows = query_ym_sp.values('id', 'datetime', 'animal_id').all()
+        #print(rows.query)
+        #print(len(rows))
+
         # OI1, OI3, event count
         for image in rows:
             image_dt = timezone_utc_to_tw(image['datetime'])
@@ -854,6 +857,7 @@ class Image(models.Model):
     folder_name = models.CharField(max_length=1000, default='', blank=True, db_index=True)
     specific_bucket = models.CharField(max_length=1000, default='', blank=True) # 跟預設不同的 bucket
     deployment_journal = models.ForeignKey('DeploymentJournal', on_delete=models.SET_NULL, null=True, blank=True) # 知道是那次上傳的
+    is_duplicated = models.CharField(max_length=2, default='', blank=True)
 
     def get_associated_media(self, thumbnail='m'):
         if self.from_mongo:
