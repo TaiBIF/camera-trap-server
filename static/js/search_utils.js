@@ -8,7 +8,7 @@ const fetchData = (url) => {
       throw json;
     });
   }).then(function (data) {
-    console.log('myFetch', data);
+    //console.log('myFetch', data);
     return Promise.resolve(data);
   }).catch(function (error) {
     console.warn(error);

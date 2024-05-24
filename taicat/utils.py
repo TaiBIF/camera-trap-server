@@ -230,7 +230,6 @@ def calculated_data(filter_args, calc_args, available_project_ids):
 
     query = apply_search_filter(filter_args)
     query = query.filter(project_id__in=available_project_ids)
-
     deployments = query.values('deployment_id', 'deployment__name', 'studyarea__name','project__name').distinct()
     dep_map = {}
     for i in deployments:
@@ -802,15 +801,16 @@ def save_calculation(species_list, year, month, deployment):
                 result = deployment.calculate(year, month, species, img_int, e_int, to_save=True)
 
 def apply_search_filter_projects(projects, query):
-    qlist = []
 
     for proj in projects:
+        qlist = []
         if deps := proj.get('deployments'):
             deployment_ids = [x['id'] for x in deps]
             qlist.append(Q(deployment_id__in=deployment_ids))
         if sa_s := proj.get('studyareas'):
             studyarea_ids = [x['id'] for x in sa_s]
             qlist.append(Q(studyarea_id__in=studyarea_ids))
+
         if len(qlist) == 0:
             if p := proj.get('project'):
                 qlist.append(Q(project_id=p['id']))
@@ -843,11 +843,11 @@ def apply_search_filter(filter_dict={}):
     if value := filter_dict.get('startDate'):
         dt = make_aware(datetime.strptime(value, '%Y-%m-%d'))
         query_start = timezone_tw_to_utc(dt)
-        query = query.filter(datetime__gte=dt)
+        query = query.filter(datetime__gte=query_start)
     if value := filter_dict.get('endDate'):
-        dt = make_aware(datetime.strptime(value, '%Y-%m-%d'))
+        dt = make_aware(datetime.strptime(value, '%Y-%m-%d') + timedelta(days=1))
         query_end = timezone_tw_to_utc(dt)
-        query = query.filter(datetime__lte=dt)
+        query = query.filter(datetime__lte=query_end)
     #if values := filter_dict.get('deployments'):
     #    query = query.filter(deployment_id__in=values)
         #if len(project_ids):
