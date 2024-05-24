@@ -151,7 +151,7 @@ function ValidateEmail(inputText){
         .then(results => {
           $('#filter-project1-mix').empty().trigger('change');
           $('#filter-project1-mix').select2({
-             data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name, children: [{id: `[studyarea]${v.studyarea_id}`, text: `[樣區]${v.name}`}].concat(v.deployments.map((v2) => ({id: v2.deployment_id, text: v2.name})))})),
+             data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name, children: [{id: `[studyarea]${v.studyarea_id}`, text: `${v.name}下的所有相機位置`}].concat(v.deployments.map((v2) => ({id: v2.deployment_id, text: v2.name})))})),
             placeholder: '請選擇',
           }).trigger('change');
           /*
@@ -255,7 +255,7 @@ function ValidateEmail(inputText){
           .then(results => {
             $(`#${mixID}`).empty().trigger('change');
             $(`#${mixID}`).select2({
-              data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name, children: [{id: `[studyarea]${v.studyarea_id}`, text: `[樣區]${v.name}`}].concat(v.deployments.map((v2) => ({id: v2.deployment_id, text: v2.name})))})),
+              data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name, children: [{id: `[studyarea]${v.studyarea_id}`, text: `${v.name}下的所有相機位置`}].concat(v.deployments.map((v2) => ({id: v2.deployment_id, text: v2.name})))})),
               placeholder: '請選擇',
             });
             // $(`#${saID}`).empty().trigger('change');
