@@ -455,3 +455,7 @@ p.species-map, p.species-pie {
 .w-100 {
     width: 100% !important
 }
+
+#map {
+    z-index: 20 !important;
+}
