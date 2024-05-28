@@ -149,6 +149,12 @@ function ValidateEmail(inputText){
       const selectedProjectId = e.target.value;
       fetchData(`/api/deployments?project_id=${selectedProjectId}`)
         .then(results => {
+          $('#filter-project1-mix').empty().trigger('change');
+          $('#filter-project1-mix').select2({
+             data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name, children: [{id: `[studyarea]${v.studyarea_id}`, text: `${v.name}下的所有相機位置`}].concat(v.deployments.map((v2) => ({id: v2.deployment_id, text: v2.name})))})),
+            placeholder: '請選擇',
+          }).trigger('change');
+          /*
           $('#filter-project1-studyareas').empty().trigger('change');
           $('#filter-project1-studyareas').select2({
             data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name})),
@@ -164,7 +170,8 @@ function ValidateEmail(inputText){
               })),
               text: v.name})),
             placeholder: '請選擇',
-          });
+            });
+          */
         });
     }
   };
@@ -228,7 +235,7 @@ function ValidateEmail(inputText){
     newItem.children[0].style.display = 'block';
     newItem.children[0].onclick = (e) => {
       newItem.remove();
-    }
+    };
 
     projectSeq++;
     newItem.children[1].children[1].textContent = projectSeq;
@@ -236,8 +243,9 @@ function ValidateEmail(inputText){
     newItem.id = newItem.id.replace('filter-project1', `filter-project${projectSeq}`);
 
     let otherProjectSelect = newItem.children[2].children[0];
-    let saID = `filter-project${projectSeq}-studyareas`;
-    let depID = `filter-project${projectSeq}-deployments`;
+    let mixID = `filter-project${projectSeq}-mix`;
+    // let saID = `filter-project${projectSeq}-studyareas`;
+    // let depID = `filter-project${projectSeq}-deployments`;
     otherProjectSelect.id = otherProjectSelect.id.replace('filter-project1', `filter-project${projectSeq}`);
     otherProjectSelect.name = otherProjectSelect.name.replace('box_1_', `box_${projectSeq}_`);
     otherProjectSelect.onchange = (e) => {
@@ -245,53 +253,62 @@ function ValidateEmail(inputText){
         const selectedProjectId = e.target.value;
         fetchData(`/api/deployments?project_id=${selectedProjectId}`)
           .then(results => {
-            $(`#${saID}`).empty().trigger('change');
-            $(`#${saID}`).select2({
-              data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name})),
+            $(`#${mixID}`).empty().trigger('change');
+            $(`#${mixID}`).select2({
+              data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name, children: [{id: `[studyarea]${v.studyarea_id}`, text: `${v.name}下的所有相機位置`}].concat(v.deployments.map((v2) => ({id: v2.deployment_id, text: v2.name})))})),
               placeholder: '請選擇',
             });
+            // $(`#${saID}`).empty().trigger('change');
+            // $(`#${saID}`).select2({
+            //   data: results.data.map((v, i) => ({id: v.studyarea_id, text: v.name})),
+            //   placeholder: '請選擇',
+            // });
 
-            $(`#${depID}`).empty().trigger('change');
-            $(`#${depID}`).select2({
-              data: results.data.map((v, i) => ({
-                children: v.deployments.map((v2, i2) => ({
-                  id: v2.deployment_id,
-                  text: v2.name,
-                })),
-                text: v.name})),
-              placeholder: '請選擇',
-            });
+            // $(`#${depID}`).empty().trigger('change');
+            // $(`#${depID}`).select2({
+            //   data: results.data.map((v, i) => ({
+            //     children: v.deployments.map((v2, i2) => ({
+            //       id: v2.deployment_id,
+            //       text: v2.name,
+            //     })),
+            //     text: v.name})),
+            //   placeholder: '請選擇',
+            // });
           });
       }
     };
 
-    let inp2Box = createE('div');
-    inp2Box.classList.add('inp2box');
-    let inp2Box_1 = createE('div');
-    inp2Box_1.classList.add('input-item');
-    let sa = createE('select');
-    sa.name = `box_${projectSeq}_studyareas`;
-    sa.id = saID;
-    sa.setAttribute('multiple', 'multiple');
-    let inp2Box_2 = createE('div');
-    inp2Box_2.classList.add('input-item');
-    let dep = createE('select');
-    dep.name = `box_${projectSeq}_deployments`;
-    dep.id = depID;
-    dep.setAttribute('multiple', 'multiple');
-    inp2Box_1.appendChild(sa);
-    inp2Box_2.appendChild(dep);
-    inp2Box.appendChild(inp2Box_1);
-    inp2Box.appendChild(inp2Box_2);
-    newItem.appendChild(inp2Box);
+    let inputBox = createE('div');
+    inputBox.classList.add('input-item');
+    let mix = createE('select');
+    mix.name= `box_${projectSeq}_mix`;
+    mix.id = mixID;
+    mix.setAttribute('multiple', 'multiple');
+    inputBox.appendChild(mix);
+    // let sa = createE('select');
+    // sa.name = `box_${projectSeq}_studyareas`;
+    // sa.id = saID;
+    // sa.setAttribute('multiple', 'multiple');
+    // let inp2Box_2 = createE('div');
+    // inp2Box_2.classList.add('input-item');
+    // let dep = createE('select');
+    // dep.name = `box_${projectSeq}_deployments`;
+    // dep.id = depID;
+    // dep.setAttribute('multiple', 'multiple');
+    // inp2Box_1.appendChild(sa);
+    // inp2Box_2.appendChild(dep);
+    // inp2Box.appendChild(inp2Box_1);
+    // inp2Box.appendChild(inp2Box_2);
+    // newItem.appendChild(inp2Box);
+    newItem.appendChild(inputBox);
 
     //$(`${newId}`).empty().trigger('change');
-    $(sa.id).select2({
-        placeholder: 'choose',
-    })
-    $(dep.id).select2({
-        placeholder: 'choose',
-    })
+    // $(sa.id).select2({
+    //     placeholder: 'choose',
+    // })
+    // $(dep.id).select2({
+    //     placeholder: 'choose',
+    // }) 
     projectContainer.appendChild(newItem);
   }); // end of getEon('filter-project-create-button')
 
@@ -319,6 +336,7 @@ function ValidateEmail(inputText){
   // handle search submit
   getEon('filter-submit', (e) => {
     e.preventDefault();
+    page.setPage(0);
     goSearch();
   });
 
@@ -326,7 +344,7 @@ function ValidateEmail(inputText){
     let form = getE('filter-form');
     let data = new FormData(form);
     let obj = serialize(data);
-    console.log('FormData: ', obj);
+    //console.log('FormData: ', obj);
 
     let cd = {
       species: $('#filter-species').select2('data').map((x) => (x.text)),
@@ -345,17 +363,30 @@ function ValidateEmail(inputText){
       let re = /box_[0-9]+_project/g;
       if (name.match(re) && obj[name]) {
         let k = name.split('_');
-        let saID = `filter-project${k[1]}-studyareas`;
-        let depID = `filter-project${k[1]}-deployments`;
+        let mixID = `filter-project${k[1]}-mix`;
+        //let saID = `filter-project${k[1]}-studyareas`;
+        //let depID = `filter-project${k[1]}-deployments`;
+        let studyareas = [];
+        let deployments = [];
+        $(`#${mixID}`).select2('data').forEach((mix) =>{
+          if (mix.id.indexOf('[studyarea]') >= 0) {
+            studyareas.push({id: mix.id.replace('[studyarea]', ''), name: mix.text});
+          } else {
+            deployments.push({id: mix.id, name: mix.text});
+          }
+        });
+
         cd['projects'].push({
           project: projectMap[obj[name]].project,
-          studyareas: $(`#${saID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
-          deployments: $(`#${depID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
+          //studyareas: $(`#${saID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
+          //deployments: $(`#${depID}`).select2('data').map((x)=>({id: x.id, name: x.text})),
+          studyareas: studyareas,
+          deployments: deployments,
         });
       }
     }
-    console.log('cleaned:', cd);
 
+    //console.log('cleaned:', cd);
     return cd;
   };
 
@@ -366,10 +397,12 @@ function ValidateEmail(inputText){
   const goSearch = () => {
 
     const filterDumps = JSON.stringify(prepareFilterData());
-    let paginationDumps = JSON.stringify({perPage: page.perPage, pageIndex: page.pageIndex});
+    let paginationDumps = JSON.stringify({
+      perPage: page.perPage,
+      pageIndex: page.pageIndex,
+    });
 
     let url = `/api/search?filter=${filterDumps}&pagination=${paginationDumps}`;
-    console.log('fetch:', url);
 
     setLoading(true);
 
