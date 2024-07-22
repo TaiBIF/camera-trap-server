@@ -1836,16 +1836,17 @@ def data(request):
     end_date = requests.get('end_date')
     date_filter = ''
     if start_date:
-        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) # YYYY-MM-DD 00:00:00
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
     else:
-        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0)
+        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
     
     if end_date:
-        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     else:
-        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59)
+        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     
     date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
+    print(f'DATE_FILTER: {date_filter}')
 
 
     conditions = ''
