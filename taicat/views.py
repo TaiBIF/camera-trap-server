@@ -1846,8 +1846,6 @@ def data(request):
         end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     
     date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
-    print(f'DATE_FILTER: {date_filter}')
-
 
     conditions = ''
     deployment = requests.getlist('deployment[]')
@@ -2586,8 +2584,10 @@ def get_project_overview(request):
         species = request.POST.getlist('species[]')
         limit = int(request.POST.get('limit'))
         order = request.POST.get('order', 'id')
-        sort = request.POST.get('sort')
+        sort = request.POST.get('sort', 'asc')
         current_page = int(request.POST.get('page', 1))
+
+        order_field = '-{}'.format(order) if sort == 'desc' else order
 
         if table_id == 'publicproject':
             project_filter = Project.objects.filter(mode='official', is_public=True)
@@ -2617,7 +2617,7 @@ def get_project_overview(request):
             offset = (current_page-1)*limit
             # [(current_page-1)*limit:current_page*limit]
             #project, _ = get_project_info(project_list, limit, offset, order, sort)
-            project2 = Project.objects.values_list('id', 'name', 'keyword', 'start_date__year', 'funding_agency', 'project_stat__num_sa', 'project_stat__num_deployment', 'project_stat__num_data').filter(id__in=project_list).order_by('-'+order)[offset: offset+int(current_page)*limit]
+            project2 = Project.objects.values_list('id', 'name', 'keyword', 'start_date__year', 'funding_agency', 'project_stat__num_sa', 'project_stat__num_deployment', 'project_stat__num_data').filter(id__in=project_list).order_by(order_field)[offset: offset+int(current_page)*limit]
             project = list(project2)
             show_start = (current_page-1)*limit + 1
             show_end = current_page*limit if total > current_page*limit else total
