@@ -1135,14 +1135,14 @@ def edit_project_members(request, pk):
     if is_authorized:
         # organization_admin
         # if project in organization
-          # incase there is no one
+        # incase there is no one
         organization_id = Organization.objects.filter(projects=pk).values('id')
         for i in organization_id:
             temp = list(Contact.objects.filter(organization=i['id'], is_organization_admin=True).all().values('name', 'email'))
             organization_admin.extend(temp)
         study_area = StudyArea.objects.filter(project_id=pk)
         # other members
-        members = ProjectMember.objects.filter(project_id=pk).all()
+        members = ProjectMember.objects.filter(project_id=pk).select_related('member').order_by('member__email')
 
         if request.method == "POST":
             data = dict(request.POST.items())     
