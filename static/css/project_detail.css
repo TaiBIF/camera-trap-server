@@ -20,7 +20,8 @@
   max-width: 100%;
   box-sizing: border-box;
   white-space: normal;
-  word-wrap: break-word;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
 }
 
 /* Prevent element.style add style */
