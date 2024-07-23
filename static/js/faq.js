@@ -1,6 +1,22 @@
 let content_dict = {'web':{'title': '網頁操作','content':
 `<ul class="faq-li">
     <li>
+    <div class="q-box">
+      <h4>自動相機架設樣站常見問題說明文件</h4>
+      <div class="arr">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+          <g data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+            <line  data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+            <line  data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="a-box">
+    <a class="link" target="_blank" href="/media/faq/自動相機架設樣站常見問題說明文件.pdf">點此下載</a>
+    </div>
+    </li>
+    <li>
       <div class="q-box">
         <h4>網頁操作說明文件</h4>
         <div class="arr">
