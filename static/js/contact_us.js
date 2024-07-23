@@ -1,10 +1,9 @@
 $(document).ready(function() {
   // Upload files
   $('#f-upload').change(function() {
-    let f;
     for (let i = 0; i < this.files.length; i++) {
       window.file_index += 1;
-      f = this.files[i];
+      let f = this.files[i];
       if ((window.f_total_size + f.size) / (1024 * 1024) > 20) {
         $("#f-list").append(`<li class="d-flex align-items-center mb-2"><p class="f-label">${f.name}</p> <span class="notice ms-2">檔案過大，已移除 </span></li>`);
       } else if (f.size / (1024 * 1024) > 20) {
@@ -12,7 +11,7 @@ $(document).ready(function() {
       } else {
         $("#f-list").append(`<li class="d-flex align-items-center mb-2">
           <p class="f-label">${f.name}</p>
-          <button class="delete-file-btn" data-index="${window.file_index}">
+          <button type="button" class="delete-file-btn" data-index="${window.file_index}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 18.828 18.828">
               <g data-name="Group 688" transform="translate(-1823.086 -445.086)">
                 <line data-name="Line 1" x1="16" y2="16" transform="translate(1824.5 446.5)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
@@ -21,28 +20,34 @@ $(document).ready(function() {
             </svg>
           </button>
         </li>`);
-        var file = this.files[i];
-        window.file_list[window.file_index] = { 'file': file };
-        window.f_data.append("uploaded_file", file, file.name);
+        window.file_list[window.file_index] = {'file': f};
+        window.f_data.append("uploaded_file", f, f.name);
         window.f_total_size += f.size;
       }
     }
-    $('.delete-file-btn').on('click', function() {
+    $('.delete-file-btn').off('click').on('click', function(event) {
       const dataIndex = $(this).data('index');
-      delete window.file_list[dataIndex];
-      // Delete from FormData
-      window.f_data.delete('uploaded_file');
-      window.f_total_size = 0;
-      // Re-append to FormData
-      Object.entries(window.file_list).forEach(([k, v]) => {
-        window.f_data.append("uploaded_file", v['file'], v['file'].name);
-        window.f_total_size += v['file'].size;
-      })
-      console.log(window.f_total_size)
-      $(this).parent().remove();
+      if (window.file_list[dataIndex]) {
+        window.f_total_size -= window.file_list[dataIndex]['file'].size;
+        delete window.file_list[dataIndex];
+        // Clear and rebuild FormData
+        window.f_data = new FormData();
+        Object.entries(window.file_list).forEach(([k, v]) => {
+          if (v !== undefined) {
+            window.f_data.append("uploaded_file", v['file'], v['file'].name);
+          }
+        });
+        $(this).parent().remove();
+      }
     });
   });
-
+  
+  // 初始化變數
+  window.file_index = 0;
+  window.file_list = {};
+  window.f_data = new FormData();
+  window.f_total_size = 0;
+  
   // Switch checkbox
   const checkboxes = document.querySelectorAll('.check-list li');
   checkboxes.forEach(checkbox => {
