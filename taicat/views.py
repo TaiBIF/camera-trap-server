@@ -1001,8 +1001,6 @@ def edit_image(request, pk):
             image_latest_date = Image.objects.filter(project_id=pk).latest('datetime').datetime
             image_earliest_date = Image.objects.filter(project_id=pk).earliest('datetime').datetime
 
-            print(f'image_latest_date:{image_latest_date}')
-
             image_latest_date += datetime.timedelta(days=1)
             image_earliest_date -= datetime.timedelta(days=1)
 
@@ -1950,7 +1948,6 @@ def data(request):
                             LIMIT {} OFFSET {}"""
         # set limit = 1000 to avoid bad psql query plan
         cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, order_query, 1000, offset))
-        # cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, orderby, sort, 1000, offset))
         image_info = cursor.fetchall()
         # print(query.format(pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, 1000, _start))
     if image_info:

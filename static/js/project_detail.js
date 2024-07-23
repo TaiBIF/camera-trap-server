@@ -508,8 +508,8 @@ $(document).ready(function () {
   $('#deleteData').on('click', function () {
 
 
-    checkedvalue = [];
-    checkeduuid = [];
+    const checkedvalue = [];
+    const checkeduuid = [];
     $("input[name=edit]").not('#edit-all').each(function () {
       if ($(this).is(":checked")) {
         if (!isNaN($(this).val())) {
