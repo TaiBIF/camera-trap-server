@@ -1808,8 +1808,14 @@ def data(request):
     # _start = requests.get('offset', 0)
     # _length = requests.get('limit', 10)
     
-    orderby = requests.get('orderby', 'datetime')
+    orderby = requests.get('orderby', 'd.name')
     sort = requests.get('sort', 'asc')
+
+    if orderby == 'd.name':
+        order_query = f'{orderby} {sort}, i.datetime ASC'
+    else:
+        order_query = f'{orderby} {sort}, d.name ASC'
+    order_query += ',i.filename ASC'
     # page = int(requests.get('page', 1))
     # print(orderby, sort)
 
@@ -1930,7 +1936,7 @@ def data(request):
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.project_id = {} {} {} {} {} {} {} {}
-                            ORDER BY {} {}, i.id ASC
+                            ORDER BY {}
                             LIMIT {} OFFSET {}"""
         else:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
@@ -1940,10 +1946,11 @@ def data(request):
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') 
                             and i.project_id = {} {} {} {} {} {} {} {}
-                            ORDER BY {} {}, i.id ASC
+                            ORDER BY {} 
                             LIMIT {} OFFSET {}"""
         # set limit = 1000 to avoid bad psql query plan
-        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, orderby, sort, 1000, offset))
+        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, order_query, 1000, offset))
+        # cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, orderby, sort, 1000, offset))
         image_info = cursor.fetchall()
         # print(query.format(pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, 1000, _start))
     if image_info:
