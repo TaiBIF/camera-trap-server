@@ -67,6 +67,7 @@ from shapely.geometry import Point
 from django.views.decorators.http import require_GET
 
 
+
 city_list = ['基隆市', '嘉義市', '台北市', '嘉義縣', '新北市', '台南市',
              '桃園縣', '高雄市', '新竹市', '屏東縣', '新竹縣', '台東縣',
              '苗栗縣', '花蓮縣', '台中市', '宜蘭縣', '彰化縣', '澎湖縣',
@@ -840,6 +841,13 @@ def edit_image(request, pk):
         image_id = requests.get('image_id')
         image_id = image_id.split(',')
 
+        # 一次性查詢所有原始影像
+        image_before_update_list = list(
+            Image.objects.filter(id__in=image_id)
+            .select_related('project','deployment','studyarea')
+            .values('id','datetime','project__name','deployment__name','studyarea__name','species','life_stage','sex','antler','animal_id','remarks', 'project_id', 'studyarea_id')
+        )
+
         keys = ['species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks']
         updated_dict = {}
         for k in keys:
@@ -1011,6 +1019,53 @@ def edit_image(request, pk):
             #     ProjectStat.objects.filter(project_id=pk).update(latest_date=datetime_object, last_updated=now)
             # elif datetime_object < project_stat.earliest_date:
             #     ProjectStat.objects.filter(project_id=pk).update(earliest_date=datetime_object, last_updated=now)
+
+        image_after_update_list = []
+        for i in image_id:
+            info = Image.objects.filter(id=int(i))\
+                                .select_related('project','deployment','studyarea')\
+                                .values('datetime','project__name','deployment__name','studyarea__name','species','life_stage','sex','antler','animal_id','remarks')\
+                                .first()
+            image_after_update_list.append(info)
+
+        modified_images = []
+        for i in range(len(image_id)):
+            print(image_before_update_list[i].get('project_id'))
+            before_dict = image_before_update_list[i].copy()
+            del before_dict['id']
+            del before_dict['project_id']
+            del before_dict['studyarea_id']
+            after_dict = image_after_update_list[i]
+            if before_dict != after_dict:
+                modified_images.append(
+                    ModifiedImage(
+                        image_id=int(image_id[i]),
+                        project_id=image_before_update_list[i].get('project_id'),
+                        studyarea_id=image_before_update_list[i].get('studyarea_id'),
+                        datetime=image_before_update_list[i].get('datetime'),
+                        project=image_before_update_list[i].get('project__name'),
+                        studyarea=image_before_update_list[i].get('studyarea__name'),
+                        deployment=image_before_update_list[i].get('deployment__name'),
+                        species=image_before_update_list[i].get('species'),
+                        life_stage=image_before_update_list[i].get('life_stage'),
+                        sex=image_before_update_list[i].get('sex'),
+                        antler=image_before_update_list[i].get('antler'),
+                        animal_id=image_before_update_list[i].get('animal_id'),
+                        remarks=image_before_update_list[i].get('remarks'),
+                        modified_datetime=image_after_update_list[i].get('datetime'),
+                        modified_project=image_after_update_list[i].get('project__name'),
+                        modified_studyarea=image_after_update_list[i].get('studyarea__name'),
+                        modified_deployment=image_after_update_list[i].get('deployment__name'),
+                        modified_species=image_after_update_list[i].get('species'),
+                        modified_life_stage=image_after_update_list[i].get('life_stage'),
+                        modified_sex=image_after_update_list[i].get('sex'),
+                        modified_antler=image_after_update_list[i].get('antler'),
+                        modified_animal_id=image_after_update_list[i].get('animal_id'),
+                        modified_remarks=image_after_update_list[i].get('remarks')
+                    )
+                )
+        # 整批插入 ModifiedImage
+        ModifiedImage.objects.bulk_create(modified_images)
 
         response = {'species': list(species), 'folder_list': results}
         return JsonResponse(response, safe=False)  # or JsonResponse({'data': data})
