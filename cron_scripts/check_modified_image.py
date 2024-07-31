@@ -64,7 +64,7 @@ for (project_id, studyarea_id), group in groups:
     email_body = f'''
     您好：
 
-    您所負責的樣區（計畫名稱：{group['project']}, 樣區名稱：{group['studyarea']}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請點擊以下連結下載相關資料：
+    您所負責的樣區（計畫名稱：{group['計畫名稱']}, 樣區名稱：{group['樣區名稱']}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請點擊以下連結下載相關資料：
 
     [下載修改內容]({download_url})
 
@@ -73,3 +73,5 @@ for (project_id, studyarea_id), group in groups:
     臺灣自動相機資訊系統 團隊敬上
     '''
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list)
+
+    print(f'{project_id}_{studyarea_id}.csv was sent to {email_list}')
