@@ -30,10 +30,34 @@ groups = df2.groupby(['project_id', 'studyarea_id'])
 for (project_id, studyarea_id), group in groups:
     studyarea_memebers = get_studyarea_member(project_id, studyarea_id)
     email_list = [x.email for x in Contact.objects.filter(id__in=studyarea_memebers)]
-    print(f'EMAIL LIST: {email_list}')
+    # print(f'EMAIL LIST: {email_list}')
     save_root = Path(settings.MEDIA_ROOT, 'email-attachment')
     save_root.mkdir(parents=True, exist_ok=True)  # 檢查並創建目錄
     save_path = os.path.join(save_root, f'{project_id}_{studyarea_id}.csv')
+    group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
+    group = group.rename(columns={
+        'last_updated': '最後更新日期',
+        'datetime':'影像拍攝日期時間',
+        'project':'計畫名稱',
+        'studyarea':'樣區名稱',
+        'deployment':'相機位置',
+        'species':'物種',
+        'life_stage':'年齡',
+        'sex':'性別',
+        'antler':'角況',
+        'animal_id':'個體ID',
+        'remarks':'備註',
+        'modified_datetime':'修改後影像拍攝日期時間',
+        'modified_project':'修改後計畫名稱',
+        'modified_studyarea':'修改後樣區名稱',
+        'modified_deployment':'修改後相機位置',
+        'modified_species':'修改後物種',
+        'modified_life_stage':'修改後年齡',
+        'modified_sex':'修改後性別',
+        'modified_antler':'修改後角況',
+        'modified_animal_id':'修改後個體ID',
+        'modified_remarks':'修改後備註',
+    })
     group.to_csv(save_path)
 
     download_url = f'https://staging.camera-trap.tw/media/email-attachment/{project_id}_{studyarea_id}.csv'
