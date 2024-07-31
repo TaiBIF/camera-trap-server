@@ -37,5 +37,15 @@ for (project_id, studyarea_id), group in groups:
     group.to_csv(save_path)
 
     download_url = f'https://staging.camera-trap.tw/media/email-attachment/{project_id}_{studyarea_id}.csv'
-    email_body = f'您所負責的樣區位置中的影像內容在上禮拜有進行修改，詳細的修改內容請點擊以下連結下載：{download_url}'
+    email_body = f'''
+    您好：
+
+    您所負責的樣區（計畫名稱：{group['project']}, 樣區名稱：{group['studyarea']}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請點擊以下連結下載相關資料：
+
+    [下載修改內容]({download_url})
+
+    如有任何問題，請隨時聯繫我們團隊。
+
+    臺灣自動相機資訊系統 團隊敬上
+    '''
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list)
