@@ -34,7 +34,9 @@ for (project_id, studyarea_id), group in groups:
     save_root = Path(settings.MEDIA_ROOT, 'email-attachment')
     save_root.mkdir(parents=True, exist_ok=True)  # 檢查並創建目錄
     save_path = os.path.join(save_root, f'{project_id}_{studyarea_id}.csv')
-    group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
+    project_name = group['project'].iloc[0]
+    studyarea_name = group['studyarea'].iloc[0]
+    group = group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
     group = group.rename(columns={
         'last_updated': '最後更新日期',
         'datetime':'影像拍攝日期時間',
@@ -64,7 +66,7 @@ for (project_id, studyarea_id), group in groups:
     email_body = f'''
     您好：
 
-    您所負責的樣區（計畫名稱：{group['計畫名稱']}, 樣區名稱：{group['樣區名稱']}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請點擊以下連結下載相關資料：
+    您所負責的樣區（計畫名稱：{project_name}, 樣區名稱：{studyarea_name}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請點擊以下連結下載相關資料：
 
     [下載修改內容]({download_url})
 
