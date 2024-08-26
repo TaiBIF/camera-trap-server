@@ -2059,7 +2059,7 @@ def data(request):
             #     file_url = df.image_uuid[i] + '.' + extension
             # else:
             # print(df.image_uuid[i], df.filename[i], 'xxx')
-            if df.memo[i] == '2022-pt-data':
+            if df.memo[i] in [ '2022-pt-data']:
                 file_url = f"{df.image_id[i]}-m.jpg"
             elif not file_url and not df.from_mongo[i]:
                 suffix = Path(df.filename[i]).suffix
@@ -2079,6 +2079,7 @@ def data(request):
                 # new data - image
                 if extension in ['jpg', '']:
                     df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://{}.s3.ap-northeast-1.amazonaws.com/{}" />""".format(s3_bucket, file_url)
+                    print(file_url)
                 # new data - video
                 else:
                     # df.loc[i, 'file_url'] = """
@@ -2097,17 +2098,26 @@ def data(request):
             else:
                 # old data - image
                 if extension in ['jpg', '']:
-                    df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/{}" />""".format(
-                        file_url)
+                    # old image data merge to new bucket
+                    #df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/{}" />""".format(
+                    #file_url)
+                    df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://{}.s3.ap-northeast-1.amazonaws.com/{}" />""".format(s3_bucket, file_url)
                 # old data - video
                 else:
+                    # df.loc[i, 'file_url'] = """
+                    # <video class="img lazy mx-auto d-block" controls height="100" preload="none">
+                    #     <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/webm">
+                    #     <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/mp4">
+                    #     抱歉，您的瀏覽器不支援內嵌影片。
+                    # </video>
+                    # """.format(file_url, file_url)
                     df.loc[i, 'file_url'] = """
                     <video class="img lazy mx-auto d-block" controls height="100" preload="none">
-                        <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/webm">
-                        <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/mp4">
+                        <source src="https://{}.s3.ap-northeast-1.amazonaws.com/{}"" type="video/webm">
+                        <source src="https://{}.s3.ap-northeast-1.amazonaws.com/{}"" type="video/mp4">
                         抱歉，您的瀏覽器不支援內嵌影片。
                     </video>
-                    """.format(file_url, file_url)
+                    """.format(s3_bucket, file_url, s3_bucket, file_url)
             ### videos: https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/video ##
         # print('e', time.time()-t)
 

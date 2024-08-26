@@ -86,7 +86,7 @@ def process_project_annotation_download_task(pk, email, is_authorized, args, use
         host,
         settings.MEDIA_URL,
         Path('download', csv_filename))
-    
+
     wb = Workbook()
     ws = wb.active
     ws.append(header)
@@ -135,6 +135,12 @@ def process_image_annotation_task(deployment_journal_id, data):
 
     folder_name = data.get('folder_name', '')
 
+    memo = ''
+    uid = data.get('user_id', 0)
+    if not uid:
+        # old upload client, save upload info to Image.memo
+        memo = data['key']
+
     for i in data['image_list']:
         #print(datetime_to, datetime_from, 'iiii')
         img_info_payload = None
@@ -177,7 +183,7 @@ def process_image_annotation_task(deployment_journal_id, data):
                 datetime=dt_,
                 image_hash=i[6],
                 annotation=anno,
-                memo=data['key'],
+                memo=memo,
                 image_uuid=image_uuid,
                 has_storage='N',
                 folder_name=folder_name,
