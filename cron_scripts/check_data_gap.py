@@ -23,7 +23,7 @@ now = datetime.datetime.now()
 range_list = half_year_ago(now.year, now.month)
 
 rows = DeploymentJournal.objects.values_list('project_id').annotate(total=Count('id')).filter(working_end__gt=range_list[0]).all()
-print(rows)
+
 # rows = [[141]]
 
 for i in rows:
@@ -79,9 +79,8 @@ for i in rows:
     email_list = list(set(email_list + [x.email for x in system_admin_list]))
     email_list_non_empty = [x for x in email_list if x]
     project_members = list(set(project_members + [x.id for x in system_admin_list]))
-    print(email_list, project_members)
+    #print(email_list, project_members)
 
-    '''
     # create notification
     for m in project_members:
         un = UploadNotification(
@@ -98,7 +97,7 @@ for i in rows:
         for x in get_chunks(email_list_non_empty, 10):
             send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, x[1])
             sleep(2)
-    '''
+
     #print(email_subject)
     #print(email_body)
 
