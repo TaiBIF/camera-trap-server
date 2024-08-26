@@ -631,6 +631,14 @@ def set_deployment_journal(data, deployment):
 
     obj = dj_new if is_new is True else dj_exist
 
+
+    if uid := data.get('user_id', 0):
+        # save upload client info
+        obj.uploader_id = uid
+        obj.num_of_images = data['num_of_images']
+        obj.client_version = data['client_hostname']
+        obj.client_hostname = data['client_version']
+
     # 有時間才算有效
     if trip_start and trip_end:
         obj.is_effective = True
