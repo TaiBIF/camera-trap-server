@@ -16,6 +16,14 @@ class UploadHistory(models.Model):
     deployment_journal = models.ForeignKey(DeploymentJournal, on_delete=models.SET_NULL, null=True, blank=True) # 知道是那次上傳的
     data = models.JSONField(default=dict, blank=True)
 
+    def set_upload_ok(self, is_ok=True):
+        if is_ok:
+            self.status = self.STATUS_CHOICES[1][0]
+            self.upload_error = False
+        else:
+            self.status = self.STATUS_CHOICES[0][0]
+            self.upload_error = True
+
 class UploadNotification(models.Model):
     created = models.DateTimeField(auto_now_add=True, null=True, db_index=True)
     is_read = models.BooleanField(default=False, blank=True)
@@ -23,7 +31,6 @@ class UploadNotification(models.Model):
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True)
     contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True)
     category = models.CharField(max_length=100, null=True, blank=True,  default='upload') # upload | gap
-
 
 class Announcement(models.Model):
     created = models.DateTimeField('建立時間',auto_now_add=True, null=True, db_index=True)

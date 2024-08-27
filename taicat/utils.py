@@ -1269,7 +1269,7 @@ def get_chunks(lst, n):
         yield (int(i/n), lst[i:i + n])
 
 
-def check_and_update_image_storage(data):
+def check_image_storage(image):
     '''TODO
     unfinish update image has_storage
     should consider clone image, duplicated image_uuid
@@ -1281,17 +1281,18 @@ def check_and_update_image_storage(data):
         region_name='ap-northeast-1'
     )
 
-    found = 0
-    not_found = 0
-    for i in data:
-        try:
-            response = s3_client.head_object(
-                Bucket=settings.AWS_S3_BUCKET,
-                Key=f"{i['image_uuid']}-m.jpg"
-            )
-            found += 1
-        except Exception as e:
-            print('not-found', not_found)
-            not_found += 1
-    #print(found, not_found)
+    try:
+        response = s3_client.head_object(
+            Bucket=settings.AWS_S3_BUCKET,
+            Key=f"{image['image_uuid']}-m.jpg"
+        )
+        #found += 1
+        return True
+
+    except Exception as e:
+        #print('not-found', not_found)
+        #not_found += 1
+        pass
+
+    return False
 
