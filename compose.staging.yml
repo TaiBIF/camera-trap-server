@@ -6,8 +6,8 @@ version: '3.7'
 services:
   django:
     build:
-      context: ./docker
-      dockerfile: Dockerfile_prod
+      context: .
+      dockerfile: ./Dockerfile_prod
     expose:
       - 8001
     command: /srv/start_prod
