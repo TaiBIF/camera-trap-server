@@ -4,16 +4,16 @@ $(document).ready(function () {
         for (let i = 0; i < this.files.length; i++) {
             window.file_index += 1;
             let f = this.files[i];
-            if ((window.f_total_size + f.size) / (1024 * 1024) > 20) {
+            if ((window.f_total_size + f.size) / (1024 * 1024) > 5) {
                 alert(
-                    "檔案容量過大，已自動移除。\n\n注意：\n最大可接受的上傳檔案大小為 20MB。\n若您的檔案超過此大小，請將其壓縮為 ZIP 檔案後再重新上傳。"
+                    "檔案容量過大，已自動移除。\n\n注意：\n最大可接受的上傳檔案大小為 5MB。\n若您的檔案超過此大小，請將其壓縮為 ZIP 檔案後再重新上傳。"
                 );
                 $("#f-list").append(
                     `<li class="d-flex align-items-center mb-2"><p class="f-label">${f.name}</p> <span class="notice ms-2">檔案過大，已移除 </span></li>`
                 );
-            } else if (f.size / (1024 * 1024) > 20) {
+            } else if (f.size / (1024 * 1024) > 5) {
                 alert(
-                    "檔案容量過大，已自動移除。\n\n注意：\n最大可接受的上傳檔案大小為 20MB。\n若您的檔案超過此大小，請將其壓縮為 ZIP 檔案後再重新上傳。"
+                    "檔案容量過大，已自動移除。\n\n注意：\n最大可接受的上傳檔案大小為 5MB。\n若您的檔案超過此大小，請將其壓縮為 ZIP 檔案後再重新上傳。"
                 );
                 $("#f-list").append(
                     `<li class="d-flex align-items-center mb-2"><p class="f-label">${f.name}</p> <span class="notice ms-2">檔案過大，已移除 </span></li>`
