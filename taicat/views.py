@@ -67,6 +67,7 @@ from shapely.geometry import Point
 from django.views.decorators.http import require_GET
 
 
+
 city_list = ['基隆市', '嘉義市', '台北市', '嘉義縣', '新北市', '台南市',
              '桃園縣', '高雄市', '新竹市', '屏東縣', '新竹縣', '台東縣',
              '苗栗縣', '花蓮縣', '台中市', '宜蘭縣', '彰化縣', '澎湖縣',
@@ -802,23 +803,13 @@ def delete_data(request, pk):
             image_df = image_df.sort_values('image_id',ascending=False)
             # 確認是否有刪除原始照片的權限 若沒有的話 確認沒有刪到原始照片
             if not check_if_authorized_delete(request, pk):
-                deleting_data = image_df.groupby('image_uuid', as_index=False).count()
-                data = pd.DataFrame(Image.objects.filter(image_uuid__in=image_uuid_list).values('image_uuid').annotate(total=Count('id')).order_by('total'))
-                data = data.merge(deleting_data)
-                data['delete_count'] = data.total.apply(lambda x: x-1)
-                if len(data[data.delete_count==0]):
-                    return_mesg = True
-                # total 代表資料庫有的筆數 image_id 代表欲刪除的筆數
-                # 要至少留一筆
-                # data = data[data.able_to_delete>0].to_dict(orient='records')
-                for i in data[data.delete_count>0].to_dict(orient='records'):
-                    current_uuid = i.get('image_uuid')
-                    delete_count = i.get('delete_count')
-                    delete_list += image_df[image_df.image_uuid==current_uuid].image_id.to_list()[:delete_count]
-                    if delete_count < i.get('total'):
-                        return_mesg = True
-                # data = data[data.image_id < data.total]
-            
+                data = pd.DataFrame(Image.objects.filter(id__in=image_list).values('id', 'annotation_seq'))
+
+                if (data['annotation_seq'] < 1).any():
+                    return_mesg = True # 如果包含原始照片則無法刪除，並提醒使用者
+                else:
+                    delete_rows = data[data['annotation_seq'] > 0]
+                    delete_list = delete_rows['id'].tolist()
             else:
                 delete_list = image_list
 
@@ -839,6 +830,13 @@ def edit_image(request, pk):
         requests = request.POST
         image_id = requests.get('image_id')
         image_id = image_id.split(',')
+
+        # 一次性查詢所有原始影像
+        image_before_update_list = list(
+            Image.objects.filter(id__in=image_id)
+            .select_related('project','deployment','studyarea')
+            .values('id','datetime','project__name','deployment__name','studyarea__name','species','life_stage','sex','antler','animal_id','remarks', 'project_id', 'studyarea_id')
+        )
 
         keys = ['species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks']
         updated_dict = {}
@@ -1001,8 +999,6 @@ def edit_image(request, pk):
             image_latest_date = Image.objects.filter(project_id=pk).latest('datetime').datetime
             image_earliest_date = Image.objects.filter(project_id=pk).earliest('datetime').datetime
 
-            print(f'image_latest_date:{image_latest_date}')
-
             image_latest_date += datetime.timedelta(days=1)
             image_earliest_date -= datetime.timedelta(days=1)
 
@@ -1013,6 +1009,53 @@ def edit_image(request, pk):
             #     ProjectStat.objects.filter(project_id=pk).update(latest_date=datetime_object, last_updated=now)
             # elif datetime_object < project_stat.earliest_date:
             #     ProjectStat.objects.filter(project_id=pk).update(earliest_date=datetime_object, last_updated=now)
+
+        image_after_update_list = []
+        for i in image_id:
+            info = Image.objects.filter(id=int(i))\
+                                .select_related('project','deployment','studyarea')\
+                                .values('datetime','project__name','deployment__name','studyarea__name','species','life_stage','sex','antler','animal_id','remarks')\
+                                .first()
+            image_after_update_list.append(info)
+
+        modified_images = []
+        for i in range(len(image_id)):
+            print(image_before_update_list[i].get('project_id'))
+            before_dict = image_before_update_list[i].copy()
+            del before_dict['id']
+            del before_dict['project_id']
+            del before_dict['studyarea_id']
+            after_dict = image_after_update_list[i]
+            if before_dict != after_dict:
+                modified_images.append(
+                    ModifiedImage(
+                        image_id=int(image_id[i]),
+                        project_id=image_before_update_list[i].get('project_id'),
+                        studyarea_id=image_before_update_list[i].get('studyarea_id'),
+                        datetime=image_before_update_list[i].get('datetime'),
+                        project=image_before_update_list[i].get('project__name'),
+                        studyarea=image_before_update_list[i].get('studyarea__name'),
+                        deployment=image_before_update_list[i].get('deployment__name'),
+                        species=image_before_update_list[i].get('species'),
+                        life_stage=image_before_update_list[i].get('life_stage'),
+                        sex=image_before_update_list[i].get('sex'),
+                        antler=image_before_update_list[i].get('antler'),
+                        animal_id=image_before_update_list[i].get('animal_id'),
+                        remarks=image_before_update_list[i].get('remarks'),
+                        modified_datetime=image_after_update_list[i].get('datetime'),
+                        modified_project=image_after_update_list[i].get('project__name'),
+                        modified_studyarea=image_after_update_list[i].get('studyarea__name'),
+                        modified_deployment=image_after_update_list[i].get('deployment__name'),
+                        modified_species=image_after_update_list[i].get('species'),
+                        modified_life_stage=image_after_update_list[i].get('life_stage'),
+                        modified_sex=image_after_update_list[i].get('sex'),
+                        modified_antler=image_after_update_list[i].get('antler'),
+                        modified_animal_id=image_after_update_list[i].get('animal_id'),
+                        modified_remarks=image_after_update_list[i].get('remarks')
+                    )
+                )
+        # 整批插入 ModifiedImage
+        ModifiedImage.objects.bulk_create(modified_images)
 
         response = {'species': list(species), 'folder_list': results}
         return JsonResponse(response, safe=False)  # or JsonResponse({'data': data})
@@ -1135,14 +1178,14 @@ def edit_project_members(request, pk):
     if is_authorized:
         # organization_admin
         # if project in organization
-          # incase there is no one
+        # incase there is no one
         organization_id = Organization.objects.filter(projects=pk).values('id')
         for i in organization_id:
             temp = list(Contact.objects.filter(organization=i['id'], is_organization_admin=True).all().values('name', 'email'))
             organization_admin.extend(temp)
         study_area = StudyArea.objects.filter(project_id=pk)
         # other members
-        members = ProjectMember.objects.filter(project_id=pk).all()
+        members = ProjectMember.objects.filter(project_id=pk).select_related('member').order_by('member__email')
 
         if request.method == "POST":
             data = dict(request.POST.items())     
@@ -1808,8 +1851,14 @@ def data(request):
     # _start = requests.get('offset', 0)
     # _length = requests.get('limit', 10)
     
-    orderby = requests.get('orderby', 'datetime')
+    orderby = requests.get('orderby', 'd.name')
     sort = requests.get('sort', 'asc')
+
+    if orderby == 'd.name':
+        order_query = f'{orderby} {sort}, i.datetime ASC'
+    else:
+        order_query = f'{orderby} {sort}, d.name ASC'
+    order_query += ',i.filename ASC'
     # page = int(requests.get('page', 1))
     # print(orderby, sort)
 
@@ -1836,17 +1885,16 @@ def data(request):
     end_date = requests.get('end_date')
     date_filter = ''
     if start_date:
-        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) # YYYY-MM-DD 00:00:00
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
     else:
-        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0)
+        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
     
     if end_date:
-        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     else:
-        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59)
+        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     
     date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
-
 
     conditions = ''
     deployment = requests.getlist('deployment[]')
@@ -1931,7 +1979,7 @@ def data(request):
                             FROM taicat_image i
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.project_id = {} {} {} {} {} {} {} {}
-                            ORDER BY {} {}, i.id ASC
+                            ORDER BY {}
                             LIMIT {} OFFSET {}"""
         else:
             query = """SELECT i.id, i.studyarea_id, i.deployment_id, i.filename, i.species,
@@ -1941,10 +1989,10 @@ def data(request):
                             JOIN ({}) d ON d.id = i.deployment_id
                             WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') 
                             and i.project_id = {} {} {} {} {} {} {} {}
-                            ORDER BY {} {}, i.id ASC
+                            ORDER BY {} 
                             LIMIT {} OFFSET {}"""
         # set limit = 1000 to avoid bad psql query plan
-        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, orderby, sort, 1000, offset))
+        cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter, order_query, 1000, offset))
         image_info = cursor.fetchall()
         # print(query.format(pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, 1000, _start))
     if image_info:
@@ -2001,7 +2049,7 @@ def data(request):
             #     file_url = df.image_uuid[i] + '.' + extension
             # else:
             # print(df.image_uuid[i], df.filename[i], 'xxx')
-            if df.memo[i] == '2022-pt-data':
+            if df.memo[i] in [ '2022-pt-data']:
                 file_url = f"{df.image_id[i]}-m.jpg"
             elif not file_url and not df.from_mongo[i]:
                 suffix = Path(df.filename[i]).suffix
@@ -2021,6 +2069,7 @@ def data(request):
                 # new data - image
                 if extension in ['jpg', '']:
                     df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://{}.s3.ap-northeast-1.amazonaws.com/{}" />""".format(s3_bucket, file_url)
+                    print(file_url)
                 # new data - video
                 else:
                     # df.loc[i, 'file_url'] = """
@@ -2039,17 +2088,26 @@ def data(request):
             else:
                 # old data - image
                 if extension in ['jpg', '']:
-                    df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/{}" />""".format(
-                        file_url)
+                    # old image data merge to new bucket
+                    #df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/{}" />""".format(
+                    #file_url)
+                    df.loc[i, 'file_url'] = """<img class="img lazy mx-auto d-block" data-src="https://{}.s3.ap-northeast-1.amazonaws.com/{}" />""".format(s3_bucket, file_url)
                 # old data - video
                 else:
+                    # df.loc[i, 'file_url'] = """
+                    # <video class="img lazy mx-auto d-block" controls height="100" preload="none">
+                    #     <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/webm">
+                    #     <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/mp4">
+                    #     抱歉，您的瀏覽器不支援內嵌影片。
+                    # </video>
+                    # """.format(file_url, file_url)
                     df.loc[i, 'file_url'] = """
                     <video class="img lazy mx-auto d-block" controls height="100" preload="none">
-                        <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/webm">
-                        <source src="https://d3gg2vsgjlos1e.cloudfront.net/annotation-videos/{}" type="video/mp4">
+                        <source src="https://{}.s3.ap-northeast-1.amazonaws.com/{}"" type="video/webm">
+                        <source src="https://{}.s3.ap-northeast-1.amazonaws.com/{}"" type="video/mp4">
                         抱歉，您的瀏覽器不支援內嵌影片。
                     </video>
-                    """.format(file_url, file_url)
+                    """.format(s3_bucket, file_url, s3_bucket, file_url)
             ### videos: https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/video ##
         # print('e', time.time()-t)
 
@@ -2585,8 +2643,10 @@ def get_project_overview(request):
         species = request.POST.getlist('species[]')
         limit = int(request.POST.get('limit'))
         order = request.POST.get('order', 'id')
-        sort = request.POST.get('sort')
+        sort = request.POST.get('sort', 'asc')
         current_page = int(request.POST.get('page', 1))
+
+        order_field = '-{}'.format(order) if sort == 'desc' else order
 
         if table_id == 'publicproject':
             project_filter = Project.objects.filter(mode='official', is_public=True)
@@ -2616,7 +2676,7 @@ def get_project_overview(request):
             offset = (current_page-1)*limit
             # [(current_page-1)*limit:current_page*limit]
             #project, _ = get_project_info(project_list, limit, offset, order, sort)
-            project2 = Project.objects.values_list('id', 'name', 'keyword', 'start_date__year', 'funding_agency', 'project_stat__num_sa', 'project_stat__num_deployment', 'project_stat__num_data').filter(id__in=project_list).order_by('-'+order)[offset: offset+int(current_page)*limit]
+            project2 = Project.objects.values_list('id', 'name', 'keyword', 'start_date__year', 'funding_agency', 'project_stat__num_sa', 'project_stat__num_deployment', 'project_stat__num_data').filter(id__in=project_list).order_by(order_field)[offset: offset+int(current_page)*limit]
             project = list(project2)
             show_start = (current_page-1)*limit + 1
             show_end = current_page*limit if total > current_page*limit else total
@@ -2684,7 +2744,7 @@ def get_image_info(request):
     df = pd.DataFrame({'datetime':datetime,
                         'species':species,
                         'studyarea':studyarea})
-    df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m')
+    df['datetime'] = pd.to_datetime(df['datetime'], format='ISO8601')
     df['year'] = df['datetime'].dt.year
     df['month'] = df['datetime'].dt.month
     df['year-month'] = pd.to_datetime(df[['year', 'month']].assign(day=1))
@@ -2732,7 +2792,7 @@ def update_line_chart(request):
         
         # Sort selected image data into a dataframe
         df = pd.DataFrame({'datetime': datetime_values, 'species': species})
-        df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d').dt.tz_localize(None)
+        df['datetime'] = pd.to_datetime(df['datetime'], format='ISO8601').dt.tz_localize(None)
         
         df['year'] = df['datetime'].dt.year
         df['month'] = df['datetime'].dt.month

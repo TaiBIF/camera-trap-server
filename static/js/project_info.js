@@ -456,10 +456,12 @@ function setSpeciesPie(pie_data, other_data, deployment_points){
                 if (r[3] == false ){ // 不是子樣區, 是相機位置
                     marker = new L.marker([r[1], r[0]], { icon: DeploymentIcon })
                     .on("mouseover", function (e) {
-                        e.target.setIcon(DeploymentIconSelect);                                 
+                        e.target.setIcon(DeploymentIconSelect);  
+                        e.target._icon.style.cursor = 'default';                               
                     })
                     .on("mouseout", function (e) {
-                        e.target.setIcon(DeploymentIcon);                                     
+                        e.target.setIcon(DeploymentIcon);  
+                        e.target._icon.style.cursor = 'default';                                   
                     })                        
                     .bindTooltip(r[2], { permanent: true, direction: 'top' })
                     .addTo(map)

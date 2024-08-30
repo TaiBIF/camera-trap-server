@@ -180,7 +180,7 @@ function updateTable(page, page_from) {
       limit: $(`.page-inf select[name=limit]`).val(),
       page: page,
       orderby: $(".now-order").data("order"),
-      sort: $(".now-order").hasClass("downar") ? "asc" : "desc",
+      sort: $(".now-order").hasClass("downar") ? "desc" : "asc",
       start_time: $("input[name=start_time]").val(),
       end_time: $("input[name=end_time]").val(),
       // pk: $("input[name=pk]").val(),
@@ -508,8 +508,8 @@ $(document).ready(function () {
   $('#deleteData').on('click', function () {
 
 
-    checkedvalue = [];
-    checkeduuid = [];
+    const checkedvalue = [];
+    const checkeduuid = [];
     $("input[name=edit]").not('#edit-all').each(function () {
       if ($(this).is(":checked")) {
         if (!isNaN($(this).val())) {

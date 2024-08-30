@@ -958,6 +958,7 @@ class DeletedImage(models.Model):
     has_storage = models.CharField('實體檔案(有無上傳)', max_length=2, default='Y', blank=True) # Y/N or 如果之後有其他種狀況, 如: 存在別的圖台?
     specific_bucket = models.CharField(max_length=1000, default='', blank=True) # 跟預設不同的 bucket
     deployment_journal = models.ForeignKey('DeploymentJournal', on_delete=models.SET_NULL, null=True, blank=True) # 知道是那次上傳的
+    is_duplicated = models.CharField(max_length=2, default='', blank=True)
 
     @property
     def species_list(self):
@@ -1033,6 +1034,11 @@ class DeploymentJournal(models.Model):
     created = models.DateTimeField(auto_now_add=True, null=True)
     last_updated = models.DateTimeField(null=True, auto_now_add=True)
     upload_status = models.CharField(max_length=100, null=True, blank=True)# start-annotation/start-media/finished
+    uploader = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True)
+    num_of_images = models.IntegerField(null=True, blank=True)
+    client_version = models.CharField(max_length=100, null=True, blank=True)
+    client_hostname = models.CharField(max_length=100, null=True, blank=True)
+
 
     @property
     def display_range(self):
@@ -1153,3 +1159,31 @@ class InfoLog(models.Model):
     name = models.CharField(max_length=1000)
     value = models.CharField(max_length=1000)
     created = models.DateTimeField(auto_now_add=True)
+
+class ModifiedImage(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    project_id = models.IntegerField(default=1)
+    studyarea_id = models.IntegerField(default=1)
+    image_id = models.IntegerField()
+    last_updated = models.DateField(auto_now_add=True, null=False, blank=False)
+    datetime = models.DateTimeField(null=True)
+    project = models.CharField(max_length=1000, null=True)
+    studyarea = models.CharField(max_length=1000, null=True)
+    deployment = models.CharField(max_length=1000, null=True)
+    species = models.CharField(max_length=1000, null=True)
+    life_stage = models.CharField(max_length=1000, null=True)
+    sex = models.CharField(max_length=1000, null=True)
+    antler = models.CharField(max_length=1000, null=True)
+    animal_id = models.CharField(max_length=1000, null=True)
+    remarks = models.TextField(default='', null=True)
+    modified_datetime = models.DateTimeField(null=True)
+    modified_project = models.CharField(max_length=1000, null=True)
+    modified_studyarea = models.CharField(max_length=1000, null=True)
+    modified_deployment = models.CharField(max_length=1000, null=True)
+    modified_species = models.CharField(max_length=1000, null=True)
+    modified_life_stage = models.CharField(max_length=1000, null=True)
+    modified_sex = models.CharField(max_length=1000, null=True)
+    modified_antler = models.CharField(max_length=1000, null=True)
+    modified_animal_id = models.CharField(max_length=1000, null=True)
+    modified_remarks = models.TextField(default='', null=True)
+

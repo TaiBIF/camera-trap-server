@@ -39,7 +39,7 @@ from .utils import (
     set_image_annotation,
     set_deployment_journal,
     get_my_project_list,
-    check_and_update_image_storage,
+    check_image_storage,
 )
 from taicat.tasks import process_image_annotation_task
 
@@ -251,10 +251,40 @@ def sync_upload(request, pk):
         #                 'action': 'sync-update-status',
         #             })
         #             uh.save()
+        res= []
+        stats = {
+            'Y': 0,
+            'N': 0,
+            'N-y': 0,
+        }
+        images_to_y = []
+        is_server_updated = False
+        for x in images:
+            res.append([x['id'], x['has_storage']])
+            if x['has_storage'] == 'Y':
+                stats['Y'] += 1
+            elif x['has_storage'] == 'N':
+                stats['N'] += 1
+                if real_storage := check_image_storage(x):
+                    #print(real_storage, x['id'])
+                    if real_storage:
+                        stats['N-y'] += 1
+                        images_to_y.append(x['id'])
+
+        if uh := UploadHistory.objects.filter(deployment_journal=dj.id).first():
+            if stats['N-y'] == stats['N']:
+                uh.set_upload_ok()
+                is_server_updated = True
+            else:
+                uh.set_upload_ok(False)
 
         response = {
             'deployment_journal_id': dj.id,
-            'images': [[x['id'], x['has_storage']] for x in images]
+            'images': res,
+            'num_images': len(images),
+            'stats': stats,
+            'images_to_y': images_to_y,
+            'is_server_updated': True,
         }
     return JsonResponse(response)
 

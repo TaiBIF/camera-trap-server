@@ -1,5 +1,7 @@
-let content_dict = {'web':{'title': '網頁操作','content':
-`<ul class="faq-li">
+let content_dict = {
+    web: {
+        title: "網頁操作",
+        content: `<ul class="faq-li">
     <li>
       <div class="q-box">
         <h4>網頁操作說明文件</h4>
@@ -99,11 +101,12 @@ let content_dict = {'web':{'title': '網頁操作','content':
       <p>打開excel，點選上方的「資料」後，選擇「取得外部資料」並選取您欲打開的excel檔案，於檔案來源下拉選單中選擇包含UTF-8的選項，並以逗號分隔，應可排除亂碼問題。</p>
       </div>
     </li>
-</ul>`
-},
+</ul>`,
+    },
 
-'account': { 'title': '帳號相關', 'content': 
-`<ul class="faq-li">
+    account: {
+        title: "帳號相關",
+        content: `<ul class="faq-li">
     <li>
       <div class="q-box">
         <h4>有哪幾種登入方式？</h4>
@@ -136,11 +139,12 @@ let content_dict = {'web':{'title': '網頁操作','content':
       <p>可能原因：<br/> 瀏覽器不支援，請使用Google Chrome 或 Firefox。<br/> 瀏覽器版本未更新至最新版。</p>
       </div>
     </li>
-</ul>`
-},
+</ul>`,
+    },
 
-'project': {'title': '計畫管理','content': 
-`<ul class="faq-li">
+    project: {
+        title: "計畫管理",
+        content: `<ul class="faq-li">
     <li>
       <div class="q-box">
         <h4>新增計畫需要填寫哪些基本資訊？</h4>
@@ -181,11 +185,28 @@ let content_dict = {'web':{'title': '網頁操作','content':
       <p>由於計畫名稱可能較長、且部分計畫可能為多年期計畫，為使後續資料搜尋或運算有一致性，可改使用計畫簡稱來辨別特定計畫。計畫簡稱非必填選項。</p>
       </div>
     </li>
-</ul>`
-},
+</ul>`,
+    },
 
-'desktop': {'title': '上傳程式軟體操作','content': 
-`<ul class="faq-li">
+    desktop: {
+        title: "上傳程式軟體操作",
+        content: `<ul class="faq-li">
+    <li>
+      <div class="q-box">
+        <h4>自動相機架設樣站常見問題說明文件</h4>
+        <div class="arr">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15.927" height="9.377" viewBox="0 0 15.927 9.377">
+            <g data-name="Group 737" transform="translate(1.414 7.963) rotate(-90)">
+              <line  data-name="Line 6" x1="6.549" y2="6.549" transform="translate(0)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+              <line  data-name="Line 7" x1="6.549" y1="6.549" transform="translate(0 6.549)" fill="none" stroke="#257455" stroke-linecap="round" stroke-width="2"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="a-box">
+        <a class="link" target="_blank" href="/media/faq/自動相機架設樣站常見問題說明文件.pdf">點此下載</a>
+      </div>
+    </li>
     <li>
       <div class="q-box">
         <h4>軟體操作說明文件</h4>
@@ -413,27 +434,27 @@ let content_dict = {'web':{'title': '網頁操作','content':
       <p>如為文字調整，可直接在軟體上更新並覆蓋舊文字資料；若為影像有問題（如重複上傳相同影像、或影像上傳至錯誤之相機位置），則請聯繫計畫承辦人或計畫總管理人協助調整。</p>
       </div>
     </li>
-</ul>`
-}}
+</ul>`,
+    },
+};
 
 $(document).ready($(".faq-content").html(content_dict["web"]["content"]));
 
 $(".nl").on("click", function () {
-  $(".nl").removeClass("active");
-  $(".nl").removeClass("now");
-  $(this).addClass("active");
-  $(this).addClass("now");
-  let type = $(this).data("type");
-  $(".faq-title").html(content_dict[type]["title"]);
-  $(".faq-content").html(content_dict[type]["content"]);
+    $(".nl").removeClass("active");
+    $(".nl").removeClass("now");
+    $(this).addClass("active");
+    $(this).addClass("now");
+    let type = $(this).data("type");
+    $(".faq-title").html(content_dict[type]["title"]);
+    $(".faq-content").html(content_dict[type]["content"]);
 });
 
-$(document).on('click', '.faq-li li', function(event) {
-  $(this).find('.a-box').slideToggle();
-  if ($(this).hasClass('now')) {
-    $(this).removeClass('now');
-  } else {
-    $(this).addClass('now');
-  }
+$(document).on("click", ".faq-li li", function (event) {
+    $(this).find(".a-box").slideToggle();
+    if ($(this).hasClass("now")) {
+        $(this).removeClass("now");
+    } else {
+        $(this).addClass("now");
+    }
 });
-

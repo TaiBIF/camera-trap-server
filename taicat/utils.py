@@ -631,6 +631,14 @@ def set_deployment_journal(data, deployment):
 
     obj = dj_new if is_new is True else dj_exist
 
+
+    if uid := data.get('user_id', 0):
+        # save upload client info
+        obj.uploader_id = uid
+        obj.num_of_images = data['num_of_images']
+        obj.client_version = data['client_hostname']
+        obj.client_hostname = data['client_version']
+
     # 有時間才算有效
     if trip_start and trip_end:
         obj.is_effective = True
@@ -1179,13 +1187,13 @@ def make_image_query_in_project(project_id, args, is_authorized, is_contractor, 
     query = Image.objects.filter(project_id=project_id).values_list('project_id', 'project__name', 'image_uuid', 'studyarea__name', 'deployment__name', 'filename', 'datetime', 'species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks')
 
     if start_date := args.get('start_date'):
-        start_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(hours=0) # YYYY-MM-DD 00:00:00
+        start_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(hours=0) - timedelta(hours=8)
     else:
-        start_date = project_stat.earliest_date + timedelta(hours=0)
+        start_date = project_stat.earliest_date + timedelta(hours=0) - timedelta(hours=8)
     if end_date := args.get('end_date'):
-        end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59) # YYYY-MM-DD 23:59:59
+        end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59) - timedelta(hours=8)
     else:
-        end_date = project_stat.latest_date + timedelta(hours=23, minutes=59, seconds=59)
+        end_date = project_stat.latest_date + timedelta(hours=23, minutes=59, seconds=59) - timedelta(hours=8)
     query = query.filter(datetime__gte=start_date, datetime__lte=end_date)
     
     if start_time := args.get('start_time'):
@@ -1261,7 +1269,7 @@ def get_chunks(lst, n):
         yield (int(i/n), lst[i:i + n])
 
 
-def check_and_update_image_storage(data):
+def check_image_storage(image):
     '''TODO
     unfinish update image has_storage
     should consider clone image, duplicated image_uuid
@@ -1273,17 +1281,18 @@ def check_and_update_image_storage(data):
         region_name='ap-northeast-1'
     )
 
-    found = 0
-    not_found = 0
-    for i in data:
-        try:
-            response = s3_client.head_object(
-                Bucket=settings.AWS_S3_BUCKET,
-                Key=f"{i['image_uuid']}-m.jpg"
-            )
-            found += 1
-        except Exception as e:
-            print('not-found', not_found)
-            not_found += 1
-    #print(found, not_found)
+    try:
+        response = s3_client.head_object(
+            Bucket=settings.AWS_S3_BUCKET,
+            Key=f"{image['image_uuid']}-m.jpg"
+        )
+        #found += 1
+        return True
+
+    except Exception as e:
+        #print('not-found', not_found)
+        #not_found += 1
+        pass
+
+    return False
 
