@@ -240,11 +240,13 @@ def process_image_annotation_task(deployment_journal_id, data):
 @shared_task
 def process_download_data_task(email, filter_dict, member_id, host, verbose):
     download_dir = Path(settings.MEDIA_ROOT, 'download')
-    filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}.csv'
+    base_filename = f'download_{str(ObjectId())}_{datetime.now().strftime("%Y-%m-%d")}'
+    csv_filename = f'{base_filename}.csv'
+    xlsx_filename = f'{base_filename}.xlsx'
     query = apply_search_filter(filter_dict)
     query = query.values_list('project_id', 'project__name', 'image_uuid', 'studyarea__name', 'deployment__name', 'filename', 'datetime', 'species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks')
     header = ['計畫ID', '計畫名稱', '影像ID', '樣區/子樣區', '相機位置', '檔名', '拍攝時間', '物種', '年齡', '性別', '角況', '個體ID', '備註']
-    with open(Path(download_dir, filename), 'w') as csvfile:
+    with open(Path(download_dir, csv_filename), 'w') as csvfile:
         spamwriter = csv.writer(csvfile)
         spamwriter.writerow(header)
         for row in query.all():
@@ -271,10 +273,23 @@ def process_download_data_task(email, filter_dict, member_id, host, verbose):
             tz_row = [*row[:6], row[6].astimezone(tw_tz), *row[7:]]
             spamwriter.writerow(tz_row)
 
-    download_url = "https://{}{}{}".format(
+    csv_download_url = "https://{}{}{}".format(
         host,
         settings.MEDIA_URL,
-        Path('download', filename))
+        Path('download', csv_filename))
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(header)
+    for row in query.all():
+        modified_row = [str(dt.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None)) if isinstance(dt, datetime) else dt for dt in row]
+        ws.append(modified_row)
+    wb.save(Path(download_dir, xlsx_filename))
+
+    xlsx_download_url = "https://{}{}{}".format(
+        host,
+        settings.MEDIA_URL,
+        Path('download', xlsx_filename))
 
     user_role = ''
     if contact := Contact.objects.get(id=member_id):
@@ -286,11 +301,11 @@ def process_download_data_task(email, filter_dict, member_id, host, verbose):
     download_log_sql = DownloadLog(
         user_role=user_role,
         condition=verbose,
-        file_link=download_url)
+        file_link=csv_download_url)
     download_log_sql.save()
 
     email_subject = '[臺灣自動相機資訊系統] 下載資料'
-    email_body = render_to_string('project/download.html', {'download_url': download_url, })
+    email_body = render_to_string('project/download.html', {'download_url': csv_download_url, 'xlsx_download_url': xlsx_download_url})
     send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, [email])
 
 
