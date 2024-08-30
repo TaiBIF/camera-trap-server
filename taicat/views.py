@@ -2754,7 +2754,7 @@ def get_image_info(request):
     df = pd.DataFrame({'datetime':datetime,
                         'species':species,
                         'studyarea':studyarea})
-    df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m')
+    df['datetime'] = pd.to_datetime(df['datetime'], format='ISO8601')
     df['year'] = df['datetime'].dt.year
     df['month'] = df['datetime'].dt.month
     df['year-month'] = pd.to_datetime(df[['year', 'month']].assign(day=1))
@@ -2802,7 +2802,7 @@ def update_line_chart(request):
         
         # Sort selected image data into a dataframe
         df = pd.DataFrame({'datetime': datetime_values, 'species': species})
-        df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d').dt.tz_localize(None)
+        df['datetime'] = pd.to_datetime(df['datetime'], format='ISO8601').dt.tz_localize(None)
         
         df['year'] = df['datetime'].dt.year
         df['month'] = df['datetime'].dt.month
