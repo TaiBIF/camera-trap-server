@@ -803,23 +803,13 @@ def delete_data(request, pk):
             image_df = image_df.sort_values('image_id',ascending=False)
             # 確認是否有刪除原始照片的權限 若沒有的話 確認沒有刪到原始照片
             if not check_if_authorized_delete(request, pk):
-                deleting_data = image_df.groupby('image_uuid', as_index=False).count()
-                data = pd.DataFrame(Image.objects.filter(image_uuid__in=image_uuid_list).values('image_uuid').annotate(total=Count('id')).order_by('total'))
-                data = data.merge(deleting_data)
-                data['delete_count'] = data.total.apply(lambda x: x-1)
-                if len(data[data.delete_count==0]):
-                    return_mesg = True
-                # total 代表資料庫有的筆數 image_id 代表欲刪除的筆數
-                # 要至少留一筆
-                # data = data[data.able_to_delete>0].to_dict(orient='records')
-                for i in data[data.delete_count>0].to_dict(orient='records'):
-                    current_uuid = i.get('image_uuid')
-                    delete_count = i.get('delete_count')
-                    delete_list += image_df[image_df.image_uuid==current_uuid].image_id.to_list()[:delete_count]
-                    if delete_count < i.get('total'):
-                        return_mesg = True
-                # data = data[data.image_id < data.total]
-            
+                data = pd.DataFrame(Image.objects.filter(id__in=image_list).values('id', 'annotation_seq'))
+
+                if (data['annotation_seq'] < 1).any():
+                    return_mesg = True # 如果包含原始照片則無法刪除，並提醒使用者
+                else:
+                    delete_rows = data[data['annotation_seq'] > 0]
+                    delete_list = delete_rows['id'].tolist()
             else:
                 delete_list = image_list
 
