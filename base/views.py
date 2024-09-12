@@ -1,5 +1,5 @@
 from lib2to3.pgen2.token import INDENT
-from django.http import response
+from django.http import response, FileResponse
 from django.shortcuts import render, HttpResponse, redirect
 import json
 from django.db import connection
@@ -1058,3 +1058,23 @@ def api_dashboard(request, chart):
 
 def page_404(request):
     return render(request, 'base/404.html')
+
+def download_desktop_file(request):
+    file_path = os.path.join(settings.MEDIA_ROOT, 'desktop', 'desktop.zip')
+    is_desktop_authorized = False
+    user_id = request.session.get('id', None)
+
+    if ProjectMember.objects.filter(member_id=user_id).exists():
+        is_desktop_authorized = True
+    elif Contact.objects.filter(Q(id=user_id, is_organization_admin=True)|Q(id=user_id, is_system_admin=True)).exists():
+        is_desktop_authorized = True
+    else:
+        is_desktop_authorized = False
+    
+    if is_desktop_authorized:
+        try:
+            return FileResponse(open(file_path, 'rb'))
+        except FileNotFoundError:
+            return page_404(request)
+    else:
+        return page_404(request)

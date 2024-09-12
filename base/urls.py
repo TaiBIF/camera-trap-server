@@ -35,4 +35,5 @@ urlpatterns = [
     path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('api/dashboard/<chart>/', views.api_dashboard, name='api-dashboard'),
     path('404', views.page_404, name='page_404'),
+    path('download_desktop_file', views.download_desktop_file, name='download_desktop_file'),
 ]
