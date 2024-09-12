@@ -1073,7 +1073,8 @@ def download_desktop_file(request):
     
     if is_desktop_authorized:
         try:
-            return FileResponse(open(file_path, 'rb'))
+            with open(file_path, 'rb') as file:
+                return FileResponse(file)
         except FileNotFoundError:
             return page_404(request)
     else:
