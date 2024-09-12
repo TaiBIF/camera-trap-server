@@ -1181,7 +1181,7 @@ def edit_project_members(request, pk):
         # incase there is no one
         organization_id = Organization.objects.filter(projects=pk).values('id')
         for i in organization_id:
-            temp = list(Contact.objects.filter(organization=i['id'], is_organization_admin=True).all().order_by('member__email').values('name', 'email'))
+            temp = list(Contact.objects.filter(organization=i['id'], is_organization_admin=True).all().order_by('email').values('name', 'email'))
             organization_admin.extend(temp)
         study_area = StudyArea.objects.filter(project_id=pk)
         # other members
