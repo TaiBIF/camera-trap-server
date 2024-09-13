@@ -542,9 +542,12 @@ def get_my_project_list(member_id):
     return list(proj_ids)
 
 
-def get_project_member(project_id):
+def get_project_member(project_id, is_admin_only=False):
     member_list = []
-    members = [m.member_id for m in ProjectMember.objects.filter(project_id=project_id)]
+    if is_admin_only is True:
+        members = [m.member_id for m in ProjectMember.objects.filter(project_id=project_id) if m.role=='project_admin']
+    else:
+        members = [m.member_id for m in ProjectMember.objects.filter(project_id=project_id)]
     organization_id = Organization.objects.filter(projects=project_id).values('id')
     for i in organization_id:
         members += [c.id for c in Contact.objects.filter(organization=i['id'], is_organization_admin=True)]

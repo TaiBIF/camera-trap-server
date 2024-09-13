@@ -275,20 +275,45 @@ def update_upload_history(request):
                         last_updated=timezone.now())
                 uh.save()
                 upload_history_id = uh.id
-            if DeploymentJournal.objects.filter(id=deployment_journal_id).exists():
+
+            if deployment_journal := DeploymentJournal.objects.get(pk=deployment_journal_id):
                 project_id = DeploymentJournal.objects.filter(id=deployment_journal_id).values('project_id')[0]['project_id']
                 studyarea_id = DeploymentJournal.objects.filter(id=deployment_journal_id).values('studyarea_id')[0]['studyarea_id']
             else:
                 response = {'messages': 'failed due to no associated record in DeploymentJournal table'}
                 return JsonResponse(response)
-            project_members = get_project_member(project_id) # 所有計劃下的成員
-            studyarea_members = get_studyarea_member(project_id,studyarea_id) # 樣區成員，含總管理人
-            studyarea_none_member = get_none_studyarea_project_member(project_id,['uploader','project_admin'])# 未選擇樣區的資料上傳者/個別計畫管理人
-            studyarea_members.extend(studyarea_none_member)
-            email_list = list(set(studyarea_members)) 
 
-            final_members = []
-            for m in project_members:
+            #project_members = get_project_member(project_id) # 所有計劃下的成員
+            #studyarea_members = get_studyarea_member(project_id,studyarea_id) # 樣區成員，含總管理人
+            #studyarea_none_member = get_none_studyarea_project_member(project_id,['uploader','project_admin'])# 未選擇樣區的資料上傳者/個別計畫管理人
+            #studyarea_members.extend(studyarea_none_member)
+            #email_list = list(set(studyarea_members)) 
+
+            #final_members = []
+            #for m in project_members:
+            #    # 每次都建立新的通知
+            #    try:
+            #        un = UploadNotification(
+            #            upload_history_id = upload_history_id,
+            #            contact_id = m
+            #        )
+            #        un.save()
+            #        final_members += [m]
+            #    except Exception as e:
+            #        pass # contact已經不在則移除
+            # 每次都寄信
+            #res = send_upload_notification(upload_history_id, email_list, request)
+
+            # only send to uploader
+            email_list = []
+            if deployment_journal.uploader_id:
+                email_list.append(int(deployment_journal.uploader_id))
+            # append project_admin
+            for m in ProjectMember.objects.filter(project_id=project_id).all():
+                if m.role == 'project_admin':
+                    email_list.append(m.member_id)
+            # ignore related organization_admin
+            for m in email_list:
                 # 每次都建立新的通知
                 try:
                     un = UploadNotification(
@@ -299,8 +324,9 @@ def update_upload_history(request):
                     final_members += [m]
                 except Exception as e:
                     pass # contact已經不在則移除
-            # 每次都寄信
+
             res = send_upload_notification(upload_history_id, email_list, request)
+
             if res.get('status') == 'fail':
                 response = {'messages': 'failed during sending email'}
                 return JsonResponse(response)
