@@ -227,6 +227,8 @@ def sync_upload(request, pk):
     - set UploadHistory status to 'finished'
     '''
     actions = request.GET.get('actions', '')
+    dry_run = request.GET.get('dry-run', '')
+
     #action_map = a
     if dj := DeploymentJournal.objects.get(pk=pk):
         images = Image.objects.values('id', 'image_uuid', 'has_storage').filter(deployment_journal_id=dj.id).all()
@@ -271,12 +273,18 @@ def sync_upload(request, pk):
                         stats['N-y'] += 1
                         images_to_y.append(x['id'])
 
-        if uh := UploadHistory.objects.filter(deployment_journal=dj.id).first():
-            if stats['N-y'] == stats['N']:
-                uh.set_upload_ok()
-                is_server_updated = True
-            else:
-                uh.set_upload_ok(False)
+        if not dry_run:
+            if uh := UploadHistory.objects.filter(deployment_journal=dj.id).first():
+                if stats['N-y'] == stats['N']:
+                    uh.set_upload_ok(True)
+                    is_server_updated = True
+                else:
+                    uh.set_upload_ok(False)
+
+            for image_id in images_to_y:
+                img = Image.objects.get(pk=image_id)
+                img.has_storage = 'Y'
+                img.save()
 
         response = {
             'deployment_journal_id': dj.id,
