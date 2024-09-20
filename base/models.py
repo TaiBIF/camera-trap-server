@@ -24,6 +24,8 @@ class UploadHistory(models.Model):
             self.status = self.STATUS_CHOICES[0][0]
             self.upload_error = True
 
+        self.save()
+
 class UploadNotification(models.Model):
     created = models.DateTimeField(auto_now_add=True, null=True, db_index=True)
     is_read = models.BooleanField(default=False, blank=True)

@@ -77,7 +77,7 @@ def find_the_gap(year, array):
 
 
 class Species(models.Model):
-    DEFAULT_LIST = ['水鹿', '山羌', '獼猴', '山羊', '野豬', '鼬獾', '白鼻心', '食蟹獴', '松鼠',
+    DEFAULT_LIST = ['水鹿', '山羌', '獼猴', '野山羊', '野豬', '鼬獾', '白鼻心', '食蟹獴', '松鼠',
                     '飛鼠', '黃喉貂', '黃鼠狼', '小黃鼠狼', '麝香貓', '黑熊', '石虎', '穿山甲', '梅花鹿', '野兔', '蝙蝠']
 
     EXCLUDE_LIST = ['人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人']
@@ -1038,7 +1038,7 @@ class DeploymentJournal(models.Model):
     num_of_images = models.IntegerField(null=True, blank=True)
     client_version = models.CharField(max_length=100, null=True, blank=True)
     client_hostname = models.CharField(max_length=100, null=True, blank=True)
-
+    action_history = models.JSONField(default=list, blank=True, null=True)
 
     @property
     def display_range(self):
