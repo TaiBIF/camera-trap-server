@@ -1038,7 +1038,7 @@ class DeploymentJournal(models.Model):
     num_of_images = models.IntegerField(null=True, blank=True)
     client_version = models.CharField(max_length=100, null=True, blank=True)
     client_hostname = models.CharField(max_length=100, null=True, blank=True)
-
+    action_history = models.JSONField(default=list, blank=True, null=True)
 
     @property
     def display_range(self):

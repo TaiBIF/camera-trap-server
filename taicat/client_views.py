@@ -239,7 +239,7 @@ def sync_upload(request, pk):
         #}
         #if 'A' in actions:
         #  TODO wait too long
-        #    check_and_update_image_storage(not_uploaded)
+        #    check_and_update_fimage_storage(not_uploaded)
         # if 'B' in actions:
         # NOT tested yet
         #     if len(not_uploaded) == 0:
@@ -286,13 +286,24 @@ def sync_upload(request, pk):
                 img.has_storage = 'Y'
                 img.save()
 
+        dj_ah = dj.action_history
+        action_data = {
+            'stats': stats,
+            'images_to_y': images_to_y,
+            'is_server_updated': is_server_updated,
+            'timestamp': str(datetime.now()),
+        }
+        dj_ah.append(action_data)
+        dj.action_history = dj_ah
+        dj.save()
+
         response = {
             'deployment_journal_id': dj.id,
             'images': res,
             'num_images': len(images),
             'stats': stats,
             'images_to_y': images_to_y,
-            'is_server_updated': True,
+            'is_server_updated': is_server_updated,
         }
     return JsonResponse(response)
 
