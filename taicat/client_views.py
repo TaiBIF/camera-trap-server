@@ -227,6 +227,8 @@ def sync_upload(request, pk):
     - set UploadHistory status to 'finished'
     '''
     actions = request.GET.get('actions', '')
+    dry_run = request.GET.get('dry-run', '')
+
     #action_map = a
     if dj := DeploymentJournal.objects.get(pk=pk):
         images = Image.objects.values('id', 'image_uuid', 'has_storage').filter(deployment_journal_id=dj.id).all()
@@ -237,7 +239,7 @@ def sync_upload(request, pk):
         #}
         #if 'A' in actions:
         #  TODO wait too long
-        #    check_and_update_image_storage(not_uploaded)
+        #    check_and_update_fimage_storage(not_uploaded)
         # if 'B' in actions:
         # NOT tested yet
         #     if len(not_uploaded) == 0:
@@ -271,12 +273,29 @@ def sync_upload(request, pk):
                         stats['N-y'] += 1
                         images_to_y.append(x['id'])
 
-        if uh := UploadHistory.objects.filter(deployment_journal=dj.id).first():
-            if stats['N-y'] == stats['N']:
-                uh.set_upload_ok()
-                is_server_updated = True
-            else:
-                uh.set_upload_ok(False)
+        if not dry_run:
+            if uh := UploadHistory.objects.filter(deployment_journal=dj.id).first():
+                if stats['N-y'] == stats['N']:
+                    uh.set_upload_ok(True)
+                    is_server_updated = True
+                else:
+                    uh.set_upload_ok(False)
+
+            for image_id in images_to_y:
+                img = Image.objects.get(pk=image_id)
+                img.has_storage = 'Y'
+                img.save()
+
+        dj_ah = dj.action_history
+        action_data = {
+            'stats': stats,
+            'images_to_y': images_to_y,
+            'is_server_updated': is_server_updated,
+            'timestamp': str(datetime.now()),
+        }
+        dj_ah.append(action_data)
+        dj.action_history = dj_ah
+        dj.save()
 
         response = {
             'deployment_journal_id': dj.id,
@@ -284,7 +303,7 @@ def sync_upload(request, pk):
             'num_images': len(images),
             'stats': stats,
             'images_to_y': images_to_y,
-            'is_server_updated': True,
+            'is_server_updated': is_server_updated,
         }
     return JsonResponse(response)
 
