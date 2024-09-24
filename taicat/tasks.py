@@ -166,6 +166,8 @@ def process_image_annotation_task(deployment_journal_id, data):
             is_save_calculation = True
             for a in anno:
                 if sp := a.get('species', ''):
+                    # HACK-SP: rename species, prevent old uploader version upload species string, 240924
+                    sp = sp.replace('山羊', '野山羊')
                     if sp not in species_list:
                         species_list.append(sp)
 
