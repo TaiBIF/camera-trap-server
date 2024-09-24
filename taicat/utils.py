@@ -686,6 +686,7 @@ def set_image_annotation(image_obj):
                 # HACK-SP: 240924
                 if field == 'species':
                     v = v.replace('山羊', '野山羊')
+                    v = v.replace('柳鶯類', '柳鶯類(無法辨識)')
                 setattr(obj, field_map[field], v)
         obj.last_updated = timezone.now()
 
