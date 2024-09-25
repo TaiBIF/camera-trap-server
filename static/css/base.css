@@ -557,6 +557,9 @@ small {
   align-items: center
 }
 
+.active {
+  width: 100% !important;
+}
 
 .login-pop .start-btn {
   width: 80px;

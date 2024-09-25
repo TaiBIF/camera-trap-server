@@ -73,7 +73,7 @@ city_list = ['基隆市', '嘉義市', '台北市', '嘉義縣', '新北市', '�
              '苗栗縣', '花蓮縣', '台中市', '宜蘭縣', '彰化縣', '澎湖縣',
              '南投縣', '金門縣', '雲林縣',	'連江縣']
 
-species_list = ['水鹿', '山羌', '獼猴', '山羊', '野豬', '鼬獾', '白鼻心', '食蟹獴', '松鼠',
+species_list = ['水鹿', '山羌', '獼猴', '野山羊', '野豬', '鼬獾', '白鼻心', '食蟹獴', '松鼠',
                 '飛鼠', '黃喉貂', '黃鼠狼', '小黃鼠狼', '麝香貓', '黑熊', '石虎', '穿山甲', '梅花鹿', '野兔', '蝙蝠']
 
 
@@ -1181,7 +1181,7 @@ def edit_project_members(request, pk):
         # incase there is no one
         organization_id = Organization.objects.filter(projects=pk).values('id')
         for i in organization_id:
-            temp = list(Contact.objects.filter(organization=i['id'], is_organization_admin=True).all().values('name', 'email'))
+            temp = list(Contact.objects.filter(organization=i['id'], is_organization_admin=True).all().order_by('email').values('name', 'email'))
             organization_admin.extend(temp)
         study_area = StudyArea.objects.filter(project_id=pk)
         # other members
