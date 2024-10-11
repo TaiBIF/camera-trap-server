@@ -26,6 +26,9 @@ df2 = df[(df['last_updated'] >= one_week_ago) & (df['last_updated'] <= today)]
 
 email_subject = '[臺灣自動相機資訊系統] | 影像資料修改通知'
 
+print('-' * 60)
+print(today)
+
 if df2.empty:
     print('NO modified images for this week.')
 else: 
@@ -65,7 +68,7 @@ else:
         })
         group.to_csv(save_path)
 
-        download_url = f'https://staging.camera-trap.tw/media/email-attachment/{project_id}_{studyarea_id}.csv'
+        download_url = f'https://camera-trap.tw/media/email-attachment/{project_id}_{studyarea_id}.csv'
         email_body = f'''
         您好：
 

@@ -170,7 +170,7 @@ for p in Project.objects.all().values('id'):
 import geopandas as gpd
 from conf.settings import BASE_DIR
 import os
-import pygeos
+# import pygeos
 #gpd.options.use_pygeos = True
 
 print('start HOMEPAGE MAP', now)
