@@ -2007,20 +2007,45 @@ def data(request):
         d_names = pd.DataFrame(Deployment.objects.filter(id__in=df.deployment_id.unique()).values('id', 'name')).rename(columns={'id': 'deployment_id', 'name': 'dname'})
         df = df.merge(d_names).merge(sa_names)
 
-        with connection.cursor() as cursor:
-            if is_project_authorized:
-                query = """SELECT COUNT(*)
-                            FROM taicat_image i
-                            JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.project_id = {} {} {} {} {} {} {} {}"""
-            else:
-                query = """SELECT COUNT(*)
-                            FROM taicat_image i
-                            JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {} {}"""
-            cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
-            count = cursor.fetchone()
-        total = count[0]
+
+        exact_count = True # False: 用 explain 估算
+        if 'all' in deployment and len(deployment) > 1:
+            all_dep_ids = [str(x.id) for x in Deployment.objects.filter(project_id=329, study_area_id__gt=0).exclude(deprecated=True).all()]
+            if len(set(deployment)) == len(all_dep_ids) + 1: # +1: all
+                exact_count = False
+
+        if exact_count == True:
+            with connection.cursor() as cursor:
+                if is_project_authorized:
+                    query = """SELECT COUNT(*)
+                                FROM taicat_image i
+                                JOIN ({}) d ON d.id = i.deployment_id
+                                WHERE i.project_id = {} {} {} {} {} {} {} {}"""
+                else:
+                    query = """SELECT COUNT(*)
+                                FROM taicat_image i
+                                JOIN ({}) d ON d.id = i.deployment_id
+                                WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {} {}"""
+                cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
+                count = cursor.fetchone()
+                total = count[0]
+        else:
+            with connection.cursor() as cursor:
+                if is_project_authorized:
+                    query = """EXPLAIN SELECT *
+                                FROM taicat_image i
+                                WHERE i.project_id = {} {} {} {} {} {} {}"""
+                else:
+                    query = """EXPLAIN SELECT *
+                                FROM taicat_image i
+                                WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {}"""
+
+                cursor.execute(query.format(pk, date_filter, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
+                ## TODO: 先拿掉conditions (deployment & studyarea), 因為誤差很大
+                # deployment_sql也先拿掉
+                explain_result = cursor.fetchall()
+                m = re.search('rows=([0-9]*)', explain_result[0][0])
+                total = int(m[1])
 
         # print('c-1', time.time()-t)
         # recordsFiltered = recordsTotal
