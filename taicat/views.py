@@ -1811,7 +1811,8 @@ def project_detail(request, pk):
         altitude__max = altitude_range['altitude__max'] if altitude_range['altitude__max'] != None else 0
         altitude__min = altitude_range['altitude__min'] if altitude_range['altitude__min'] != None else 0
 
-        remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
+        #remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
+        remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('?').distinct().exclude(remarks__exact='')[0:10]
 
         return render(request, 'project/project_detail.html', {
             'project_info': project_info, 'species': species, 'pk': pk,
