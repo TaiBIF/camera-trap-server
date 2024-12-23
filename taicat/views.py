@@ -2013,7 +2013,11 @@ def data(request):
             all_dep_ids = [str(x.id) for x in Deployment.objects.filter(project_id=329, study_area_id__gt=0).exclude(deprecated=True).all()]
             if len(set(deployment)) == len(all_dep_ids) + 1: # +1: all
                 exact_count = False
+        if conditions != '' or spe_conditions != '' or folder_filter != '' or media_type_filter != '' or remarks_filter != '':
+            exact_count = True
 
+
+        #print(exact_count)
         if exact_count == True:
             with connection.cursor() as cursor:
                 if is_project_authorized:
@@ -2029,6 +2033,7 @@ def data(request):
                 cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
                 count = cursor.fetchone()
                 total = count[0]
+                print(total,'1')
         else:
             with connection.cursor() as cursor:
                 if is_project_authorized:
@@ -2046,7 +2051,7 @@ def data(request):
                 explain_result = cursor.fetchall()
                 m = re.search('rows=([0-9]*)', explain_result[0][0])
                 total = int(m[1])
-
+                print(total, '2')
         # print('c-1', time.time()-t)
         # recordsFiltered = recordsTotal
 
