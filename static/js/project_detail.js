@@ -762,7 +762,26 @@ $(document).ready(function () {
   $("#select-protectarea").select2({language: "zh-TW"})
   $("#select-county").select2({language: "zh-TW"})
   $("#select-media-type").select2({language: "zh-TW"})
-  $("#select-remarks").select2({language: "zh-TW"})
+  $("#select-remarks").select2({
+    language: "zh-TW",
+    ajax: {
+      url: `/api/project/remarks/${pk}/`,
+      delay: 250,
+      data: function (params) {
+        return  {
+          q: params.term,
+        };
+      },
+      processResults: function (data) {
+        return {
+          results: data.data.map( x => ({id: x, text: x}))
+        };
+      }
+    },
+    //minimumInputLength: 1,
+    placeholder: '請選擇',
+    allowClear: true
+  });
 
 
   /* 進來頁面後取得起始資料 */

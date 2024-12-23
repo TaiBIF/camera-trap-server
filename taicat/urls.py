@@ -17,6 +17,7 @@ urlpatterns = [
     path('project/details/<pk>/', views.project_detail, name='project_detail'),
     path('project/oversight/<pk>/', views.project_oversight, name='project_oversight'),
     path('project/oversight/<pk>/download/', views.download_project_oversight, name='download_project_oversight'),
+    path('api/project/remarks/<pk>/', views.project_remarks, name='project_remarks'),
     path('api/deployment_journals/<pk>/', views.api_update_deployment_journals, name='update-deployment-journals'),
     path('api/deployment_journals/', views.api_create_or_list_deployment_journals, name='create-deployment-journals'),
     # path('api/check_data_gap/', views.api_check_data_gap, name='check-data-gap'),
