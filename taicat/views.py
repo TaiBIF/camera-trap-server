@@ -1812,7 +1812,7 @@ def project_detail(request, pk):
         altitude__min = altitude_range['altitude__min'] if altitude_range['altitude__min'] != None else 0
 
         #remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
-        remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('?').distinct().exclude(remarks__exact='')[0:10]
+        remarks = Image.objects.filter(project_id=pk).values('remarks').distinct().exclude(remarks__isnull=True).exclude(remarks__exact='').order_by('?')[0:10]
 
         return render(request, 'project/project_detail.html', {
             'project_info': project_info, 'species': species, 'pk': pk,
@@ -1823,7 +1823,7 @@ def project_detail(request, pk):
             'projects': project_list, 'is_project_authorized': is_project_authorized,'is_project_public':is_project_public,
             'county_list':county_list,'protectedarea_list':protectedarea_list,
             'altitude__min':altitude__min,'altitude__max':altitude__max, #'sa_list': list(sa_list),'sa_d_list': sa_d_list, 
-            'remarks': remarks
+            #'remarks': remarks
         })
     except:
         return render(request, 'base/404.html')
@@ -2837,3 +2837,14 @@ def update_line_chart(request):
 
     return HttpResponse(json.dumps(response, default=str), content_type='application/json')
 
+def project_remarks(request, pk):
+    resp = {'data': []}
+    query = Image.objects.filter(project_id=pk).values('remarks').distinct().exclude(remarks__exact='').exclude(remarks__isnull=True)
+    if q := request.GET.get('q'):
+        remarks = query.filter(remarks__icontains=q).order_by('remarks').all()
+    else:
+        remarks = query.order_by('?').all()[0:10]
+        print(remarks.query)
+    resp['data'] = [x['remarks'] for x in remarks]
+
+    return HttpResponse(json.dumps(resp), content_type='application/json')
