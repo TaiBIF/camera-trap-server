@@ -1811,7 +1811,8 @@ def project_detail(request, pk):
         altitude__max = altitude_range['altitude__max'] if altitude_range['altitude__max'] != None else 0
         altitude__min = altitude_range['altitude__min'] if altitude_range['altitude__min'] != None else 0
 
-        remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
+        #remarks = Image.objects.filter(project_id=pk).values('remarks').order_by('remarks').distinct().exclude(remarks__exact='')
+        remarks = Image.objects.filter(project_id=pk).values('remarks').distinct().exclude(remarks__isnull=True).exclude(remarks__exact='').order_by('?')[0:10]
 
         return render(request, 'project/project_detail.html', {
             'project_info': project_info, 'species': species, 'pk': pk,
@@ -1822,7 +1823,7 @@ def project_detail(request, pk):
             'projects': project_list, 'is_project_authorized': is_project_authorized,'is_project_public':is_project_public,
             'county_list':county_list,'protectedarea_list':protectedarea_list,
             'altitude__min':altitude__min,'altitude__max':altitude__max, #'sa_list': list(sa_list),'sa_d_list': sa_d_list, 
-            'remarks': remarks
+            #'remarks': remarks
         })
     except:
         return render(request, 'base/404.html')
@@ -2006,21 +2007,51 @@ def data(request):
         d_names = pd.DataFrame(Deployment.objects.filter(id__in=df.deployment_id.unique()).values('id', 'name')).rename(columns={'id': 'deployment_id', 'name': 'dname'})
         df = df.merge(d_names).merge(sa_names)
 
-        with connection.cursor() as cursor:
-            if is_project_authorized:
-                query = """SELECT COUNT(*)
-                            FROM taicat_image i
-                            JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.project_id = {} {} {} {} {} {} {} {}"""
-            else:
-                query = """SELECT COUNT(*)
-                            FROM taicat_image i
-                            JOIN ({}) d ON d.id = i.deployment_id
-                            WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {} {}"""
-            cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
-            count = cursor.fetchone()
-        total = count[0]
 
+        exact_count = True # False: 用 explain 估算
+        if 'all' in deployment and len(deployment) > 1:
+            all_dep_ids = [str(x.id) for x in Deployment.objects.filter(project_id=329, study_area_id__gt=0).exclude(deprecated=True).all()]
+            if len(set(deployment)) == len(all_dep_ids) + 1: # +1: all
+                exact_count = False
+        if conditions != '' or spe_conditions != '' or folder_filter != '' or media_type_filter != '' or remarks_filter != '':
+            exact_count = True
+
+
+        #print(exact_count)
+        if exact_count == True:
+            with connection.cursor() as cursor:
+                if is_project_authorized:
+                    query = """SELECT COUNT(*)
+                                FROM taicat_image i
+                                JOIN ({}) d ON d.id = i.deployment_id
+                                WHERE i.project_id = {} {} {} {} {} {} {} {}"""
+                else:
+                    query = """SELECT COUNT(*)
+                                FROM taicat_image i
+                                JOIN ({}) d ON d.id = i.deployment_id
+                                WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {} {}"""
+                cursor.execute(query.format(deployment_sql, pk, date_filter, conditions, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
+                count = cursor.fetchone()
+                total = count[0]
+                print(total,'1')
+        else:
+            with connection.cursor() as cursor:
+                if is_project_authorized:
+                    query = """EXPLAIN SELECT *
+                                FROM taicat_image i
+                                WHERE i.project_id = {} {} {} {} {} {} {}"""
+                else:
+                    query = """EXPLAIN SELECT *
+                                FROM taicat_image i
+                                WHERE i.species not in ('人','人（有槍）','人＋狗','狗＋人','獵人','砍草工人','研究人員','研究人員自己','除草工人') and i.project_id = {} {} {} {} {} {} {}"""
+
+                cursor.execute(query.format(pk, date_filter, spe_conditions, time_filter, folder_filter, media_type_filter, remarks_filter))
+                ## TODO: 先拿掉conditions (deployment & studyarea), 因為誤差很大
+                # deployment_sql也先拿掉
+                explain_result = cursor.fetchall()
+                m = re.search('rows=([0-9]*)', explain_result[0][0])
+                total = int(m[1])
+                print(total, '2')
         # print('c-1', time.time()-t)
         # recordsFiltered = recordsTotal
 
@@ -2811,3 +2842,14 @@ def update_line_chart(request):
 
     return HttpResponse(json.dumps(response, default=str), content_type='application/json')
 
+def project_remarks(request, pk):
+    resp = {'data': []}
+    query = Image.objects.filter(project_id=pk).values('remarks').distinct().exclude(remarks__exact='').exclude(remarks__isnull=True)
+    if q := request.GET.get('q'):
+        remarks = query.filter(remarks__icontains=q).order_by('remarks').all()
+    else:
+        remarks = query.order_by('?').all()[0:10]
+        print(remarks.query)
+    resp['data'] = [x['remarks'] for x in remarks]
+
+    return HttpResponse(json.dumps(resp), content_type='application/json')

@@ -460,7 +460,7 @@ class Deployment(models.Model):
     latitude = models.DecimalField(decimal_places=8, max_digits=20, null=True, blank=True)
     altitude = models.SmallIntegerField(null=True, blank=True, db_index=True)
     # deploymentLocationID
-    name = models.CharField(max_length=1000)
+    name = models.CharField(max_length=1000, db_index=True)
     # cameraStatus
     camera_status = models.CharField(max_length=4, default='1', choices=CAMERA_STATUS_CHOICES)
     study_area = models.ForeignKey(StudyArea, on_delete=models.SET_NULL, null=True)
