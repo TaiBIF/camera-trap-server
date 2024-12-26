@@ -989,6 +989,14 @@ def stat_studyarea(request):
 def api_dashboard(request, chart):
 
     if chart == 'app_ver':
+        # new version
+        ver_dict = {}
+        dj_list = DeploymentJournal.objects.filter(num_of_images__gt=0).values('client_version').annotate(n=Sum('num_of_images')).order_by('client_version')
+        for x in dj_list:
+            s = x['client_version'].split('(')
+            ver_dict[f'APP-v{s[0]}'] = x['n']
+
+        # old version
         query = "SELECT split_part(memo, '/', 1) as version, COUNT(*) FROM taicat_image WHERE project_id=329 AND memo != '' AND annotation_seq = 0 GROUP BY version ORDER BY version;"
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -998,6 +1006,11 @@ def api_dashboard(request, chart):
                 'labels': [x[0] for x in data],
                 'data': [x[1] for x in data],
             }
+            # no overlap
+            for k, v in ver_dict.items():
+                res['labels'].append(k)
+                res['data'].append(v)
+
             return JsonResponse(res)
 
     elif chart == 'top3':
