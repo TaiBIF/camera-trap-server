@@ -636,8 +636,8 @@ def set_deployment_journal(data, deployment):
         # save upload client info
         obj.uploader_id = uid
         obj.num_of_images = data['num_of_images']
-        obj.client_version = data['client_hostname']
-        obj.client_hostname = data['client_version']
+        obj.client_hostname = data['client_hostname']
+        obj.client_version = data['client_version']
 
     # 有時間才算有效
     if trip_start and trip_end:
