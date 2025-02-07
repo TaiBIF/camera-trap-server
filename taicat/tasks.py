@@ -157,10 +157,11 @@ def process_image_annotation_task(deployment_journal_id, data):
                 print ('Does Not Exist!')
                 continue
 
-        elif img2 := Image.objects.filter(image_hash=i[6], deployment_id=deployment_journal.deployment_id).first():
+        if i[15] == 'image' and i[6]:
+            if img2 := Image.objects.filter(image_hash=i[6], deployment_id=deployment_journal.deployment_id).first():
             # if annotated image already uploaded, don't create duplicated image, 2024.11.25
-            img = img2
-            has_image = True
+                img = img2
+                has_image = True
 
         if has_image is True:
             next_status = 'finished' # re-upload
