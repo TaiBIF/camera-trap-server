@@ -157,11 +157,12 @@ def process_image_annotation_task(deployment_journal_id, data):
                 print ('Does Not Exist!')
                 continue
 
-        if i[15] == 'image' and i[6]:
-            if img2 := Image.objects.filter(image_hash=i[6], deployment_id=deployment_journal.deployment_id).first():
-            # if annotated image already uploaded, don't create duplicated image, 2024.11.25
-                img = img2
-                has_image = True
+        # 先不處理判斷重複上傳照片, 2025.03.12
+        # if i[15] == 'image' and i[6]:
+        #     if img2 := Image.objects.filter(image_hash=i[6], deployment_id=deployment_journal.deployment_id).first():
+        #     # if annotated image already uploaded, don't create duplicated image, 2024.11.25
+        #         img = img2
+        #         has_image = True
 
         if has_image is True:
             next_status = 'finished' # re-upload

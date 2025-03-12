@@ -1034,6 +1034,7 @@ class DeploymentJournal(models.Model):
     created = models.DateTimeField(auto_now_add=True, null=True)
     last_updated = models.DateTimeField(null=True, auto_now_add=True)
     upload_status = models.CharField(max_length=100, null=True, blank=True)# start-annotation/start-media/finished
+    upload_uuid = models.CharField(max_length=100, null=True, blank=True)
     uploader = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True)
     num_of_images = models.IntegerField(null=True, blank=True)
     client_version = models.CharField(max_length=100, null=True, blank=True)
