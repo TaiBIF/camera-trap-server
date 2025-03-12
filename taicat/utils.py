@@ -585,10 +585,17 @@ def set_deployment_journal(data, deployment):
     # if data.get('trip_start') and data.get('trip_end') and data.get('folder_name') and data.get('source_id'):  # 不要判斷了
 
     is_new = None
-    dj_exist = DeploymentJournal.objects.filter(
-        deployment=deployment,
-        folder_name=data['folder_name'],
-        local_source_id=data['source_id']).first()
+    dj_exist = None
+    upload_uuid = data.get('upload_uuid')
+
+    # check which deploymentjournal
+    if x := DeploymentJournal.objects.filter(upload_uuid=upload_uuid).first():
+        dj_exist = x
+    else:
+        dj_exist = DeploymentJournal.objects.filter(
+            deployment=deployment,
+            folder_name=data['folder_name'],
+            local_source_id=data['source_id']).first()
 
     trip_start = sanitize_date(data['trip_start'])
     trip_end = sanitize_date(data['trip_end'])
@@ -618,6 +625,8 @@ def set_deployment_journal(data, deployment):
             local_source_id=data['source_id'],
             last_updated=timezone.now()
         )
+        if upload_uuid != '':
+            dj_new.upload_uuid = upload_uuid
 
         is_new = True
 
