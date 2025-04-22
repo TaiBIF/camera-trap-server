@@ -93,7 +93,7 @@ def api_named_areas(request):
 
 
 def api_get_species(request):
-    species_list = [x.to_dict() for x in Species.objects.filter(is_default=True).all()]
+    species_list = [x.to_dict() for x in Species.objects.filter(Q(is_default=True) | Q(name__in=['貓', '狗'])).order_by('-is_default').all()]
     return JsonResponse({
         'category': 'species',
         'data': species_list,
