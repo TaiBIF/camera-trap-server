@@ -16,7 +16,7 @@ services:
       - ../ct22-volumes/bucket:/bucket
       - ../ct22-volumes/logs/ct-web:/var/log/ct-web
     command: /srv/start
-    restart: no
+    restart: "no"
     #env_file:
     #  - .env
     environment:
@@ -57,7 +57,7 @@ services:
         max-file: "3"
   redis:
     image: redis:6-alpine
-    restart: no
+    restart: "no"
   celery:
     restart: unless-stopped
     container_name: cameratrap-celery-container
