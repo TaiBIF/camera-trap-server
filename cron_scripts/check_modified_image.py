@@ -3,13 +3,13 @@ import os
 import datetime
 from pathlib import Path
 from django.conf import settings
-from taicat.models import ModifiedImage
+from taicat.models import ModifiedImage, Image
 from taicat.models import Contact
 from taicat.utils import get_studyarea_member
 from django.core.mail import send_mail
 
-modified_images = ModifiedImage.objects.all().values()
-df = pd.DataFrame(list(modified_images))
+#modified_images = ModifiedImage.objects.all().values()
+#df = pd.DataFrame(list(modified_images))
 
 modified_images = ModifiedImage.objects.all().values()
 df = pd.DataFrame(list(modified_images))
@@ -42,6 +42,14 @@ else:
         save_path = os.path.join(save_root, f'{project_id}_{studyarea_id}.csv')
         project_name = group['project'].iloc[0]
         studyarea_name = group['studyarea'].iloc[0]
+
+        # add Image.filename
+        def find_image_id(x):
+            img = Image.objects.get(pk=x)
+            return img.filename
+
+        group['filename'] = group['image_id'].map(find_image_id)
+
         group = group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
         group = group.rename(columns={
             'last_updated': '最後更新日期',
@@ -49,6 +57,7 @@ else:
             'project':'計畫名稱',
             'studyarea':'樣區名稱',
             'deployment':'相機位置',
+            'filename': '原始檔案名稱',
             'species':'物種',
             'life_stage':'年齡',
             'sex':'性別',
