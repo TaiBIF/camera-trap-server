@@ -1152,7 +1152,7 @@ $(document).ready(function () {
 
     if (allEqual(sa_array)) {
       $('#edit-studyarea').val(sa_array[0])
-      $dep.autocomplete('option', 'source', window.sa_d_list[current_row['saname']]);
+      $dep.autocomplete('option', 'source', window.sa_d_list[current_row.data('saname')]);
     } else {
       $('#edit-studyarea').val('')
       $dep.autocomplete('option', 'source', '');
