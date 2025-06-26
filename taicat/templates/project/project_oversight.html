@@ -211,7 +211,7 @@
           <td>
             <div class="absent-box">
               {% for gap in deployment.gaps %}
-              <div class="absent-btn{% if 'caused' in gap %} absent-caused-btn{% endif %}" data-name="{{ deployment.name }}" data-deploymentid="{{ deployment.id}}" data-gapid="{{ gap.id }}" data-caused="{{ gap.caused }}" data-bs-toggle="modal" data-bs-target="#gap-modal" data-gaplabel="{{ gap.label }}" data-gapstart="{{ gap.range.0 }}" data-gapend="{{ gap.range.1 }}">{{ gap.label }}{% if 'caused' in gap %}({{ gap.caused }}){% endif %}</div>
+              <div class="absent-btn{% if 'caused' in gap %} absent-caused-btn{% endif %}" data-name="{{ deployment.name }}" data-deploymentid="{{ deployment.id}}" data-gapid="{% if 'id' in gap %}{{ gap.id }}{% endif %}" data-caused="{% if 'caused' in gap %}{{ gap.caused }}{% endif %}" data-bs-toggle="modal" data-bs-target="#gap-modal" data-gaplabel="{{ gap.label }}" data-gapstart="{{ gap.range.0 }}" data-gapend="{{ gap.range.1 }}">{{ gap.label }}{% if 'caused' in gap %}({{ gap.caused }}){% endif %}</div>
               {% endfor %}
           </td>
 	</tr>
