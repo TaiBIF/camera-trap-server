@@ -14,4 +14,5 @@ python manage.py migrate --no-input
 python manage.py collectstatic --no-input
 pip install gunicorn
 #gunicorn --bind 0.0.0.0:8001 --timeout 300 conf.wsgi --limit-request-line 8190 #--chdir=/code
-gunicorn --bind 0.0.0.0:8000 --workers 17 --worker-class sync --timeout 30 --keepalive 2 --max-requests 1200 --max-requests-jitter 100 --preload --access-logfile /var/log/gunicorn/access.log --error-logfile /var/log/gunicorn/error.log --log-level info --daemon conf.wsgi
+#gunicorn --bind 0.0.0.0:8000 --workers 17 --worker-class sync --timeout 30 --keepalive 2 --max-requests 1200 --max-requests-jitter 100 --preload --access-logfile /var/log/gunicorn/access.log --error-logfile /var/log/gunicorn/error.log --log-level info --daemon conf.wsgi
+gunicorn --bind 0.0.0.0:8001 --timeout 300 conf.wsgi --limit-request-line 8190 --workers 8 --worker-class sync --max-requests 1200 --max-requests-jitter 100
