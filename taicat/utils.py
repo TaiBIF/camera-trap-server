@@ -589,13 +589,16 @@ def set_deployment_journal(data, deployment):
     upload_uuid = data.get('upload_uuid')
 
     # check which deploymentjournal
-    if x := DeploymentJournal.objects.filter(upload_uuid=upload_uuid).first():
-        dj_exist = x
+    if upload_uuid:
+        if x := DeploymentJournal.objects.filter(upload_uuid=upload_uuid).first():
+            dj_exist = x
+
     else:
         dj_exist = DeploymentJournal.objects.filter(
             deployment=deployment,
             folder_name=data['folder_name'],
             local_source_id=data['source_id']).first()
+
 
     trip_start = sanitize_date(data['trip_start'])
     trip_end = sanitize_date(data['trip_end'])
