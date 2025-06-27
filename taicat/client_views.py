@@ -364,6 +364,8 @@ def post_image_annotation1_1(request):
                 ret['deployment_journal_id'] = deployment_journal.id
 
                 return JsonResponse(ret)
+            else:
+                ret['error'] = 'ct-server: deployment_journal_id error'
 
         else:
             ret['error'] = 'ct-server: arguments error (deployment_id)'
