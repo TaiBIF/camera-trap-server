@@ -16,6 +16,7 @@ from conf.settings import BASE_DIR
 from shapely.geometry import Point, shape
 
 import requests
+import logging
 
 import time
 import pandas as pd
@@ -23,6 +24,8 @@ from datetime import datetime, timedelta
 
 import os
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 # from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
@@ -676,16 +679,51 @@ def set_permission(request):
 def get_auth_callback(request):
     original_page_url = request.GET.get('next')
     authorization_code = request.GET.get('code')
+
+    # Check if authorization code exists
+    if not authorization_code:
+        logger.warning('OAuth callback: Missing authorization code')
+        messages.error(request, '授權碼遺失，請重新登入')
+        return redirect('home')
+
     data = {'client_id': settings.ORCID_CLIENT_ID,
             'client_secret': settings.ORCID_CLIENT_SECRET,
             'grant_type': 'authorization_code',
             'code': authorization_code}
     token_url = 'https://orcid.org/oauth/token'
 
-    r = requests.post(token_url, data=data)
-    results = r.json()
-    orcid = results['orcid']
-    name = results['name']
+    try:
+        r = requests.post(token_url, data=data)
+        results = r.json()
+
+        # Check for error in response
+        if 'error' in results:
+            error_description = results.get('error_description', results.get('error'))
+            error_type = results.get('error')
+            logger.error(f'OAuth callback error: {error_type} - {error_description}')
+
+            if 'reused' in error_description.lower() or error_type == 'invalid_grant':
+                messages.error(request, '授權碼已被使用或已過期，請重新登入')
+            else:
+                messages.error(request, f'登入失敗: {error_description}')
+            return redirect('home')
+
+        orcid = results.get('orcid')
+        name = results.get('name')
+
+        if not orcid or not name:
+            logger.error(f'OAuth callback: Missing user info in response: {results}')
+            messages.error(request, '無法取得使用者資訊，請重新登入')
+            return redirect('home')
+
+    except requests.RequestException as e:
+        logger.error(f'OAuth callback network error: {str(e)}')
+        messages.error(request, f'連線失敗: {str(e)}')
+        return redirect('home')
+    except Exception as e:
+        logger.error(f'OAuth callback unexpected error: {str(e)}', exc_info=True)
+        messages.error(request, f'登入過程發生錯誤，請重新嘗試')
+        return redirect('home')
 
     # check if orcid exists in db
     if Contact.objects.filter(orcid=orcid).exists():
