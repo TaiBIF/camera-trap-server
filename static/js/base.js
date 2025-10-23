@@ -120,7 +120,15 @@ $(document).ready(function () {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    $("#getAuth").on("click", function () {
+    $("#getAuth").on("click", function (e) {
+        e.preventDefault();
+
+        // Prevent multiple clicks
+        if ($(this).data('requesting')) {
+            return false;
+        }
+        $(this).data('requesting', true);
+
         let url =
             "https://orcid.org/oauth/authorize?client_id=APP-F6POVPAP5L1JOUN1&response_type=code&scope=/authenticate&redirect_uri=" +
             location.protocol +
