@@ -764,6 +764,15 @@ def get_auth_callback(request):
     request.session["orcid"] = orcid
     request.session["id"] = id
 
+
+    # Prevent redirect loop - don't redirect back to callback URL
+    if not original_page_url or 'callback/orcid' in original_page_url:
+        logger.info(f'OAuth callback: Redirecting to home (original_page_url was {original_page_url})')
+        return redirect('/')
+
+    logger.info(f'OAuth callback success: Redirecting to {original_page_url}')
+
+
     return redirect(original_page_url)
 
 
