@@ -134,7 +134,7 @@ $(document).ready(function () {
             location.protocol +
             "//" +
             location.host +
-            "/callback/orcid/auth?next=" +
+            "/callback/orcid/auth/web?foo=bar&state=" +
             window.location.pathname;
         window.location.href = url;
     });
