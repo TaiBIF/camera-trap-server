@@ -677,8 +677,9 @@ def set_permission(request):
 
 
 def get_auth_callback(request):
-    original_page_url = request.GET.get('next')
+    #original_page_url = request.GET.get('next')
     authorization_code = request.GET.get('code')
+    state = request.GET.get('state') # orcid only support state querystring? (moogoo, 251030)
 
     # Check if authorization code exists
     if not authorization_code:
@@ -735,9 +736,10 @@ def get_auth_callback(request):
         name = contact.name
         id = contact.id
 
-        if 'desktop_login' in original_page_url:
-            url_parts = original_page_url.split('?t=')
-            contact.desktop_login = url_parts[1]
+        #if 'desktop_login' in original_page_url:
+        #    url_parts = original_page_url.split('?t=')
+        if via == 'desktop_login':
+            contact.desktop_login = state #url_parts[1]
             contact.save()
 
         request.session["first_login"] = False
@@ -752,9 +754,10 @@ def get_auth_callback(request):
         request.session["id"] = id
         request.session["first_login"] = True
 
-        if 'desktop_login' in original_page_url:
-            url_parts = original_page_url.split('?t=')
-            new_user.desktop_login = url_parts[1]
+        #if 'desktop_login' in original_page_url:
+        if via == 'desktop_login':
+            #url_parts = original_page_url.split('?t=')
+            new_user.desktop_login = state #url_parts[1]
             new_user.save()
 
         return redirect(personal_info)
@@ -766,14 +769,19 @@ def get_auth_callback(request):
 
 
     # Prevent redirect loop - don't redirect back to callback URL
-    if not original_page_url or 'callback/orcid' in original_page_url:
-        logger.info(f'OAuth callback: Redirecting to home (original_page_url was {original_page_url})')
-        return redirect('/')
+    #if not original_page_url or 'callback/orcid' in original_page_url:
+    #    logger.info(f'OAuth callback: Redirecting to home (original_page_url was {original_page_url})')
+    #    return redirect('/')
+    if state:
+        if via == 'web':
+            logger.info(f'OAuth callback: Redirecting to home (next_url was {state})')
+            return redirect(state)
+        elif via == 'desktop_login':
+            logger.info(f'OAuth callback success: Redirecting to /desktop_login')
+            return redirect(f'/desktop_login?t={state}')
 
-    logger.info(f'OAuth callback success: Redirecting to {original_page_url}')
 
-
-    return redirect(original_page_url)
+    return redirect('/')
 
 
 def logout(request):
