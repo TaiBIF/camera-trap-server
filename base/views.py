@@ -676,7 +676,7 @@ def set_permission(request):
                     'is_authorized': is_authorized, 'org_list': org_list, 'project_list': project_list, 'org_admin_list': org_admin_list})
 
 
-def get_auth_callback(request):
+def get_auth_callback(request, via):
     #original_page_url = request.GET.get('next')
     authorization_code = request.GET.get('code')
     state = request.GET.get('state') # orcid only support state querystring? (moogoo, 251030)
