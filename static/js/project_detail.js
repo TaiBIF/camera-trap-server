@@ -1158,7 +1158,7 @@ $(document).ready(function () {
       $dep.autocomplete('option', 'source', '');
     }
     allEqual(dep_array) ? $('#edit-deployment').val(dep_array[0]) : $('#edit-deployment').val('');
-    allEqual(species_array) ? $('#edit-species').val(species_array[0]) : $('#edit-species').val('');
+    allEqual(species_array) ? $('#edit-species').val(species_array[0]) : $('#edit-species').val(''); // 不一樣就會被設定成''
     allEqual(life_stage_array) ? $('#edit-life_stage').val(life_stage_array[0]) : $('#edit-life_stage').val('');
     allEqual(sex_array) ? $('#edit-sex').val(sex_array[0]) : $('#edit-sex').val('');
     allEqual(antler_array) ? $('#edit-antler').val(antler_array[0]) : $('#edit-antler').val('');

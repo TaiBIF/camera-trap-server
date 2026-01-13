@@ -1,4 +1,5 @@
 from taicat.models import DeploymentJournal, Image
+from base.models import UploadHistory, UploadNotification
 from django.conf import settings
 
 import boto3
@@ -6,6 +7,7 @@ import boto3
 DJ_ID = GIVE_ME_A_ID
 
 dj = DeploymentJournal.objects.get(pk=DJ_ID)
+'''
 images = Image.objects.filter(deployment_journal_id=DJ_ID).all()
 
 s3_client = boto3.client(
@@ -37,6 +39,10 @@ for i in images:
     #if info := Image_info.objects.filter(image_uuid=i.uuid).first():
     #    info.delete()
 
-    i.delete()
+    #i.delete()
 
+'''
 dj.delete()
+
+
+
