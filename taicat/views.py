@@ -841,7 +841,11 @@ def edit_image(request, pk):
         keys = ['species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks']
         updated_dict = {}
         for k in keys:
-            updated_dict.update({k: requests.get(k)})
+            value = requests.get(k)
+            # Skip species if blank - keep existing value
+            if k == 'species' and not value:
+                continue
+            updated_dict.update({k: value})
 
         project_id = requests.get('project_id')
         if project_id:
@@ -867,64 +871,67 @@ def edit_image(request, pk):
         # taicat_geostat -> 忽略
         # 抓原本的回來減掉
         species = requests.get('species')
-        query = obj.values('species').annotate(total=Count('species')).order_by('-total')
-        for q in query:
-            # print(q)
-            # taicat_species
-            if mode == 'official':
-                if sp := Species.objects.filter(name=q['species']).first():
-                    if sp.count == q['total']: # 該物種全部都先被減掉
-                        sp.delete()
+
+        # Only update species counts if species is provided (not blank)
+        if species:
+            query = obj.values('species').annotate(total=Count('species')).order_by('-total')
+            for q in query:
+                # print(q)
+                # taicat_species
+                if mode == 'official':
+                    if sp := Species.objects.filter(name=q['species']).first():
+                        if sp.count == q['total']: # 該物種全部都先被減掉
+                            sp.delete()
+                        else:
+                            sp.count -= q['total']
+                            sp.last_updated = now
+                            sp.save()
+                # taicat_projectspecies
+                if p_sp := ProjectSpecies.objects.filter(name=q['species'], project_id=pk).first():
+                    if p_sp.count == q['total']:
+                        p_sp.delete()
                     else:
-                        sp.count -= q['total']
-                        sp.last_updated = now
-                        sp.save()
-            # taicat_projectspecies
-            if p_sp := ProjectSpecies.objects.filter(name=q['species'], project_id=pk).first():
-                if p_sp.count == q['total']:
-                    p_sp.delete()
+                        p_sp.count -= q['total']
+                        p_sp.last_updated = now
+                        p_sp.save()
+
+            # 新的加上去
+            if mode == 'official':
+                if sp := Species.objects.filter(name=species).first():
+                    sp.count += c
+                    sp.last_updated = now
+                    sp.save()
                 else:
-                    p_sp.count -= q['total']
+                    sp = Species(name=species, last_updated=now, count=c)
+                    if species in Species.DEFAULT_LIST:
+                        sp.is_default = True
+                    sp.save()
+
+            # taicat_projectspecies
+            if project_id == pk:
+                if p_sp := ProjectSpecies.objects.filter(name=species, project_id=pk).first():
+                    p_sp.count += c
                     p_sp.last_updated = now
                     p_sp.save()
-
-        # 新的加上去
-        if mode == 'official':
-            if sp := Species.objects.filter(name=species).first():
-                sp.count += c
-                sp.last_updated = now
-                sp.save()
-            else:
-                sp = Species(name=species, last_updated=now, count=c)
-                if species in Species.DEFAULT_LIST:
-                    sp.is_default = True
-                sp.save()
-
-        # taicat_projectspecies
-        if project_id == pk:
-            if p_sp := ProjectSpecies.objects.filter(name=species, project_id=pk).first():
-                p_sp.count += c
-                p_sp.last_updated = now
-                p_sp.save()
-            else:
-                p_sp = ProjectSpecies(
-                    name=species,
-                    last_updated=now,
-                    count=c,
-                    project_id=pk)
-                p_sp.save()
-        elif project_id and project_id != pk:
-            if p_sp := ProjectSpecies.objects.filter(name=species, project_id=project_id).first():
-                p_sp.count += c
-                p_sp.last_updated = now
-                p_sp.save()
-            else:
-                p_sp = ProjectSpecies(
-                    name=species,
-                    last_updated=now,
-                    count=c,
-                    project_id=project_id)
-                p_sp.save()
+                else:
+                    p_sp = ProjectSpecies(
+                        name=species,
+                        last_updated=now,
+                        count=c,
+                        project_id=pk)
+                    p_sp.save()
+            elif project_id and project_id != pk:
+                if p_sp := ProjectSpecies.objects.filter(name=species, project_id=project_id).first():
+                    p_sp.count += c
+                    p_sp.last_updated = now
+                    p_sp.save()
+                else:
+                    p_sp = ProjectSpecies(
+                        name=species,
+                        last_updated=now,
+                        count=c,
+                        project_id=project_id)
+                    p_sp.save()
 
         if project_id and project_id != pk:
             # project_stat
@@ -1851,7 +1858,7 @@ def data(request):
     pk = requests.get('pk')
     # _start = requests.get('offset', 0)
     # _length = requests.get('limit', 10)
-    
+
     orderby = requests.get('orderby', 'd.name')
     sort = requests.get('sort', 'asc')
 
