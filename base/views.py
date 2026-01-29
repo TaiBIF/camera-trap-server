@@ -39,6 +39,7 @@ from .utils import (
     update_studyareastat,
     get_request_site_url)
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 # from django.core import serializers
 import geopandas as gpd
 from shapely.geometry import Point
@@ -503,6 +504,7 @@ def announcement_is_read(request):
     return JsonResponse(response,  safe=False) 
 
 
+@login_required
 def announcement(request):
     email_list = []
 
@@ -546,6 +548,7 @@ def announcement(request):
     return render(request, 'base/announcement.html',context)
 
 
+@login_required
 def announcement_request(request):
     # https://stackoverflow.com/questions/38345977/filefield-force-using-temporaryuploadedfile
     try:
