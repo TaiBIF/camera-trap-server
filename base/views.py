@@ -401,14 +401,14 @@ def upload_history(request):
                 deployment_journal_list = DeploymentJournal.objects.filter(studyarea_id__in=sa)
                 print(f'deployment_journal_list:{deployment_journal_list}')
                 query = UploadHistory.objects.filter(deployment_journal_id__in=deployment_journal_list).annotate(
-                    created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),                
+                    created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),
                     last_updated_8=ExpressionWrapper(F('last_updated') + timedelta(hours=8),output_field=DateTimeField()
-                    )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error').order_by('-created')
+                    )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error', 'deployment_journal__uploader__name').order_by('-created')
             else:
                 query = UploadHistory.objects.filter(deployment_journal__project_id__in=my_project_list).annotate(
-                    created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),                
+                    created_8=ExpressionWrapper(F('created') + timedelta(hours=8),output_field=DateTimeField()),
                     last_updated_8=ExpressionWrapper(F('last_updated') + timedelta(hours=8),output_field=DateTimeField()
-                    )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error').order_by('-created')
+                    )).exclude(deployment_journal__deployment__name__isnull=True).values_list('created_8', 'last_updated_8', 'deployment_journal__folder_name', 'deployment_journal__project__name', 'deployment_journal__studyarea__name', 'deployment_journal__deployment__name', 'status', 'deployment_journal__project_id', 'deployment_journal__id', 'species_error', 'upload_error', 'deployment_journal__uploader__name').order_by('-created')
 
             if q:
                 query = query.filter(Q(deployment_journal__project__name__icontains=q) |

@@ -105,6 +105,7 @@
 					<td>所屬計畫</td>
 					<td>樣區</td>
 					<td>相機位置</td>
+					<td>上傳者</td>
 					<td>上傳結果</td>
 					<td>詳細</td>
 				</tr>
@@ -124,6 +125,7 @@
 						<td>{{ i.3 }}</td>
 						<td>{{ i.4 }}</td>
 						<td>{% if i.5 != None %} {{ i.5 }}{% else %}已刪除{% endif%}</td>
+						<td>{{ i.11|default:"-" }}</td>
 
 					<td>
 						<div class="infbox">
@@ -153,7 +155,7 @@
 					{% endfor %}
 				  	{% else %}
 					<tr>
-						<td colspan="8">暫無紀錄</td>
+						<td colspan="9">暫無紀錄</td>
 					</tr>
 				  	{% endif %}
 				</tr>
@@ -297,7 +299,7 @@
 						{% endfor %}
 					  {% else %}
 					  <tr>
-						<td colspan="8">暫無紀錄</td>
+						<td colspan="9">暫無紀錄</td>
 					  </tr>
 					  {% endif %}
 					</tr>
