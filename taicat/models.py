@@ -1166,6 +1166,7 @@ class ModifiedImage(models.Model):
     project_id = models.IntegerField(default=1)
     studyarea_id = models.IntegerField(default=1)
     image_id = models.IntegerField()
+    contact_id = models.IntegerField(null=True, blank=True)
     last_updated = models.DateField(auto_now_add=True, null=False, blank=False)
     datetime = models.DateTimeField(null=True)
     project = models.CharField(max_length=1000, null=True)

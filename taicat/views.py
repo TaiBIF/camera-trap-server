@@ -1025,6 +1025,7 @@ def edit_image(request, pk):
                                 .first()
             image_after_update_list.append(info)
 
+        member_id = request.session.get('id', None)
         modified_images = []
         for i in range(len(image_id)):
             print(image_before_update_list[i].get('project_id'))
@@ -1037,6 +1038,7 @@ def edit_image(request, pk):
                 modified_images.append(
                     ModifiedImage(
                         image_id=int(image_id[i]),
+                        contact_id=member_id,
                         project_id=image_before_update_list[i].get('project_id'),
                         studyarea_id=image_before_update_list[i].get('studyarea_id'),
                         datetime=image_before_update_list[i].get('datetime'),
