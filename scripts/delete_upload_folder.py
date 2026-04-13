@@ -88,11 +88,12 @@ def delete_folder_by_dj(dj, s3_client, dry_run=False):
         print(f"    No UploadHistory found")
 
     # 3. Delete DeploymentJournal
+    dj_id = dj.id
     if dry_run:
-        print(f"    [DRY-RUN] would delete DeploymentJournal id={dj.id}")
+        print(f"    [DRY-RUN] would delete DeploymentJournal id={dj_id}")
     else:
         dj.delete()
-        print(f"    Deleted DeploymentJournal id={dj.id}")
+        print(f"    Deleted DeploymentJournal id={dj_id}")
 
 
 def delete_folder(folder_name, s3_client, dry_run=False):
