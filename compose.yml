@@ -15,6 +15,7 @@ services:
       - ../ct22-volumes/media:/ct22-volumes/media
       - ../ct22-volumes/bucket:/bucket
       - ../ct22-volumes/logs/ct-web:/var/log/ct-web
+      - ../ct22-volumes/duckdb:/duckdb
     command: /srv/start
     restart: "no"
     #env_file:
@@ -104,6 +105,22 @@ services:
       - POSTGRES_PASSWORD=example
       - POSTGRES_DB=cameratrap
       - CELERY_BROKER_URL=redis://redis:6379/3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+  slack_bot:
+    build:
+      context: ./slack_bot
+      dockerfile: Dockerfile
+    container_name: cameratrap-slack-bot-container
+    image: cameratrap-slack-bot-image
+    env_file:
+      - ./slack_bot/.env
+    volumes:
+      - ../ct22-volumes/duckdb:/data:ro
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
