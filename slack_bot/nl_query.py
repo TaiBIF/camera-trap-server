@@ -19,6 +19,22 @@ QUERY_TIMEOUT_MS = 15_000
 _schema_path = Path(__file__).parent / 'schema.md'
 SCHEMA_DOC = _schema_path.read_text(encoding='utf-8')
 
+DEFAULT_PROJECT_ID = os.environ.get('DEFAULT_PROJECT_ID', '').strip()
+if DEFAULT_PROJECT_ID:
+    SCHEMA_DOC += (
+        f'\n## Default project scope\n\n'
+        f'Unless the user explicitly names a different project or clearly asks a '
+        f'cross-project question (e.g. "which project has the most…"), scope every '
+        f'query to `project_id = {DEFAULT_PROJECT_ID}`:\n'
+        f'- On `image`, `deployment`, `studyarea`, `deploymentjournal`, '
+        f'`calculation`, `projectspecies`, `projectstat`, `deploymentstat`, and '
+        f'views like `v_project_summary` / `v_species_by_project`: add '
+        f'`project_id = {DEFAULT_PROJECT_ID}` to the WHERE clause.\n'
+        f'- On the `project` table directly: filter `id = {DEFAULT_PROJECT_ID}`.\n'
+        f'- For `v_species_total` (no project column): JOIN through `image` and '
+        f'filter there, or build the aggregation from scratch with the filter.\n'
+    )
+
 SQLGEN_SYSTEM = (
     'You convert Chinese/English wildlife camera-trap analytics questions into '
     'a single read-only DuckDB SQL query. Output ONLY the SQL, no prose, no '
