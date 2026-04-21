@@ -1,6 +1,7 @@
 """Natural-language querying: question -> SQL -> DuckDB -> summary."""
 import logging
 import os
+import threading
 from pathlib import Path
 
 import anthropic
@@ -59,13 +60,15 @@ def _generate_sql(question: str) -> str:
 
 def _execute(sql: str) -> tuple[list[str], list[tuple]]:
     con = duckdb.connect(DUCKDB_PATH, read_only=True)
+    timer = threading.Timer(QUERY_TIMEOUT_MS / 1000.0, con.interrupt)
+    timer.start()
     try:
-        con.execute(f"SET statement_timeout = '{QUERY_TIMEOUT_MS}ms';")
         cursor = con.execute(sql)
         rows = cursor.fetchmany(MAX_ROWS)
         columns = [d[0] for d in cursor.description] if cursor.description else []
         return columns, rows
     finally:
+        timer.cancel()
         con.close()
 
 
