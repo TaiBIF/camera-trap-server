@@ -1,7 +1,8 @@
-"""Slash command handlers (phase 1 MVP)."""
+"""Slash command handlers."""
 import json
 
 from db import query, snapshot_info
+from nl_query import ask
 
 
 def cmd_help(text: str) -> str:
@@ -11,6 +12,7 @@ def cmd_help(text: str) -> str:
         '`/ct-projects [keyword]`  列出計畫（可用關鍵字過濾）\n'
         '`/ct-stats <project_id|name>`  某計畫的統計摘要\n'
         '`/ct-snapshot`  顯示目前資料快照時間\n'
+        '`/ct-ask <問題>`  用自然語言提問（LLM 生成 SQL）\n'
     )
 
 
@@ -124,4 +126,5 @@ HANDLERS = {
     '/ct-projects': cmd_projects,
     '/ct-stats': cmd_stats,
     '/ct-snapshot': cmd_snapshot,
+    '/ct-ask': ask,
 }
