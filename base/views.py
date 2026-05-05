@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 # from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 import threading
 from django.http import response, JsonResponse
 from .models import *
@@ -442,10 +444,25 @@ def feedback_request(request):
     # https://stackoverflow.com/questions/38345977/filefield-force-using-temporaryuploadedfile
     try:
         # print(request.POST)
+        # Honeypot: real users can't see this field, bots fill it in
+        if request.POST.get('website'):
+            return JsonResponse({"status": 'fail'}, safe=False)
+
         q_detail_type = request.POST.getlist('q-detail-type')
         q_detail_type = ','.join(q_detail_type)
         description = request.POST.get('description')
         email = request.POST.get('email')
+
+        # Reject malformed emails (SQL-injection junk, garbage strings) and
+        # RFC 2606 reserved domains (example.{com,org,net}) — only spam bots use them
+        try:
+            validate_email(email)
+        except (ValidationError, TypeError):
+            return JsonResponse({"status": 'fail'}, safe=False)
+        domain = email.rsplit('@', 1)[-1].lower()
+        if domain in ('example.com', 'example.org', 'example.net'):
+            return JsonResponse({"status": 'fail'}, safe=False)
+
         # user = '1'
         user = email.split('@')[0]
         files = request.FILES.getlist('uploaded_file')
