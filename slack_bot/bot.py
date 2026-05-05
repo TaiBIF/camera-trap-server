@@ -1,6 +1,7 @@
 """Slack Bolt entrypoint — Socket Mode (no public URL required)."""
 import logging
 import os
+import threading
 
 from dotenv import load_dotenv
 from slack_bolt import App
@@ -41,12 +42,16 @@ def _register(cmd_name: str):
 
         log.info('cmd=%s user=%s channel=%s text=%r',
                  cmd_name, user, channel_name, text)
-        try:
-            reply = handler(text)
-        except Exception as exc:
-            log.exception('handler failed for %s', cmd_name)
-            reply = f':warning: 發生錯誤：`{exc}`'
-        respond({'response_type': 'ephemeral', 'text': reply})
+
+        def _work():
+            try:
+                reply = handler(text)
+            except Exception as exc:
+                log.exception('handler failed for %s', cmd_name)
+                reply = f':warning: 發生錯誤：`{exc}`'
+            respond({'response_type': 'ephemeral', 'text': reply})
+
+        threading.Thread(target=_work, daemon=True).start()
 
 
 for _cmd in HANDLERS:
