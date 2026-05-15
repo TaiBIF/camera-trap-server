@@ -526,7 +526,7 @@ def announcement_is_read(request):
 def announcement(request):
     email_list = []
 
-    # 所有人 
+    # 所有人
     all_ppl = []
     for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').values('name','email'):
         all_ppl.append(x['email'])
@@ -534,32 +534,37 @@ def announcement(request):
     organization_admin = []
     for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(is_organization_admin=True).values('name','email'):
         organization_admin.append(x['email'])
-        
+
     # 計畫承辦人 select * from taicat_projectmember where role = 'project_admin';
     project_admin = []
     for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='project_admin').values('member_id')).values('name','email'):
         project_admin.append(x['email'])
-        
+
     # 資料上傳者 select * from taicat_projectmember where role = 'uploader';
     uploader = ['jhujyunjhang@gmail.com']
-    
+
     # for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='uploader').values('member_id')).values('name','email'):
     #     uploader.append(x['email'])
-    
+
     # other = []
     # for x in Contact.objects.filter(id=).values('name','email'):
     #     other.append(x['email'])
-    
+
     email_list = {
-        "all_ppl": ','.join(all_ppl), 
-        "organization_admin": ','.join(organization_admin), 
-        "project_admin": ','.join(project_admin), 
-        "uploader": ','.join(uploader), 
+        "all_ppl": ','.join(all_ppl),
+        "organization_admin": ','.join(organization_admin),
+        "project_admin": ','.join(project_admin),
+        "uploader": ','.join(uploader),
         # "other" :','.join(other),
     }
-    
+
+    user_id = request.session.get('id')
+    is_system_admin = Contact.objects.filter(id=user_id, is_system_admin=True).exists()
+
     context = {
-        'email' : email_list,
+        'email': email_list,
+        'is_system_admin': is_system_admin,
+        'test_receiver': settings.ANNOUNCEMENT_TEST_RECEIVER,
     }
 
     return render(request, 'base/announcement.html',context)

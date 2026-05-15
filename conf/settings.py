@@ -200,6 +200,7 @@ AWS_S3_BUCKET = env('AWS_S3_BUCKET', default='')
 
 CT_SERVICE_EMAIL = env('CT_SERVICE_EMAIL', default='')
 CT_BCC_EMAIL_LIST = env('CT_BCC_EMAIL_LIST', default='')
+ANNOUNCEMENT_TEST_RECEIVER = env('ANNOUNCEMENT_TEST_RECEIVER', default='')
 
 
 MEDIA_URL = '/media/'
