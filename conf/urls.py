@@ -19,6 +19,9 @@ from django.urls import path, include, re_path
 from conf import settings
 from django.views.static import serve
 from taicat.client_views import post_image_annotation1_1
+from base.views import page_404
+
+handler404 = page_404
 
 urlpatterns = [
     path('admin/', admin.site.urls),
