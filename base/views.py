@@ -39,7 +39,8 @@ from django.db.models.functions import Trunc, TruncDate
 from .utils import (
     DecimalEncoder,
     update_studyareastat,
-    get_request_site_url)
+    get_request_site_url,
+    session_login_required)
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 # from django.core import serializers
@@ -149,6 +150,7 @@ def desktop_login_verify(request):
     return JsonResponse(res)
 
 
+@session_login_required
 def desktop(request):
     is_desktop_authorized = False
     user_id = request.session.get('id', None)
@@ -529,7 +531,6 @@ def announcement(request):
     all_ppl = []
     for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').values('name','email'):
         all_ppl.append(x['email'])
-        
     # 計畫總管理人 select * from taicat_contact where  is_organization_admin = true;
     organization_admin = []
     for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(is_organization_admin=True).values('name','email'):
@@ -1173,6 +1174,7 @@ def api_dashboard(request, chart):
 def page_404(request):
     return render(request, 'base/404.html')
 
+@session_login_required
 def download_desktop_file(request):
     file_path = os.path.join(settings.MEDIA_ROOT, 'desktop', 'desktop.zip')
     is_desktop_authorized = False
