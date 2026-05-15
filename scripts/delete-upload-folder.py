@@ -10,12 +10,7 @@ dj = DeploymentJournal.objects.get(pk=DJ_ID)
 '''
 images = Image.objects.filter(deployment_journal_id=DJ_ID).all()
 
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-    region_name='ap-northeast-1'
-)
+s3_client = boto3.client('s3', region_name='ap-northeast-1')
 
 print('images: ', len(images))
 for i in images:

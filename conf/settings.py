@@ -190,15 +190,17 @@ SERIALIZATION_MODULES = {
 }
 
 # email
+# AWS credentials are sourced from the boto3 credential chain
+# (EC2 instance profile in prod). Do not set AWS_ACCESS_KEY_ID /
+# AWS_SECRET_ACCESS_KEY here.
 EMAIL_BACKEND = 'django_ses.SESBackend'
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='')
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='')
 AWS_SES_REGION_NAME = env('AWS_SES_REGION_NAME', default='')
 AWS_SES_REGION_ENDPOINT = env('AWS_SES_REGION_ENDPOINT', default='')
 AWS_S3_BUCKET = env('AWS_S3_BUCKET', default='')
 
 CT_SERVICE_EMAIL = env('CT_SERVICE_EMAIL', default='')
 CT_BCC_EMAIL_LIST = env('CT_BCC_EMAIL_LIST', default='')
+ANNOUNCEMENT_TEST_RECEIVER = env('ANNOUNCEMENT_TEST_RECEIVER', default='')
 
 
 MEDIA_URL = '/media/'

@@ -25,12 +25,7 @@ from base.models import UploadHistory, UploadNotification
 
 
 def get_s3_client():
-    return boto3.client(
-        's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name='ap-northeast-1',
-    )
+    return boto3.client('s3', region_name='ap-northeast-1')
 
 
 def delete_s3_image(s3_client, image_uuid, dry_run=False):
