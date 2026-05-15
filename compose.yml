@@ -110,19 +110,3 @@ services:
       options:
         max-size: "1m"
         max-file: "3"
-  slack_bot:
-    build:
-      context: ./slack_bot
-      dockerfile: Dockerfile
-    container_name: cameratrap-slack-bot-container
-    image: cameratrap-slack-bot-image
-    env_file:
-      - ./slack_bot/.env
-    volumes:
-      - ../ct22-volumes/duckdb:/data:ro
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1m"
-        max-file: "3"
