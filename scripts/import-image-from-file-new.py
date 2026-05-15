@@ -49,18 +49,12 @@ def make_thumb(src_path, thumb_source_path, oid):
 
 
 def upload_to_s3(file_path, object_name):
-    key = ''
-    secret = ''
     bucket_name = 'camera-trap-21-prod'
     ret = {
         'data': {},
         'error': ''
     }
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=key,
-        aws_secret_access_key=secret,
-    )
+    s3_client = boto3.client('s3', region_name='ap-northeast-1')
     try:
         response = s3_client.upload_file(
             file_path,

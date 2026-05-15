@@ -1292,12 +1292,7 @@ def check_image_storage(image):
     unfinish update image has_storage
     should consider clone image, duplicated image_uuid
     '''
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name='ap-northeast-1'
-    )
+    s3_client = boto3.client('s3', region_name='ap-northeast-1')
 
     try:
         response = s3_client.head_object(
