@@ -1175,8 +1175,8 @@ def api_dashboard(request, chart):
 
     return JsonResponse(res)
 
-def page_404(request):
-    return render(request, 'base/404.html')
+def page_404(request, exception=None):
+    return render(request, 'base/404.html', status=404)
 
 @session_login_required
 def download_desktop_file(request):
