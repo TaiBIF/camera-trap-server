@@ -196,6 +196,7 @@ SERIALIZATION_MODULES = {
 EMAIL_BACKEND = 'django_ses.SESBackend'
 AWS_SES_REGION_NAME = env('AWS_SES_REGION_NAME', default='')
 AWS_SES_REGION_ENDPOINT = env('AWS_SES_REGION_ENDPOINT', default='')
+AWS_SES_AUTO_THROTTLE = False  # skip GetSendQuota check; throttling handled by SES itself
 AWS_S3_BUCKET = env('AWS_S3_BUCKET', default='')
 
 CT_SERVICE_EMAIL = env('CT_SERVICE_EMAIL', default='')
