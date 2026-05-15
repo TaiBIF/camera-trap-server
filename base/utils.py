@@ -1,4 +1,7 @@
+from functools import wraps
+
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.shortcuts import redirect
 import six
 from django.core.cache import cache
 import time
@@ -8,6 +11,15 @@ import pandas as pd
 import json
 from decimal import Decimal
 from django.utils import timezone
+
+
+def session_login_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get('is_login', False):
+            return redirect('/')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
