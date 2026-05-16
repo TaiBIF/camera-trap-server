@@ -71,10 +71,10 @@
               <div class="input-item">
                 <p><span class="red">*</span>收件人</p>
                 <select id="email-option" name="email" class="form-control">
-                  <option value={{email.all_ppl}} selected="selected" name="email">所有人</option>
-                  <option value={{email.organization_admin}} selected="selected" name="email">計畫總管理人</option>
-                  <option value={{email.project_admin}} selected="selected" name="email">計畫承辦人</option>
-                  <option value={{email.uploader}} selected="selected" name="email">資料上傳者</option>
+                  <option value="{{ email.all_ppl }}" name="email">所有人</option>
+                  <option value="{{ email.organization_admin }}" name="email">計畫總管理人</option>
+                  <option value="{{ email.project_admin }}" name="email">計畫承辦人</option>
+                  <option value="{{ email.uploader }}" name="email">資料上傳者</option>
                   {% if is_system_admin and test_receiver %}
                   <option value="{{ test_receiver }}" name="email">測試收件人 ({{ test_receiver }})</option>
                   {% endif %}

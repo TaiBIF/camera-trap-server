@@ -509,7 +509,10 @@ def feedback_request(request):
 
 
 def send_msg(msg):
-    msg.send()
+    try:
+        msg.send()
+    except Exception as e:
+        logger.error(f'send_msg failed: {e}', exc_info=True)
 
 
 def announcement_is_read(request):
