@@ -9,7 +9,8 @@ AWS_SES_REGION_NAME=region
 AWS_SES_REGION_ENDPOINT=endpoint
 AWS_S3_BUCKET=bucket
 CT_BCC_EMAIL_LIST=list
-CT_SERVICE_EMAIL=email
+CT_SERVICE_EMAIL=noreply@camera-trap.tw
+# comma-separated, e.g. a@example.com,b@example.com
 ANNOUNCEMENT_TEST_RECEIVER=
 ORCID_CLIENT_ID=1234
 ORCID_CLIENT_SECRET=5678

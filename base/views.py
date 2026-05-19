@@ -223,7 +223,7 @@ def send_upload_notification(upload_history_id, member_list, request):
         <br>"""
 
         subject = '[臺灣自動相機資訊系統] 上傳通知'
-        msg = EmailMessage(subject, html_content, 'Camera Trap <no-reply@camera-trap.tw>', [], email_list)
+        msg = EmailMessage(subject, html_content, settings.CT_SERVICE_EMAIL, [], email_list)
         msg.content_subtype = "html"  # Main content is now text/html
         # 改成背景執行
         task = threading.Thread(target=send_msg, args=(msg,))
@@ -489,7 +489,7 @@ def feedback_request(request):
 
         subject = '[臺灣自動相機資訊系統] 問題回饋'
 
-        msg = EmailMessage(subject, html_content, 'Camera Trap <no-reply@camera-trap.tw>', [settings.CT_SERVICE_EMAIL])
+        msg = EmailMessage(subject, html_content, settings.CT_SERVICE_EMAIL, [settings.CT_SERVICE_EMAIL])
         msg.content_subtype = "html"  # Main content is now text/html
         # # save files to temporary dir
         for f in files:
