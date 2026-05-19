@@ -509,7 +509,12 @@ def feedback_request(request):
 
 
 def send_msg(msg):
-    msg.send()
+    recipients = (msg.to or []) + (msg.cc or []) + (msg.bcc or [])
+    try:
+        msg.send()
+        logger.info(f'send_msg ok: subject={msg.subject!r} recipients={recipients}')
+    except Exception as e:
+        logger.error(f'send_msg failed: {e} subject={msg.subject!r} recipients={recipients}', exc_info=True)
 
 
 def announcement_is_read(request):
@@ -541,10 +546,9 @@ def announcement(request):
         project_admin.append(x['email'])
 
     # 資料上傳者 select * from taicat_projectmember where role = 'uploader';
-    uploader = ['jhujyunjhang@gmail.com']
-
-    # for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='uploader').values('member_id')).values('name','email'):
-    #     uploader.append(x['email'])
+    uploader = []
+    for x in Contact.objects.exclude(email__isnull=True).exclude(email__exact='').filter(id__in=ProjectMember.objects.filter(role='uploader').values('member_id')).values('name','email'):
+        uploader.append(x['email'])
 
     # other = []
     # for x in Contact.objects.filter(id=).values('name','email'):
@@ -576,39 +580,37 @@ def announcement_request(request):
     try:
         announcement_title = request.POST.get('announcement-title')
         description = request.POST.get('description').replace('\r\n','<br>')
-        email_to = request.POST.get('email').split(',')
-       
-        chunk_size = 50
-        i = 0 
-        while email_to:
-            chunk, email_to = email_to[:chunk_size], email_to[chunk_size:]
-            # print(chunk)
+        email_to = [x.strip() for x in request.POST.get('email').split(',') if x.strip()]
 
-            # send email
-            html_content = f"""
-            您好：
-            <br>
-            <br>
-            {description}
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            臺灣自動相機資訊系統 團隊敬上
-            """
+        html_content = f"""
+        您好：
+        <br>
+        <br>
+        {description}
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        臺灣自動相機資訊系統 團隊敬上
+        """
+        subject = f'[臺灣自動相機資訊系統]公告 {announcement_title}'
 
-            subject = f'[臺灣自動相機資訊系統]公告 {announcement_title}'
-            # ('Subject here','Here is the message.','from@example.com',['to@example.com'],fail_silently=False,)
-            msg = EmailMessage(subject, html_content, settings.CT_SERVICE_EMAIL, bcc=chunk)
-            msg.content_subtype = "html"  # Main content is now text/html
+        # AWS SES: <=50 recipients per call, per-second send rate.
+        # Mirror cron_scripts/check_data_gap.py: chunks of 10 with a 2s gap.
+        chunk_size = 30
 
-            # 改成背景執行
-            task = threading.Thread(target=send_msg, args=(msg,))
-            # task.daemon = True
-            task.start()
-            i = i+1
-            print("email no. ",i , len(chunk))
+        def send_chunks(recipients):
+            for idx in range(0, len(recipients), chunk_size):
+                chunk = recipients[idx:idx + chunk_size]
+                msg = EmailMessage(subject, html_content, settings.CT_SERVICE_EMAIL, bcc=chunk)
+                msg.content_subtype = "html"
+                send_msg(msg)
+
+                if idx + chunk_size < len(recipients):
+                    time.sleep(2)
+
+        threading.Thread(target=send_chunks, args=(email_to,)).start()
 
         return JsonResponse({"status": 'success'}, safe=False)
     except Exception as e:
