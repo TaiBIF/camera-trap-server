@@ -282,9 +282,11 @@ def sync_upload(request, pk):
                 else:
                     uh.set_upload_ok(False)
 
+            now = datetime.now()
             for image_id in images_to_y:
                 img = Image.objects.get(pk=image_id)
                 img.has_storage = 'Y'
+                img.media_uploaded_at = now
                 img.save()
 
         dj_ah = dj.action_history
@@ -385,6 +387,8 @@ def update_image(request):
                 # limited update field
                 if has_storage := data.get('has_storage', ''):
                     image.has_storage = has_storage
+                    if has_storage == 'Y' and not image.media_uploaded_at:
+                        image.media_uploaded_at = datetime.now()
                     image.save()
 
                 # "複製一列" 的資料也要處理
@@ -392,6 +396,8 @@ def update_image(request):
                 for i in related_annotation_images:
                     if has_storage := data.get('has_storage', ''):
                         i.has_storage = has_storage
+                        if has_storage == 'Y' and not i.media_uploaded_at:
+                            i.media_uploaded_at = datetime.now()
                         i.save()
 
         res = {
