@@ -278,6 +278,7 @@ def sync_upload(request, pk):
                 if stats['N-y'] == stats['N']:
                     uh.set_upload_ok(True)
                     is_server_updated = True
+                    dj.upload_status = 'finished'
                 else:
                     uh.set_upload_ok(False)
 
@@ -315,7 +316,7 @@ def check_deployment_journal_upload_status(request, pk):
             'deployment_journal_id': dj.id,
             'upload_status': dj.upload_status,
         })
-        if dj.upload_status != 'start-image-annotation':
+        if dj.upload_status != 'start-annotation':
             rows = Image.objects.values('id', 'source_data', 'image_uuid').filter(deployment_journal_id=dj.id).all()
             img_ids = {}
             for i in rows:
