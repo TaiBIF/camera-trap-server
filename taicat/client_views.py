@@ -278,12 +278,15 @@ def sync_upload(request, pk):
                 if stats['N-y'] == stats['N']:
                     uh.set_upload_ok(True)
                     is_server_updated = True
+                    dj.upload_status = 'finished'
                 else:
                     uh.set_upload_ok(False)
 
+            now = datetime.now()
             for image_id in images_to_y:
                 img = Image.objects.get(pk=image_id)
                 img.has_storage = 'Y'
+                img.media_uploaded_at = now
                 img.save()
 
         dj_ah = dj.action_history
@@ -315,7 +318,7 @@ def check_deployment_journal_upload_status(request, pk):
             'deployment_journal_id': dj.id,
             'upload_status': dj.upload_status,
         })
-        if dj.upload_status != 'start-image-annotation':
+        if dj.upload_status != 'start-annotation':
             rows = Image.objects.values('id', 'source_data', 'image_uuid').filter(deployment_journal_id=dj.id).all()
             img_ids = {}
             for i in rows:
@@ -384,6 +387,8 @@ def update_image(request):
                 # limited update field
                 if has_storage := data.get('has_storage', ''):
                     image.has_storage = has_storage
+                    if has_storage == 'Y' and not image.media_uploaded_at:
+                        image.media_uploaded_at = datetime.now()
                     image.save()
 
                 # "複製一列" 的資料也要處理
@@ -391,6 +396,8 @@ def update_image(request):
                 for i in related_annotation_images:
                     if has_storage := data.get('has_storage', ''):
                         i.has_storage = has_storage
+                        if has_storage == 'Y' and not i.media_uploaded_at:
+                            i.media_uploaded_at = datetime.now()
                         i.save()
 
         res = {

@@ -273,15 +273,18 @@ def update_upload_history(request):
                 uh.species_error = species_error
                 uh.save()
                 upload_history_id = UploadHistory.objects.filter(deployment_journal_id=deployment_journal_id)[0].id
-            else: 
+            else:
                 uh = UploadHistory(
-                        deployment_journal_id=deployment_journal_id, 
+                        deployment_journal_id=deployment_journal_id,
                         status=status,
                         upload_error = upload_error,
                         species_error = species_error,
                         last_updated=timezone.now())
                 uh.save()
                 upload_history_id = uh.id
+
+            if status == 'finished':
+                DeploymentJournal.objects.filter(pk=deployment_journal_id).update(upload_status='finished')
 
             if deployment_journal := DeploymentJournal.objects.get(pk=deployment_journal_id):
                 project_id = DeploymentJournal.objects.filter(id=deployment_journal_id).values('project_id')[0]['project_id']

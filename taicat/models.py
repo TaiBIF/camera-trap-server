@@ -852,6 +852,7 @@ class Image(models.Model):
     # file_path = models.TextField(default='', blank=True)  # deprecated
     image_uuid = models.CharField(max_length=1000, default='', blank=True, null=True, db_index=True)
     has_storage = models.CharField('實體檔案(有無上傳)', max_length=2, default='Y', blank=True) # Y/N or 如果之後有其他種狀況, 如: 存在別的圖台?
+    media_uploaded_at = models.DateTimeField(null=True, blank=True) # 實體檔案上傳到 S3 的時間 (has_storage N→Y 的時刻)
     source_data = models.JSONField(default=dict, blank=True)
     # exif = models.JSONField(default=dict, blank=True)
     folder_name = models.CharField(max_length=1000, default='', blank=True, db_index=True)
