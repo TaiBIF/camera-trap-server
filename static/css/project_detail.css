@@ -695,3 +695,10 @@ div.dt-buttons{
   padding-bottom: 10px !important;
 }
 */
+/* 樣區 / 相機位置 為唯讀欄位，灰底顯示 */
+#edit-studyarea[readonly],
+#edit-deployment[readonly] {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
