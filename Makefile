@@ -1,28 +1,21 @@
-#SHELL := bash
-#.ONESHELL:
-#.SHELLFLAGS := -eu -o pipefail -c
-#.DELETE_ON_ERROR:
-#MAKEFLAGS += --warn-undefined-variables
-#MAKEFLAGS += --no-builtin-rules
+DATE := $(shell date +%y%m%d)
 
-up:
-	docker-compose up -d
-start:
-	docker-compose up
-down:
-	docker-compose down
-logs:
-	docker-compose logs -f
-build:
-	docker-compose build
+.PHONY: db-clear db-bak db-dump
 
-prod-up:
-	docker-compose -f production.yml up -d
+help: ## Show this help menu
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-prod-down:
-	docker-compose -f production.yml down
+db-clear: ## clear pgdata
+	sudo rm -fr ../ct22-volumes/pgdata
+	@echo "pgdata cleared."
 
-prod-build:
-	docker-compose -f production.yml build
-prod-logs:
-	docker-compose -f production.yml logs -f
+db-dump: ## dump production database to local initdb
+	@cd initdb && sudo rm -f *.gz
+	ssh ct-prod "cd camera-trap-server;docker-compose -f compose.yml exec -T postgres pg_dump -U postgres cameratrap --compress=5 --no-owner -f /bucket/dump.sql.gz"
+	scp ct-prod:~/ct22-volumes/bucket/dump.sql.gz initdb/dump-cameratrap-$(DATE).sql.gz
+	ssh ct-prod "sudo rm -f ct22-volumes/bucket/dump.sql.gz"
+	@echo "dump-cameratrap-$(DATE).sql.gz saved."
+
+db-bak: ## bak inindb dump file
+	sudo mv ./initdb/*.sql.gz .
+	@echo "dump files moved to project root."
