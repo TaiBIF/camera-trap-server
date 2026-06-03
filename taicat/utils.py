@@ -826,6 +826,115 @@ def save_calculation(species_list, year, month, deployment):
             for e_int in [2, 5, 10, 30, 60]:
                 result = deployment.calculate(year, month, species, img_int, e_int, to_save=True)
 
+
+def recalc_deployment_month(deployment, year, month, dry_run=False):
+    """Recompute a deployment's Calculation rows for a single Taiwan-local month.
+
+    Refreshes every species that currently has (non-duplicated) images that month
+    OR already has a Calculation row for the cell, via save_calculation. Present
+    species get correct counts; species absent that month are recomputed to
+    image_count 0 -- matching the existing zero-baseline convention (the data
+    keeps a zero row for a species in months it is absent as long as it appears
+    elsewhere in the deployment). Nothing is deleted here; use
+    prune_orphan_calculations() to remove rows for species that no longer appear
+    anywhere in the deployment. Returns the sorted list of recomputed species.
+    """
+    day_start = make_aware(timezone_tw_to_utc(datetime(year, month, 1)))
+    day_end = day_start + timedelta(days=monthrange(year, month)[1])
+    present = {
+        s.strip()
+        for s in Image.objects
+        .filter(deployment_id=deployment.id, datetime__range=[day_start, day_end])
+        .exclude(is_duplicated='Y')
+        .values_list('species', flat=True)
+        .distinct()
+        if s and s.strip()
+    }
+    existing = set(
+        Calculation.objects
+        .filter(deployment=deployment, datetime_from=day_start)
+        .values_list('species', flat=True)
+        .distinct()
+    )
+    recompute = sorted(present | existing)
+    if recompute and not dry_run:
+        save_calculation(recompute, year, month, deployment)
+    return recompute
+
+
+def prune_orphan_calculations(deployment, year=None, dry_run=False):
+    """Delete Calculation rows for orphan species in a deployment.
+
+    An orphan is a species that has a Calculation row but no longer has ANY
+    (non-duplicated) image anywhere in the deployment, and is not a default
+    species. This removes leftovers such as typo species that were corrected by
+    edits, while preserving zero baselines for default species and for species
+    that still appear in other months. Pass ``year`` to restrict deletion to that
+    year's rows. Returns (orphan_species, deleted_row_count).
+    """
+    default = set(Species.DEFAULT_LIST)
+    calc_sp = set(
+        Calculation.objects.filter(deployment=deployment)
+        .values_list('species', flat=True).distinct()
+    )
+    img_sp = {
+        s.strip()
+        for s in Image.objects.filter(deployment_id=deployment.id)
+        .exclude(is_duplicated='Y')
+        .values_list('species', flat=True).distinct()
+        if s and s.strip()
+    }
+    orphan_species = calc_sp - img_sp - default
+    rows = Calculation.objects.filter(deployment=deployment, species__in=orphan_species)
+    if year:
+        y_start = make_aware(timezone_tw_to_utc(datetime(year, 1, 1)))
+        y_end = make_aware(timezone_tw_to_utc(datetime(year + 1, 1, 1)))
+        rows = rows.filter(datetime_from__gte=y_start, datetime_from__lt=y_end)
+    # report only orphans that actually have rows in scope (the year filter may
+    # exclude some), so the species list matches the deleted row count
+    orphans = sorted(set(rows.values_list('species', flat=True)))
+    count = rows.count()
+    if not dry_run:
+        rows.delete()
+    return orphans, count
+
+
+def recalc_deployment(deployment, year=None, dry_run=False):
+    """Reconcile all of a deployment's Calculation data with its current images.
+
+    Prunes orphan-species rows, then recomputes every (year, month) cell that has
+    images or an existing Calculation row (so counts on both sides of a move /
+    delete are corrected and emptied months drop to zero). Pass ``year`` to limit
+    to a single year. Returns (cell_results, prune_result), where cell_results is
+    a list of (year, month, recomputed_species) and prune_result is
+    (orphan_species, deleted_row_count).
+    """
+    if year:
+        years = [year]
+    else:
+        img_years = {
+            d.year for d in
+            Image.objects.filter(deployment_id=deployment.id).dates('datetime', 'year')
+        }
+        cal_years = {
+            timezone_utc_to_tw(df).year
+            for df in Calculation.objects.filter(deployment=deployment)
+            .values_list('datetime_from', flat=True).distinct()
+            if df
+        }
+        years = sorted(img_years | cal_years)
+
+    prune_result = prune_orphan_calculations(deployment, year=year, dry_run=dry_run)
+
+    cell_results = []
+    for y in years:
+        for m in range(1, 13):
+            recompute = recalc_deployment_month(deployment, y, m, dry_run=dry_run)
+            if recompute:
+                cell_results.append((y, m, recompute))
+    return cell_results, prune_result
+
+
 def apply_search_filter_projects(projects, query):
 
     for proj in projects:
