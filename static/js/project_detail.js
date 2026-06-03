@@ -1029,8 +1029,6 @@ $(document).ready(function () {
 
   $('#edit_button').on('click', function () {
 
-    $('.edit-date-cal').toggleClass('d-none');
-
     if ($('#edit_button').attr('data-edit') == 'off') {
       // $('#edit_button').attr('data-edit', 'on');
       updateDataEdit('on')
@@ -1232,15 +1230,10 @@ $(document).ready(function () {
     } else {
       $('.edit-content input').prop("disabled", false)
       $('.edit-footer').removeClass('d-none')
-      if (!allEqual(time_array)) { // 如果選擇一個以上的資料列，無法編緝時間欄位
-        $('#edit-time').attr('disabled', 'disabled');
-      };
-      if (!allEqual(date_array)) { // 如果選擇一個以上的資料列，且日期不同，無法日期時間欄位
-        $('.edit-date-cal').addClass('d-none');
-        $('#edit-date').attr('disabled', 'disabled');
-      } else {
-        $('.edit-date-cal').removeClass('d-none');
-      };
+      // 僅開放物種及標註欄位（年齡/性別/角況/個體ID/備註）編輯，
+      // 鎖定日期、時間、計畫（樣區與相機位置已於 HTML 設為唯讀）
+      $('#edit-date, #edit-time, #edit-project').attr('disabled', 'disabled');
+      $('.edit-date-cal').addClass('d-none');
       console.log('edit mode')
     }
 

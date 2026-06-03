@@ -702,3 +702,12 @@ div.dt-buttons{
   color: #6c757d;
   cursor: not-allowed;
 }
+
+/* 日期 / 時間 / 計畫 編輯時鎖定，灰底顯示（僅開放物種與標註欄位編輯） */
+#edit-date:disabled,
+#edit-time:disabled,
+#edit-project:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
