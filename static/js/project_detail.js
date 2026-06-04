@@ -1456,6 +1456,10 @@ function changeEditContent(row) {
   } else {
     $('.edit-content input').prop("disabled", false)
     $('.edit-footer').removeClass('d-none')
+    // 僅開放物種及標註欄位（年齡/性別/角況/個體ID/備註）編輯，
+    // 鎖定日期、時間、計畫（樣區與相機位置已於 HTML 設為唯讀）
+    $('#edit-date, #edit-time, #edit-project').attr('disabled', 'disabled');
+    $('.edit-date-cal').addClass('d-none');
   }
 
 
