@@ -1231,8 +1231,10 @@ $(document).ready(function () {
       $('.edit-content input').prop("disabled", false)
       $('.edit-footer').removeClass('d-none')
       // 僅開放物種及標註欄位（年齡/性別/角況/個體ID/備註）編輯，
-      // 鎖定日期、時間、計畫（樣區與相機位置已於 HTML 設為唯讀）
-      $('#edit-date, #edit-time, #edit-project').attr('disabled', 'disabled');
+      // 鎖定日期、時間、計畫、樣區、相機位置。
+      // 注意：樣區與相機位置不能只用 HTML readonly，因為 readonly 欄位仍可被
+      // 點擊聚焦而觸發 autocomplete 下拉選單改值；必須一併 disabled 才會真正鎖定。
+      $('#edit-date, #edit-time, #edit-project, #edit-studyarea, #edit-deployment').attr('disabled', 'disabled');
       $('.edit-date-cal').addClass('d-none');
       console.log('edit mode')
     }
@@ -1457,8 +1459,10 @@ function changeEditContent(row) {
     $('.edit-content input').prop("disabled", false)
     $('.edit-footer').removeClass('d-none')
     // 僅開放物種及標註欄位（年齡/性別/角況/個體ID/備註）編輯，
-    // 鎖定日期、時間、計畫（樣區與相機位置已於 HTML 設為唯讀）
-    $('#edit-date, #edit-time, #edit-project').attr('disabled', 'disabled');
+    // 鎖定日期、時間、計畫、樣區、相機位置。
+    // 注意：樣區與相機位置不能只用 HTML readonly，因為 readonly 欄位仍可被
+    // 點擊聚焦而觸發 autocomplete 下拉選單改值；必須一併 disabled 才會真正鎖定。
+    $('#edit-date, #edit-time, #edit-project, #edit-studyarea, #edit-deployment').attr('disabled', 'disabled');
     $('.edit-date-cal').addClass('d-none');
   }
 
