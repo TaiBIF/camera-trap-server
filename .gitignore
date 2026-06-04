@@ -6,6 +6,7 @@ node_modules
 .env
 .vscode/
 static/js/search.dev.*
+staticfiles/
 ct-mongo-to-postgres/
 
 

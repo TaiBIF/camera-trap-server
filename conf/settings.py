@@ -157,7 +157,11 @@ USE_TZ = True
 # web
 default_static_dir = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
-STATIC_ROOT = env('STATIC_ROOT', default=default_static_dir)
+# STATIC_ROOT must never point inside a STATICFILES_DIRS entry, otherwise
+# collectstatic copies app static (e.g. django admin) into the source `static/`
+# dir and the next collect finds duplicates ("only the first encountered file
+# is collected"). Default to a sibling `staticfiles/` dir; prod overrides via env.
+STATIC_ROOT = env('STATIC_ROOT', default=os.path.join(BASE_DIR, 'staticfiles'))
 STATICFILES_DIRS = [default_static_dir, ]
 
 CACHES = {
