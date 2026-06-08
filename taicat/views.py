@@ -17,6 +17,7 @@ import re
 import json
 import math
 import datetime
+from zoneinfo import ZoneInfo
 from tempfile import NamedTemporaryFile
 from urllib.parse import quote
 # from datetime import datetime, timedelta, timezone
@@ -1894,15 +1895,22 @@ def data(request):
     start_date = requests.get('start_date')
     end_date = requests.get('end_date')
     date_filter = ''
+    # ProjectStat dates are stored in UTC; the date range is meant to be the
+    # Taipei-local day, so localize before taking the calendar date — otherwise
+    # an image whose UTC time is in the evening (next day in Taipei) falls
+    # outside the default range and gets hidden while still counted in num_data.
+    taipei_tz = ZoneInfo("Asia/Taipei")
     if start_date:
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
     else:
-        start_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
-    
+        earliest_date = ProjectStat.objects.filter(project_id=pk).first().earliest_date.astimezone(taipei_tz)
+        start_date = datetime.datetime.strptime(earliest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=0) - datetime.timedelta(hours=8)
+
     if end_date:
         end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     else:
-        end_date = datetime.datetime.strptime(ProjectStat.objects.filter(project_id=pk).first().latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
+        latest_date = ProjectStat.objects.filter(project_id=pk).first().latest_date.astimezone(taipei_tz)
+        end_date = datetime.datetime.strptime(latest_date.strftime("%Y-%m-%d"), "%Y-%m-%d") + datetime.timedelta(hours=23, minutes=59, seconds=59) - datetime.timedelta(hours=8)
     
     date_filter = "AND datetime BETWEEN '{}' AND '{}'".format(start_date, end_date)
 
