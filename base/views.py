@@ -492,7 +492,12 @@ def feedback_request(request):
 
         subject = '[臺灣自動相機資訊系統] 問題回饋'
 
-        msg = EmailMessage(subject, html_content, settings.CT_SERVICE_EMAIL, [settings.CT_SERVICE_EMAIL])
+        # From must stay CT_SERVICE_EMAIL (verified SES sender), but the
+        # feedback has to land in a monitored inbox. camera-trap.tw has no MX
+        # record, so mail addressed to noreply@camera-trap.tw is undeliverable —
+        # send to CT_BCC_EMAIL_LIST (the staff gmail) instead.
+        recipients = [e.strip() for e in settings.CT_BCC_EMAIL_LIST.split(',') if e.strip()]
+        msg = EmailMessage(subject, html_content, settings.CT_SERVICE_EMAIL, recipients)
         msg.content_subtype = "html"  # Main content is now text/html
         # # save files to temporary dir
         for f in files:
