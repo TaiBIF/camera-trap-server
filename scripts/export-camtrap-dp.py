@@ -39,6 +39,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 django.setup()
 
 from django.conf import settings
+from django.db.models import Max, Min, Q
 
 from taicat.models import (
     Deployment,
@@ -130,9 +131,12 @@ def write_deployments(project, out_dir):
 
     Returns set of journal ids that were written (used to filter media/obs).
     """
+    # is_gap may be NULL (legacy) or False; both mean "not a gap" — match the
+    # idiom used by Deployment.count_working_day (taicat/models.py).
     journals = (
         DeploymentJournal.objects
-        .filter(project_id=project.id, is_effective=True, is_gap=False)
+        .filter(project_id=project.id, is_effective=True)
+        .filter(Q(is_gap__isnull=True) | Q(is_gap=False))
         .select_related('deployment', 'studyarea')
         .order_by('deployment_id', 'working_start')
     )
@@ -181,8 +185,79 @@ def write_deployments(project, out_dir):
     return written_ids
 
 
-def write_media_and_observations(project, journal_ids, out_dir):
-    """Stream images for the project and write both media.csv and observations.csv."""
+def write_deployments_legacy(project, out_dir):
+    """Write deployments.csv for old projects that have no DeploymentJournal rows.
+
+    One Camtrap deployment per Deployment record; the working period is derived
+    from the min/max Image.datetime observed at that deployment (UTC → +08:00).
+
+    Returns the set of deployment ids that were written (used to filter media/obs).
+    """
+    # min/max image datetime per deployment (UTC, like all Image.datetime values)
+    ranges = {
+        r['deployment_id']: (r['dt_min'], r['dt_max'])
+        for r in (
+            Image.objects
+            .filter(project_id=project.id)
+            .exclude(is_duplicated='Y')
+            .values('deployment_id')
+            .annotate(dt_min=Min('datetime'), dt_max=Max('datetime'))
+        )
+        if r['deployment_id'] is not None
+    }
+
+    deployments = (
+        Deployment.objects
+        .filter(project_id=project.id, deprecated=False)
+        .select_related('study_area')
+        .order_by('id')
+    )
+
+    written_ids = set()
+    path = out_dir / 'deployments.csv'
+    with path.open('w', newline='', encoding='utf-8') as fh:
+        writer = csv.DictWriter(fh, fieldnames=DEPLOYMENT_COLUMNS)
+        writer.writeheader()
+        for dep in deployments.iterator(chunk_size=500):
+            dt_min, dt_max = ranges.get(dep.id, (None, None))
+            row = {
+                'deploymentID': f'dep-{dep.id}',
+                'locationID': f'loc-{dep.id}',
+                'locationName': dep.name,
+                'latitude': dep.latitude if dep.latitude is not None else '',
+                'longitude': dep.longitude if dep.longitude is not None else '',
+                'coordinateUncertainty': '',
+                'deploymentStart': to_iso_tw(dt_min, assume_naive_tw=False),
+                'deploymentEnd': to_iso_tw(dt_max, assume_naive_tw=False),
+                'setupBy': '',
+                'cameraID': '',
+                'cameraModel': '',
+                'cameraDelay': '',
+                'cameraHeight': dep.altitude if dep.altitude is not None else '',
+                'cameraDepth': '',
+                'cameraTilt': '',
+                'cameraHeading': '',
+                'detectionDistance': '',
+                'timestampIssues': 'false',
+                'baitUse': '',
+                'featureType': '',
+                'habitat': dep.vegetation or dep.landcover or '',
+                'deploymentGroups': dep.study_area.name if dep.study_area_id else '',
+                'deploymentTags': '',
+                'deploymentComments': '',
+            }
+            writer.writerow(row)
+            written_ids.add(dep.id)
+    return written_ids
+
+
+def write_media_and_observations(project, resolve_ref, out_dir):
+    """Stream images for the project and write both media.csv and observations.csv.
+
+    resolve_ref(img) returns the deploymentID this image belongs to, or None to
+    skip it. This lets the journal-based and legacy (deployment-based) exports
+    share the same media/observation writer.
+    """
     media_path = out_dir / 'media.csv'
     obs_path = out_dir / 'observations.csv'
 
@@ -203,10 +278,10 @@ def write_media_and_observations(project, journal_ids, out_dir):
         obs_writer.writeheader()
 
         for img in qs.iterator(chunk_size=2000):
-            if not img.deployment_journal_id or img.deployment_journal_id not in journal_ids:
+            deployment_ref = resolve_ref(img)
+            if deployment_ref is None:
                 continue
             media_id = img.image_uuid or f'img-{img.id}'
-            deployment_ref = f'j-{img.deployment_journal_id}'
             ts = to_iso_tw(img.datetime, assume_naive_tw=False)
 
             media_writer.writerow({
@@ -355,14 +430,36 @@ def export_project(project, base_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f'[{project.id}] {project.name} → {out_dir}')
-    journal_ids = write_deployments(project, out_dir)
-    print(f'  deployments: {len(journal_ids)}')
 
-    n_media, n_obs = write_media_and_observations(project, journal_ids, out_dir)
+    has_journals = (
+        DeploymentJournal.objects
+        .filter(project_id=project.id, is_effective=True)
+        .filter(Q(is_gap__isnull=True) | Q(is_gap=False))
+        .exists()
+    )
+
+    if has_journals:
+        unit_ids = write_deployments(project, out_dir)
+        def resolve_ref(img):
+            if img.deployment_journal_id in unit_ids:
+                return f'j-{img.deployment_journal_id}'
+            return None
+    else:
+        # old project: no journal linking — build straight from taicat_deployment
+        print('  (no DeploymentJournal records; using deployment-based export)')
+        unit_ids = write_deployments_legacy(project, out_dir)
+        def resolve_ref(img):
+            if img.deployment_id in unit_ids:
+                return f'dep-{img.deployment_id}'
+            return None
+
+    print(f'  deployments: {len(unit_ids)}')
+
+    n_media, n_obs = write_media_and_observations(project, resolve_ref, out_dir)
     print(f'  media:       {n_media}')
     print(f'  observations:{n_obs}')
 
-    descriptor = build_datapackage(project, len(journal_ids), n_media, n_obs)
+    descriptor = build_datapackage(project, len(unit_ids), n_media, n_obs)
     with (out_dir / 'datapackage.json').open('w', encoding='utf-8') as fh:
         json.dump(descriptor, fh, ensure_ascii=False, indent=2)
 
