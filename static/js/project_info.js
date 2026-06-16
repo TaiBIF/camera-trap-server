@@ -4,6 +4,7 @@ var $csrf_token = $('[name="csrfmiddlewaretoken"]').attr('value');
 let map = L.map("map", {tap: false});
 L.tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
   attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+  referrerPolicy: "no-referrer-when-downgrade",
 }).addTo(map);
 
 
