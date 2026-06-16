@@ -289,6 +289,7 @@ $(function () {
   let map = L.map("map", {tap: false}).setView([23.5, 121.2], 7);
   L.tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
     attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+    referrerPolicy: "no-referrer-when-downgrade",
   }).addTo(map);
 
   function onEachFeature(feature, layer) {
