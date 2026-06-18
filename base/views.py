@@ -420,7 +420,8 @@ def upload_history(request):
                 query = query.filter(Q(deployment_journal__project__name__icontains=q) |
                                      Q(deployment_journal__folder_name__icontains=q) |
                                      Q(deployment_journal__studyarea__name__icontains=q) |
-                                     Q(deployment_journal__deployment__name__icontains=q))
+                                     Q(deployment_journal__deployment__name__icontains=q) |
+                                     Q(deployment_journal__uploader__name__icontains=q))
 
             paginator = Paginator(query.all(), 20)
             page_obj = paginator.get_page(page_number)
