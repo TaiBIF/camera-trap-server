@@ -1,6 +1,8 @@
 DATE := $(shell date +%y%m%d)
 
-.PHONY: db-clear db-bak db-dump
+HOST ?= ct-prod
+
+.PHONY: db-clear db-bak db-dump delete-folder
 
 help: ## Show this help menu
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -19,3 +21,7 @@ db-dump: ## dump production database to local initdb
 db-bak: ## bak inindb dump file
 	sudo mv ./initdb/*.sql.gz .
 	@echo "dump files moved to project root."
+
+delete-folder: ## delete upload folder on remote. Usage: make delete-folder FOLDER=name [DRY_RUN=1] [HOST=ct-prod]
+	@test -n "$(FOLDER)" || { echo "ERROR: FOLDER is required, e.g. make delete-folder FOLDER=some_folder"; exit 1; }
+	ssh $(HOST) "cd camera-trap-server;docker-compose -f compose.yml exec -T django python scripts/delete_upload_folder.py $(if $(DRY_RUN),--dry-run )$(FOLDER)"

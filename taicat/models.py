@@ -181,15 +181,15 @@ class Project(models.Model):
     def get_deployment_list(self, as_object=False, studyarea_ids=[]):
         res = []
         if len(studyarea_ids) > 0:
-            sa = self.studyareas.filter(parent__isnull=True, id__in=studyarea_ids).all()
+            sa = self.studyareas.filter(parent__isnull=True, id__in=studyarea_ids).order_by('name')
         else:
-            sa = self.studyareas.filter(parent__isnull=True).all()
+            sa = self.studyareas.filter(parent__isnull=True).order_by('name')
 
         for i in sa:
             children = []
-            for j in StudyArea.objects.filter(parent_id=i.id).all():
+            for j in StudyArea.objects.filter(parent_id=i.id).order_by('name'):
                 sa_deployments = []
-                for x in j.deployment_set.exclude(deprecated=True).all():
+                for x in j.deployment_set.exclude(deprecated=True).order_by('name'):
                     item = {
                         'name': x.name,
                         'deployment_id': x.id
@@ -205,7 +205,7 @@ class Project(models.Model):
                 })
 
             deployments = []
-            for x in i.deployment_set.exclude(deprecated=True).all():
+            for x in i.deployment_set.exclude(deprecated=True).order_by('name'):
                 item = {
                     'name': x.name,
                     'deployment_id': x.id
