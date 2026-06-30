@@ -995,9 +995,9 @@ def stat_county(request):
                 sa_list = [int(s) for s in sa_list]
                 if last_updated := StudyAreaStat.objects.filter(studyarea_id__in=sa_list).aggregate(Min('last_updated'))['last_updated__min']:
                     if Deployment.objects.filter(last_updated__gte=last_updated, study_area_id__in=sa_list).exists():
-                        update_studyareastat(response['studyarea'])
+                        update_studyareastat(sa_list)
                 else:
-                    update_studyareastat(response['studyarea'])
+                    update_studyareastat(sa_list)
                 with connection.cursor() as cursor:
                     query = """SELECT sas.longitude, sas.latitude, p.name, sa.name, sa.id  
                                 FROM taicat_studyareastat sas  
