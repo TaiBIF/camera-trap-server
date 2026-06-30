@@ -233,6 +233,11 @@ CSP_SCRIPT_SRC = ["'self'", "https://cdnjs.cloudflare.com",
 
 CSP_CONNECT_SRC = ("'self'","https://*.fontawesome.com",)
 
+# Django defaults this to "same-origin", which strips the Referer on
+# cross-origin requests. OpenStreetMap's tile usage policy requires a
+# Referer, so send the origin to cross-origin destinations.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5000000 #20000000 change to 5MB (9999 image post need almost 1MB)
 
 # via: https://docs.djangoproject.com/en/4.1/topics/logging/
