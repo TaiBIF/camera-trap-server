@@ -218,7 +218,7 @@ ORCID_CLIENT_SECRET = env('ORCID_CLIENT_SECRET')
 # Content Security Policy 
 CSP_DEFAULT_SRC = ("'self'", "https://www.google.com/recpatcha/", "https://www.google.com/") 
 CSP_STYLE_SRC = ["'self'","https://cdn.datatables.net","https://*.fontawesome.com","https://*.highcharts.com","https://unpkg.com/","https://fonts.googleapis.com","http://www.w3.org","https://cdnjs.cloudflare.com"] #  "'unsafe-inline'"
-CSP_IMG_SRC = ("'self'","https://*.highcharts.com", "https://*.fontawesome.com", "data: http://www.w3.org", 'https://*.tile.osm.org/',"https://*.s3.ap-northeast-1.amazonaws.com/","https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/") 
+CSP_IMG_SRC = ("'self'","https://*.highcharts.com", "https://*.fontawesome.com", "data: http://www.w3.org", 'https://*.tile.osm.org/','https://tile.openstreetmap.org/',"https://*.s3.ap-northeast-1.amazonaws.com/","https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/") 
 CSP_MEDIA_SRC = ("'self'","https://*.s3.ap-northeast-1.amazonaws.com/","https://d3gg2vsgjlos1e.cloudfront.net/") 
 CSP_FONT_SRC = ("'self'", "https://*.fontawesome.com","https://fonts.googleapis.com","https://fonts.gstatic.com" ) 
 
