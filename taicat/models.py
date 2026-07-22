@@ -957,6 +957,7 @@ class DeletedImage(models.Model):
     # exif = models.JSONField(default=dict, blank=True)
     folder_name = models.CharField(max_length=1000, default='', blank=True, db_index=True)
     has_storage = models.CharField('實體檔案(有無上傳)', max_length=2, default='Y', blank=True) # Y/N or 如果之後有其他種狀況, 如: 存在別的圖台?
+    media_uploaded_at = models.DateTimeField(null=True, blank=True) # 實體檔案上傳到 S3 的時間 (has_storage N→Y 的時刻)
     specific_bucket = models.CharField(max_length=1000, default='', blank=True) # 跟預設不同的 bucket
     deployment_journal = models.ForeignKey('DeploymentJournal', on_delete=models.SET_NULL, null=True, blank=True) # 知道是那次上傳的
     is_duplicated = models.CharField(max_length=2, default='', blank=True)

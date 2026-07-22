@@ -319,7 +319,10 @@
 				{% comment %} this could be part of datatable {% endcomment %}
 				<div class="right-btnaera">
 					{% if editable %}
-						<button class="edi-btn" id="edit_button" data-edit="off">
+						{# 暫時停用編輯模式: disabled + 灰色樣式, 恢復時移除 disabled 與 style #}
+							<button class="edi-btn" id="edit_button" data-edit="off" disabled
+								title="編輯模式暫停開放"
+								style="opacity: 0.4; filter: grayscale(1); cursor: not-allowed; pointer-events: none;">
 							<svg id="Group_749" data-name="Group 749" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="19.999" viewBox="0 0 20 19.999">
 								<g id="Group_748" data-name="Group 748" clip-path="url(#clip-path)">
 									<path id="Path_10217" data-name="Path 10217" d="M20,4.238a2.818,2.818,0,0,1-.855,2q-3.8,3.8-7.6,7.6-1.8,1.8-3.613,3.6a1.215,1.215,0,0,1-.45.279q-3.29,1.11-6.586,2.2a1.082,1.082,0,0,1-.4.078.546.546,0,0,1-.446-.786Q.775,17,1.512,14.792c.256-.769.509-1.54.774-2.306a1.037,1.037,0,0,1,.231-.384Q8.133,6.477,13.756.861A2.744,2.744,0,0,1,17.741.853q.734.724,1.46,1.457A2.747,2.747,0,0,1,20,4.238M7.447,16.318,17,6.767,13.233,3,3.678,12.549l3.768,3.769M17.837,5.967c.2-.192.414-.38.607-.587a1.622,1.622,0,0,0,.03-2.23c-.523-.565-1.071-1.108-1.634-1.633a1.578,1.578,0,0,0-2-.128,9.64,9.64,0,0,0-.828.753l3.824,3.825M6.4,16.925,3.073,13.6,1.406,18.587,6.4,16.925" transform="translate(0 0)" fill="#257455"/>

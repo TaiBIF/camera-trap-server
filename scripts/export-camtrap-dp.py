@@ -98,7 +98,7 @@ DEFAULT_SPECIES_MAP = os.path.join(
 # Chinese vernacular names are tagged with this ISO 639-3 language code.
 VERNACULAR_LANG = 'zho'
 
-CAMTRAP_DP_PROFILE = 'https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/camtrap-dp-profile.json'
+CAMTRAP_DP_PROFILE = 'https://rs.gbif.org/data-packages/camtrap-dp/1.0/profile/camtrap-dp-profile.json'
 
 TW_TZ = timezone(timedelta(hours=8))
 
@@ -124,7 +124,7 @@ MEDIA_COLUMNS = [
 ]
 
 # Field names and order follow the Camtrap DP 1.0 observations table schema:
-# https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/observations-table-schema.json
+# https://rs.gbif.org/data-packages/camtrap-dp/1.0/table-schemas/observations.json
 # (there is no 'taxonID'; the setup flag is 'cameraSetupType', enum setup/calibration)
 OBSERVATION_COLUMNS = [
     'observationID', 'deploymentID', 'mediaID', 'eventID', 'eventStart',
@@ -600,7 +600,7 @@ def write_media_and_observations(project, resolve_ref, out_dir, species_map):
                 'observationID': f'obs-{img.id}',
                 'deploymentID': deployment_ref,
                 'mediaID': media_id,
-                'eventID': '',
+                'eventID': media_id,
                 'eventStart': ts,
                 'eventEnd': ts,
                 'observationLevel': 'media',
@@ -716,7 +716,7 @@ def build_datapackage(project, n_deployments, n_media, n_obs, taxa, geo):
                 'format': 'csv',
                 'mediatype': 'text/csv',
                 'encoding': 'utf-8',
-                'schema': 'https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/deployments-table-schema.json',
+                'schema': 'https://rs.gbif.org/data-packages/camtrap-dp/1.0/table-schemas/deployments.json',
             },
             {
                 'name': 'media',
@@ -725,7 +725,7 @@ def build_datapackage(project, n_deployments, n_media, n_obs, taxa, geo):
                 'format': 'csv',
                 'mediatype': 'text/csv',
                 'encoding': 'utf-8',
-                'schema': 'https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/media-table-schema.json',
+                'schema': 'https://rs.gbif.org/data-packages/camtrap-dp/1.0/table-schemas/media.json',
             },
             {
                 'name': 'observations',
@@ -734,7 +734,7 @@ def build_datapackage(project, n_deployments, n_media, n_obs, taxa, geo):
                 'format': 'csv',
                 'mediatype': 'text/csv',
                 'encoding': 'utf-8',
-                'schema': 'https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/observations-table-schema.json',
+                'schema': 'https://rs.gbif.org/data-packages/camtrap-dp/1.0/table-schemas/observations.json',
             },
         ],
         **({'spatial': spatial} if spatial else {}),
