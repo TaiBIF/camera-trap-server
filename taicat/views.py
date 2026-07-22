@@ -789,6 +789,9 @@ def project_info(request, pk):
         return render(request, 'base/404.html')
 
 def delete_data(request, pk):
+    # 暫時停用編輯模式: 禁止所有角色透過網頁刪除資料 (恢復時移除此段)
+    return JsonResponse({'species': [], 'return_mesg': False}, safe=False)
+
     species_list = []
     image_list = []
     delete_list = []
@@ -824,6 +827,9 @@ def delete_data(request, pk):
 
 
 def edit_image(request, pk):
+    # 暫時停用編輯模式: 禁止所有角色透過網頁編輯資料 (恢復時移除此段)
+    return JsonResponse({'species': [], 'folder_list': []}, safe=False)
+
     if request.method == "POST":
         mode = Project.objects.filter(id=pk).first().mode
 
