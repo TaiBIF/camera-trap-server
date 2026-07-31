@@ -286,6 +286,9 @@ $(function () {
   
 
 
+  // 正在進行中的樣區request, 用來取消還沒回來的舊request
+  let studyareaXhr = null;
+
   let map = L.map("map", {tap: false}).setView([23.5, 121.2], 7);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -345,11 +348,16 @@ $(function () {
               })
               .on("click", function (e) {
                 $('.loading-pop').removeClass('d-none')
-                $.ajax({
+                // 連續點不同樣區時, 取消上一個還沒回來的request, 避免舊資料蓋掉新的
+                if (studyareaXhr) {
+                  studyareaXhr.abort()
+                }
+                studyareaXhr = $.ajax({
                   url: '/api/stat_studyarea',
                   data: {"said": i[4], 'county': county},
                   dataType: "json",
                   success: function(response) {
+                    studyareaXhr = null
                     $('.loading-pop').addClass('d-none')
                     $('.city-box').addClass('d-none')
                     $('.pin-chartbox').removeClass('d-none')
@@ -357,7 +365,7 @@ $(function () {
                     //$('.map-explore').html(`<a class="link" onClick="resetMapExplore('${county}')">返回</a>`)
                     // 更換右側統計圖
                     $('.pin-chartbox').html(`
-
+                    <button class="mapBackBtn resetMapExplore" data-county="${county}">← 返回${county}</button>
                     <h2>${i[3]}</h2>
                     <div class="mbscro">
                       <div class="chart-box">
@@ -365,11 +373,10 @@ $(function () {
                       </div>
                     </div>
                     <div class="mapiconbox">
-                      <button class="resetMapExplore" data-county="${county}">< 返回</button>
                       <img src="/static/image/marker-icon.png" alt="">
                       <p>相機位置</p>
                     </div>
-                      `);                                        
+                      `);
                     $('.resetMapExplore').off('click')
                     $('.resetMapExplore').on('click', function(){
                       resetMapExplore($(this).data('county'))
@@ -436,9 +443,10 @@ $(function () {
                       legend:{ enabled:false },
                     });
                     // 更換左側地圖
-                    // 重設縮放 & 移除其他icon
+                    // 重設縮放, 保留樣區icon讓使用者可以直接點另一個樣區
                     map.setView([response.center[1], response.center[0]], 10);
-                    $('.myStudyAreaIcon').remove();
+                    $('.myDeploymentIcon').remove();
+                    $('.leaflet-tooltip').remove();
                     $('.countyPoly').addClass('d-none');
                     response.deployment_points.forEach(
                       (r) =>
@@ -452,7 +460,12 @@ $(function () {
                           .bindTooltip(r[3], { permanent: true, direction: 'top' })
                           .addTo(map)));
                   },
-                  error: function () {
+                  error: function (jqXHR, textStatus) {
+                    // abort是因為使用者又點了別的樣區, 交給新的request處理
+                    if (textStatus === 'abort') {
+                      return
+                    }
+                    studyareaXhr = null
                     $('.loading-pop').addClass('d-none')
                   }
                 })
@@ -461,7 +474,8 @@ $(function () {
         );
 
         $('.city-box').html(
-          `<h2>${county}</h2>
+          `<button class="mapBackBtn resetMapAll">← 返回全臺</button>
+          <h2>${county}</h2>
           <ul class="inflist">
           <li>
             <div class="left-title">計畫總數</div>
@@ -495,6 +509,8 @@ $(function () {
           </div>
           `
         )
+        $('.resetMapAll').off('click')
+        $('.resetMapAll').on('click', resetMapAll)
       }
   })
   }
@@ -514,14 +530,38 @@ $(function () {
   });
 
     function resetMapExplore(county){
+      if (studyareaXhr) {
+        studyareaXhr.abort();
+        studyareaXhr = null;
+      }
+      $('.loading-pop').addClass('d-none');
       $('.myDeploymentIcon').remove();
       $('.leaflet-tooltip').remove();
+      map.closePopup();
       map.setView([23.5, 121.2], 7);
       $('.countyPoly').removeClass('d-none');
       // trigger event
       $('.city-box').removeClass('d-none');
       $('.pin-chartbox').addClass('d-none')
       countyOnClick(county);
-    
+
+    }
+
+    // 回到最初的全臺地圖
+    function resetMapAll(){
+      if (studyareaXhr) {
+        studyareaXhr.abort();
+        studyareaXhr = null;
+      }
+      $('.loading-pop').addClass('d-none');
+      $('.myDeploymentIcon').remove();
+      $('.myStudyAreaIcon').remove();
+      $('.leaflet-tooltip').remove();
+      map.closePopup();
+      map.setView([23.5, 121.2], 7);
+      $('.countyPoly').removeClass('d-none');
+      $('.city-box').addClass('d-none');
+      $('.pin-chartbox').addClass('d-none');
+      $('.inf-box').removeClass('d-none').addClass('d-block');
     }
   
