@@ -11,6 +11,9 @@ from django.core.mail import send_mail
 #modified_images = ModifiedImage.objects.all().values()
 #df = pd.DataFrame(list(modified_images))
 
+# SES 單封信最多 50 個收件者, 超過整封會被退回
+SES_MAX_RECIPIENTS = 50
+
 modified_images = ModifiedImage.objects.all().values()
 df = pd.DataFrame(list(modified_images))
 # 確保 'last_updated' 欄位為 datetime 格式
@@ -31,7 +34,7 @@ print(today)
 
 if df2.empty:
     print('NO modified images for this week.')
-else: 
+else:
     # 影像可能已被刪除, 查不到就留空, 不要讓整個通知中斷
     def find_image_id(x):
         img = Image.objects.filter(pk=x).first()
@@ -39,57 +42,71 @@ else:
 
     groups = df2.groupby(['project_id', 'studyarea_id'])
     for (project_id, studyarea_id), group in groups:
-        studyarea_memebers = get_studyarea_member(project_id, studyarea_id)
-        email_list = [x.email for x in Contact.objects.filter(id__in=studyarea_memebers)]
-        # print(f'EMAIL LIST: {email_list}')
-        save_root = Path(settings.MEDIA_ROOT, 'email-attachment')
-        save_root.mkdir(parents=True, exist_ok=True)  # 檢查並創建目錄
-        save_path = os.path.join(save_root, f'{project_id}_{studyarea_id}.csv')
-        project_name = group['project'].iloc[0]
-        studyarea_name = group['studyarea'].iloc[0]
+        # 單一樣區出錯(信箱格式錯誤/AWS 憑證失效...)不能影響其他樣區的通知
+        try:
+            studyarea_memebers = get_studyarea_member(project_id, studyarea_id)
+            email_list = [x.email for x in Contact.objects.filter(id__in=studyarea_memebers)]
+            # 空白或格式錯誤的信箱會讓整批寄送失敗, 先濾掉
+            email_list = [x.strip() for x in email_list if x and '@' in x]
+            # print(f'EMAIL LIST: {email_list}')
+            if not email_list:
+                print(f'{project_id}_{studyarea_id}: NO valid recipient, skipped')
+                continue
+            save_root = Path(settings.MEDIA_ROOT, 'email-attachment')
+            save_root.mkdir(parents=True, exist_ok=True)  # 檢查並創建目錄
+            save_path = os.path.join(save_root, f'{project_id}_{studyarea_id}.csv')
+            project_name = group['project'].iloc[0]
+            studyarea_name = group['studyarea'].iloc[0]
 
-        # add Image.filename
-        group['filename'] = group['image_id'].map(find_image_id)
+            # add Image.filename
+            group['filename'] = group['image_id'].map(find_image_id)
 
-        group = group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
-        group = group.rename(columns={
-            'last_updated': '最後更新日期',
-            'datetime':'影像拍攝日期時間',
-            'project':'計畫名稱',
-            'studyarea':'樣區名稱',
-            'deployment':'相機位置',
-            'filename': '原始檔案名稱',
-            'species':'物種',
-            'life_stage':'年齡',
-            'sex':'性別',
-            'antler':'角況',
-            'animal_id':'個體ID',
-            'remarks':'備註',
-            'modified_datetime':'修改後影像拍攝日期時間',
-            'modified_project':'修改後計畫名稱',
-            'modified_studyarea':'修改後樣區名稱',
-            'modified_deployment':'修改後相機位置',
-            'modified_species':'修改後物種',
-            'modified_life_stage':'修改後年齡',
-            'modified_sex':'修改後性別',
-            'modified_antler':'修改後角況',
-            'modified_animal_id':'修改後個體ID',
-            'modified_remarks':'修改後備註',
-        })
-        group.to_csv(save_path)
+            group = group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
+            group = group.rename(columns={
+                'last_updated': '最後更新日期',
+                'datetime':'影像拍攝日期時間',
+                'project':'計畫名稱',
+                'studyarea':'樣區名稱',
+                'deployment':'相機位置',
+                'filename': '原始檔案名稱',
+                'species':'物種',
+                'life_stage':'年齡',
+                'sex':'性別',
+                'antler':'角況',
+                'animal_id':'個體ID',
+                'remarks':'備註',
+                'modified_datetime':'修改後影像拍攝日期時間',
+                'modified_project':'修改後計畫名稱',
+                'modified_studyarea':'修改後樣區名稱',
+                'modified_deployment':'修改後相機位置',
+                'modified_species':'修改後物種',
+                'modified_life_stage':'修改後年齡',
+                'modified_sex':'修改後性別',
+                'modified_antler':'修改後角況',
+                'modified_animal_id':'修改後個體ID',
+                'modified_remarks':'修改後備註',
+            })
+            group.to_csv(save_path)
 
-        download_url = f'https://camera-trap.tw/media/email-attachment/{project_id}_{studyarea_id}.csv'
-        email_body = f'''
-        您好：
+            download_url = f'https://camera-trap.tw/media/email-attachment/{project_id}_{studyarea_id}.csv'
+            email_body = f'''
+            您好：
 
-        您所負責的樣區（計畫名稱：{project_name}, 樣區名稱：{studyarea_name}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請複製以下連結下載相關資料：
+            您所負責的樣區（計畫名稱：{project_name}, 樣區名稱：{studyarea_name}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請複製以下連結下載相關資料：
 
-        下載修改內容：{download_url}
+            下載修改內容：{download_url}
 
-        如有任何問題，請隨時聯繫我們團隊。
+            如有任何問題，請隨時聯繫我們團隊。
 
-        臺灣自動相機資訊系統 團隊敬上
-        '''
-        send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, email_list)
-
-        print(f'{project_id}_{studyarea_id}.csv was sent to {email_list}')
+            臺灣自動相機資訊系統 團隊敬上
+            '''
+            # 收件者超過上限要分批寄, 一批失敗不影響其他批
+            for i in range(0, len(email_list), SES_MAX_RECIPIENTS):
+                batch = email_list[i:i + SES_MAX_RECIPIENTS]
+                try:
+                    send_mail(email_subject, email_body, settings.CT_SERVICE_EMAIL, batch)
+                    print(f'{project_id}_{studyarea_id}.csv was sent to {batch}')
+                except Exception as e:
+                    print(f'{project_id}_{studyarea_id}: SEND FAILED for {batch}: {type(e).__name__}: {e}')
+        except Exception as e:
+            print(f'{project_id}_{studyarea_id}: SKIPPED: {type(e).__name__}: {e}')
