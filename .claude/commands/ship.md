@@ -32,18 +32,33 @@ $ARGUMENTS
      `gh pr create --repo TaiBIF/camera-trap-server --base devel --head moogoo78:<branch> --title "..." --body "..."`
    - Title: `$ARGUMENTS` if given, otherwise derive from the commits. Body: what changed and how it was verified. Note honestly if it was not verified against a running instance.
 
-4. **Merge that PR.** Ask for confirmation, then `gh pr merge <number> --repo TaiBIF/camera-trap-server --merge`.
-   - If the PR is not mergeable (conflicts, failing required checks), stop and report — do not attempt to resolve conflicts as part of this command.
+4. **Merge that PR.** Follow the merge gate below, then `gh pr merge <number> --repo TaiBIF/camera-trap-server --merge`.
+   - If the PR is not mergeable (conflicts), stop and report — do not attempt to resolve conflicts as part of this command.
 
 5. **Merge `TaiBIF:devel` into `TaiBIF:main`.** This is a release step touching the upstream release branch, so **always confirm separately** — a yes in step 4 does not carry over.
    - Show what would move first: `gh api repos/TaiBIF/camera-trap-server/compare/main...devel --jq '{ahead:.ahead_by, behind:.behind_by, commits:[.commits[].commit.message|split("\n")[0]]}'`
    - If `ahead_by` is 0, report that `main` is already current and stop.
-   - On confirmation, open and merge the release PR:
+   - On confirmation, open the release PR:
      `gh pr create --repo TaiBIF/camera-trap-server --base main --head devel --title "release: devel → main" --body "..."`
-     then `gh pr merge <number> --repo TaiBIF/camera-trap-server --merge`.
+     then apply the merge gate below before `gh pr merge <number> --repo TaiBIF/camera-trap-server --merge`.
    - If a `devel → main` PR is already open, reuse it instead of creating a second one.
+   - Say plainly that merging fires `main.yml`, which SSHes to the production host and restarts its containers.
 
-6. **Report.** Give the user the PR URLs, both merge commit SHAs, and the resulting tip of `TaiBIF:main`. Mention that their local `devel` may now be behind and can be updated with `git pull`.
+6. **Report.** Give the user the PR URLs, both merge commit SHAs, and the resulting tip of `TaiBIF:main`. Report the production deploy result too (`gh run list --repo TaiBIF/camera-trap-server --branch main --limit 1`); wait for it with an until-loop rather than assuming it passed. Mention that their local `devel` may now be behind and can be updated with `git pull`.
+
+## Merge gate
+
+Applies to **both** merges. Never skip it, and never collapse it into one call.
+
+1. Read the state in its own tool call, before any merge:
+   `gh pr view <number> --repo TaiBIF/camera-trap-server --json mergeable,mergeStateStatus,statusCheckRollup --jq '{mergeable,mergeStateStatus,checks:[.statusCheckRollup[]?|{name,conclusion}]}'`
+2. Decide from `mergeStateStatus`:
+   - `CLEAN` → ask for merge confirmation as normal.
+   - `BLOCKED`, `DIRTY`, `BEHIND` → stop and report. Do not merge.
+   - `UNSTABLE` or any non-`CLEAN` state → **pause**. A check is failing or still running. Name each failing check and paste the failing step's error (`gh run view <run-id> --repo TaiBIF/camera-trap-server --log-failed | tail -30`), say whether it looks related to the commits being shipped, and ask the user explicitly whether to merge anyway. Never merge a non-`CLEAN` PR without that separate yes.
+3. Only then run `gh pr merge`. The state read and the merge are always two calls — never chain them with `&&` or `;` in one command, because that merges before the user can see the state.
+
+A check that has been failing for a long time is not a reason to skip the pause. Report it as pre-existing and still ask.
 
 ## Rules
 
