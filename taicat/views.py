@@ -826,9 +826,26 @@ def delete_data(request, pk):
     return JsonResponse(response, safe=False)  # or JsonResponse({'data': data})
 
 
+def check_if_editable(request, project_id):
+    '''編輯權限: 系統管理員 / 個別計畫承辦人 / 該計畫的計畫總管理人'''
+    user_id = request.session.get('id', None)
+    if not user_id:
+        return False
+    # 系統管理員 / 個別計畫承辦人
+    if Contact.objects.filter(id=user_id, is_system_admin=True).first() or ProjectMember.objects.filter(member_id=user_id, role="project_admin", project_id=project_id):
+        return True
+    # 計畫總管理人
+    elif Contact.objects.filter(id=user_id, is_organization_admin=True):
+        organization_id = Contact.objects.filter(id=user_id, is_organization_admin=True).values('organization').first()['organization']
+        if Organization.objects.filter(id=organization_id, projects=project_id):
+            return True
+    return False
+
+
 def edit_image(request, pk):
-    # 暫時停用編輯模式: 禁止所有角色透過網頁編輯資料 (恢復時移除此段)
-    return JsonResponse({'species': [], 'folder_list': []}, safe=False)
+    # 編輯模式只開放修改物種, 其他欄位一律忽略
+    if not check_if_editable(request, pk):
+        return JsonResponse({'species': [], 'folder_list': []}, safe=False)
 
     if request.method == "POST":
         mode = Project.objects.filter(id=pk).first().mode
@@ -845,31 +862,13 @@ def edit_image(request, pk):
             .values('id','datetime','project__name','deployment__name','studyarea__name','species','life_stage','sex','antler','animal_id','remarks', 'project_id', 'studyarea_id')
         )
 
-        keys = ['species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks']
+        # 只接受 species, 年齡/性別/角況/個體ID/備註/日期時間/計畫/樣區/相機位置都不開放修改
         updated_dict = {}
-        for k in keys:
-            value = requests.get(k)
-            # Skip species if blank - keep existing value
-            if k == 'species' and not value:
-                continue
-            updated_dict.update({k: value})
+        if species_value := requests.get('species'):
+            updated_dict.update({'species': species_value})
 
-        project_id = requests.get('project_id')
-        if project_id:
-            updated_dict.update({'project_id': project_id})
-        if requests.get('studyarea_id'):
-            updated_dict.update({'studyarea_id': requests.get('studyarea_id')})
-        if requests.get('deployment_id'):
-            updated_dict.update({'deployment_id': requests.get('deployment_id')})
-        
-        date = requests.get('date')
-        time = requests.get('time')
-        if date and time:
-            datetime_str = f'{date} {time}'
-            datetime_object = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
-            datetime_object = datetime_object - datetime.timedelta(hours=8)
-            datetime_object = timezone.make_aware(datetime_object, timezone=timezone.utc)
-            updated_dict.update({'datetime': datetime_object})
+        # 影像不會換計畫, 後面的統計沿用原計畫
+        project_id = pk
 
         obj = Image.objects.filter(id__in=image_id)
         # obj_ori = obj
