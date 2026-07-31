@@ -999,11 +999,12 @@ def stat_county(request):
                 else:
                     update_studyareastat(sa_list)
                 with connection.cursor() as cursor:
-                    query = """SELECT sas.longitude, sas.latitude, p.name, sa.name, sa.id  
-                                FROM taicat_studyareastat sas  
+                    # 首頁地圖只顯示 project_id = 329 的樣區
+                    query = """SELECT sas.longitude, sas.latitude, p.name, sa.name, sa.id
+                                FROM taicat_studyareastat sas
                                 JOIN taicat_studyarea sa ON sas.studyarea_id = sa.id
                                 JOIN taicat_project p ON p.id = sa.project_id
-                                WHERE sas.studyarea_id = ANY(%s);"""
+                                WHERE sas.studyarea_id = ANY(%s) AND sa.project_id = 329;"""
                     cursor.execute(query,(sa_list,))
                     sa_points = cursor.fetchall()
             response.update({'studyarea': sa_points})
@@ -1020,7 +1021,8 @@ def stat_studyarea(request):
         print('縣市：', county)
         sa = []
         said = request.GET.get('said')
-        query = """SELECT id, longitude, latitude, name, geodetic_datum FROM taicat_deployment WHERE study_area_id = %s"""
+        # 首頁地圖只顯示 project_id = 329 的相機位置
+        query = """SELECT id, longitude, latitude, name, geodetic_datum FROM taicat_deployment WHERE study_area_id = %s AND project_id = 329"""
         with connection.cursor() as cursor:
             cursor.execute(query, (said, ))
             sa = cursor.fetchall()
