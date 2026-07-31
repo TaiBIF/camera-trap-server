@@ -248,7 +248,7 @@ function updateTable(page, page_from) {
         if ($('input[name="edit"]#edit-all').is(":checked")) {
           $("input[name='edit']").prop('checked', true)
         }      
-        $('.e-button, .d-button').removeClass('disabled')
+        $('.e-button').removeClass('disabled')
       }
 
       // 影像
@@ -1039,8 +1039,8 @@ $(document).ready(function () {
         <path id="Path_10217" data-name="Path 10217" d="M20,4.238a2.818,2.818,0,0,1-.855,2q-3.8,3.8-7.6,7.6-1.8,1.8-3.613,3.6a1.215,1.215,0,0,1-.45.279q-3.29,1.11-6.586,2.2a1.082,1.082,0,0,1-.4.078.546.546,0,0,1-.446-.786Q.775,17,1.512,14.792c.256-.769.509-1.54.774-2.306a1.037,1.037,0,0,1,.231-.384Q8.133,6.477,13.756.861A2.744,2.744,0,0,1,17.741.853q.734.724,1.46,1.457A2.747,2.747,0,0,1,20,4.238M7.447,16.318,17,6.767,13.233,3,3.678,12.549l3.768,3.769M17.837,5.967c.2-.192.414-.38.607-.587a1.622,1.622,0,0,0,.03-2.23c-.523-.565-1.071-1.108-1.634-1.633a1.578,1.578,0,0,0-2-.128,9.64,9.64,0,0,0-.828.753l3.824,3.825M6.4,16.925,3.073,13.6,1.406,18.587,6.4,16.925" transform="translate(0 0)" fill="#257455"/>
       </g>
     </svg>結束編輯`)
-      // show buttons
-      $('.d-button, .e-button').removeClass('d-none')
+      // show buttons: 刪除(.d-button)不開放, 保持隱藏
+      $('.e-button').removeClass('d-none')
       // bind onclick event
       $('.del-check').removeClass('d-none')
     } else {
@@ -1230,11 +1230,11 @@ $(document).ready(function () {
     } else {
       $('.edit-content input').prop("disabled", false)
       $('.edit-footer').removeClass('d-none')
-      // 僅開放物種及標註欄位（年齡/性別/角況/個體ID/備註）編輯，
-      // 鎖定日期、時間、計畫、樣區、相機位置。
+      // 只開放物種，其餘欄位全部鎖定（年齡/性別/角況/個體ID/備註/日期/時間/計畫/樣區/相機位置）。
       // 注意：樣區與相機位置不能只用 HTML readonly，因為 readonly 欄位仍可被
       // 點擊聚焦而觸發 autocomplete 下拉選單改值；必須一併 disabled 才會真正鎖定。
       $('#edit-date, #edit-time, #edit-project, #edit-studyarea, #edit-deployment').attr('disabled', 'disabled');
+      $('#edit-life_stage, #edit-sex, #edit-antler, #edit-animal_id, #edit-remarks').attr('disabled', 'disabled');
       $('.edit-date-cal').addClass('d-none');
       console.log('edit mode')
     }
