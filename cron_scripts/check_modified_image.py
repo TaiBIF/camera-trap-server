@@ -32,6 +32,11 @@ print(today)
 if df2.empty:
     print('NO modified images for this week.')
 else: 
+    # 影像可能已被刪除, 查不到就留空, 不要讓整個通知中斷
+    def find_image_id(x):
+        img = Image.objects.filter(pk=x).first()
+        return img.filename if img else ''
+
     groups = df2.groupby(['project_id', 'studyarea_id'])
     for (project_id, studyarea_id), group in groups:
         studyarea_memebers = get_studyarea_member(project_id, studyarea_id)
@@ -44,10 +49,6 @@ else:
         studyarea_name = group['studyarea'].iloc[0]
 
         # add Image.filename
-        def find_image_id(x):
-            img = Image.objects.get(pk=x)
-            return img.filename
-
         group['filename'] = group['image_id'].map(find_image_id)
 
         group = group.drop(columns=['id', 'project_id', 'studyarea_id', 'image_id'])
@@ -81,9 +82,9 @@ else:
         email_body = f'''
         您好：
 
-        您所負責的樣區（計畫名稱：{project_name}, 樣區名稱：{studyarea_name}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請點擊以下連結下載相關資料：
+        您所負責的樣區（計畫名稱：{project_name}, 樣區名稱：{studyarea_name}）中的影像資料在過去一週內有經過修改。為了方便您查閱詳細的修改內容，請複製以下連結下載相關資料：
 
-        [下載修改內容]({download_url})
+        下載修改內容：{download_url}
 
         如有任何問題，請隨時聯繫我們團隊。
 
