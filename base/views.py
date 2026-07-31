@@ -1013,6 +1013,35 @@ def stat_county(request):
         return HttpResponse(json.dumps(response, cls=DecimalEncoder), content_type='application/json')
 
 
+def can_view_studyarea_deployment(request, project_id, studyarea_id):
+    '''首頁地圖: 是否能看到這個樣區的相機位置
+
+    未登入者一律看不到
+    系統管理員 / 該計畫的計畫總管理人: 全部
+    有指定樣區的計畫成員: 只有自己的樣區 (即使是同一個計畫)
+    沒有指定樣區的計畫成員: 全部
+    非計畫成員: 看不到
+    '''
+    if not request.session.get('is_login', False):
+        return False
+
+    user_id = request.session.get('id')
+    if Contact.objects.filter(
+            Q(id=user_id, is_system_admin=True) |
+            Q(id=user_id, is_organization_admin=True, organization__projects=project_id)).exists():
+        return True
+
+    members = ProjectMember.objects.filter(project_id=project_id, member_id=user_id)
+    if not members.exists():
+        return False
+
+    restricted = members.filter(pmstudyarea__isnull=False)
+    if not restricted.exists():
+        return True
+
+    return restricted.filter(pmstudyarea__id=studyarea_id).exists()
+
+
 def stat_studyarea(request):
     county_shapes = gpd.read_file(os.path.join(os.path.join(BASE_DIR, "static"),'map/COUNTY_MOI_1090820.shp'))
     if request.method == 'GET':
@@ -1021,11 +1050,12 @@ def stat_studyarea(request):
         print('縣市：', county)
         sa = []
         said = request.GET.get('said')
-        # 首頁地圖只顯示 project_id = 329 的相機位置
-        query = """SELECT id, longitude, latitude, name, geodetic_datum FROM taicat_deployment WHERE study_area_id = %s AND project_id = 329"""
-        with connection.cursor() as cursor:
-            cursor.execute(query, (said, ))
-            sa = cursor.fetchall()
+        # 首頁地圖只顯示 project_id = 329 的相機位置, 且只給有權限的登入者看
+        if can_view_studyarea_deployment(request, 329, said):
+            query = """SELECT id, longitude, latitude, name, geodetic_datum FROM taicat_deployment WHERE study_area_id = %s AND project_id = 329"""
+            with connection.cursor() as cursor:
+                cursor.execute(query, (said, ))
+                sa = cursor.fetchall()
         name = []
         count = []
         new_sa = []
