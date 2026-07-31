@@ -23,6 +23,25 @@
   height: 100%;
 }
 
+/* 地圖返回鍵: 讓返回動作看得出來是可以點的按鈕 */
+.mapBackBtn {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 6px 16px;
+  border: 1px solid #257455;
+  border-radius: 16px;
+  background: none;
+  color: #257455;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.mapBackBtn:hover {
+  background: #257455;
+  color: #FFF;
+}
+
 /*
 .banner {
   background-image: url('/static/image/banner.png');
