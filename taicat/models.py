@@ -911,7 +911,16 @@ class Image(models.Model):
 
     class Meta:
         ordering = ['-created']
-        indexes = [GinIndex(fields=['annotation'])]
+        indexes = [
+            GinIndex(fields=['annotation']),
+            # client上傳時每張照片都會查一次「複製一列」的資料 (client_views.update_image),
+            # 沒有這個索引會把整批上傳的影像從heap撈出來再過濾filename
+            models.Index(
+                fields=['deployment_journal', 'filename'],
+                name='taicat_image_journal_filename',
+                condition=Q(annotation_seq__gt=0),
+            ),
+        ]
 
 
 class DeletedImage(models.Model):
