@@ -58,6 +58,7 @@ from taicat.models import (
     ProjectStat,
     HomePageStat,
     DeletedImage,
+    InfoLog,
     Calculation,
     timezone_utc_to_tw,
     timezone_tw_to_utc,
@@ -580,6 +581,62 @@ def sanitize_date(input):
     month = input[4:6]
     day = input[6:8]
     return f'{year}-{month}-{day}'
+
+CLIENT_VERSION_RE = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
+
+def parse_client_version(value):
+    '''取出版本號開頭的 x.y.z, 回傳 tuple 以便比較大小
+    ex: "1.1.16(2025.03.14)" -> (1, 1, 16), "1.1.2 (2023.06.20)" -> (1, 1, 2)
+    無法解析時回傳 None
+    '''
+    if not value:
+        return None
+
+    if m := CLIENT_VERSION_RE.match(str(value).strip()):
+        return tuple(int(x) for x in m.groups())
+
+    return None
+
+def get_client_version(data):
+    '''從上傳的 payload 找出客戶端版本
+    新版客戶端有 client_version, 舊版只有 key: APP-v1.1.2/D150-TS026/1.1.2 (2023.06.20)/23
+    '''
+    if version := parse_client_version(data.get('client_version', '')):
+        return version
+
+    if key := data.get('key', ''):
+        keys = key.split('/')
+        if len(keys) > 2:
+            return parse_client_version(keys[2])
+
+    return None
+
+def check_client_version(data):
+    '''擋掉太舊的上傳客戶端 (1.1.12 以前不會回傳 user_id/client_version, 上傳者資訊會是空的)
+    版本 OK 回傳 '', 太舊則回傳錯誤訊息
+    認不出版本的先放行, 只記錄到 InfoLog
+    '''
+    minimum = parse_client_version(getattr(settings, 'MINIMUM_CLIENT_VERSION', ''))
+    if not minimum:
+        # 沒設定就不檢查
+        return ''
+
+    minimum_display = '.'.join([str(x) for x in minimum])
+    version = get_client_version(data)
+    upload_key = data.get('key', '') or data.get('client_version', '')
+
+    if version is None:
+        InfoLog(name=f'unknown-client-version: {upload_key}'[:1000],
+                value=str(data.get('deployment_id', ''))).save()
+        return ''
+
+    if version < minimum:
+        InfoLog(name=upload_key[:1000],
+                value=str(data.get('deployment_id', ''))).save()
+        version_display = '.'.join([str(x) for x in version])
+        return f'目前上傳程式版本已經淘汰: {version_display}，無法上傳，請更新至 {minimum_display} 以上版本'
+
+    return ''
 
 def set_deployment_journal(data, deployment):
     # if data.get('trip_start') and data.get('trip_end') and data.get('folder_name') and data.get('source_id'):  # 不要判斷了

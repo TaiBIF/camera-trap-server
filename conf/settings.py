@@ -334,4 +334,6 @@ LOGGING = {
 
 CSRF_TRUSTED_ORIGINS = ['https://staging.camera-trap.tw', 'https://camera-trap.tw']
 
-AVAILABLE_CLIENT_VERSIONS = env.list('AVAILABLE_CLIENT_VERSIONS')
+# 上傳客戶端最低版本 (1.1.12 以前不會回傳 user_id/client_version/client_hostname/num_of_images)
+# 設成空字串就不檢查
+MINIMUM_CLIENT_VERSION = env('MINIMUM_CLIENT_VERSION', default='1.1.18')
