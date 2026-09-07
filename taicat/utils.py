@@ -43,6 +43,7 @@ from openpyxl import Workbook
 import requests
 from bson.objectid import ObjectId
 
+from taicat import calc_core
 from taicat.models import (
     Project,
     Image,
@@ -874,14 +875,110 @@ def half_year_ago(year, month):
     ]
 
 
-def save_calculation(species_list, year, month, deployment):
-    print('save_calcultaion: {} {} {} {}'.format(species_list, year, month, deployment.id))
+def _journal_windows(deployment_id):
+    """The deployment's effective, non-gap working windows, fetched once."""
+    return list(
+        DeploymentJournal.objects
+        .filter(is_effective=True, deployment_id=deployment_id)
+        .filter(Q(is_gap__isnull=True) | Q(is_gap=False))
+        .values_list('working_start', 'working_end')
+    )
+
+
+def _existing_calculations(deployment, day_start=None):
+    """Load a deployment's Calculation rows once.
+
+    Returns (index, species_by_start): index maps
+    (datetime_from, datetime_to, species, image_interval, event_interval) -> pk
+    so a refresh can update in place instead of looking each row up, and
+    species_by_start maps datetime_from -> the species that already have rows
+    in that cell (the zero baselines a recalc has to keep refreshing).
+    """
+    qs = Calculation.objects.filter(deployment=deployment)
+    if day_start is not None:
+        qs = qs.filter(datetime_from=day_start)
+    index = {}
+    species_by_start = collections.defaultdict(set)
+    for pk, df, dt_to, sp, img_int, e_int in qs.order_by('id').values_list(
+            'id', 'datetime_from', 'datetime_to', 'species', 'image_interval', 'event_interval'):
+        index.setdefault((df, dt_to, sp, img_int, e_int), pk)
+        species_by_start[df].add(sp)
+    return index, species_by_start
+
+
+def _cell_payloads(species_list, rows_by_species, month_stat, day_start, day_end, days_in_month):
+    """The 10 interval combinations of every given species, computed in memory."""
+    payloads = []
     for sp in species_list:
-        # print('sp', sp, datetime_from.year, datetime_from.month)
         species = sp.strip()
-        for img_int in [30, 60]:
-            for e_int in [2, 5, 10, 30, 60]:
-                result = deployment.calculate(year, month, species, img_int, e_int, to_save=True)
+        # exact match, like the query this replaces: images stored with padding
+        # around the name are not counted under the stripped name
+        rows = rows_by_species.get(species, [])
+        for img_int in calc_core.IMAGE_INTERVALS:
+            for e_int in calc_core.EVENT_INTERVALS:
+                data = calc_core.calc_payload(rows, month_stat, days_in_month, img_int, e_int)
+                payloads.append((day_start, day_end, species, img_int, e_int, data))
+    return payloads
+
+
+def _flush_calculations(deployment, payloads, index, dry_run=False):
+    """Write payloads with bulk_update / bulk_create. Returns (updated, created)."""
+    to_update, to_create, new_keys = [], [], []
+    for day_start, day_end, species, img_int, e_int, data in payloads:
+        key = (day_start, day_end, species, img_int, e_int)
+        if pk := index.get(key):
+            to_update.append(Calculation(id=pk, data=data))
+        else:
+            to_create.append(Calculation(
+                deployment=deployment,
+                studyarea=deployment.study_area,
+                project=deployment.project,
+                datetime_from=day_start,
+                datetime_to=day_end,
+                species=species,
+                image_interval=img_int,
+                event_interval=e_int,
+                data=data))
+            new_keys.append(key)
+
+    if not dry_run:
+        if to_update:
+            Calculation.objects.bulk_update(to_update, ['data'], batch_size=200)
+        if to_create:
+            created = Calculation.objects.bulk_create(to_create, batch_size=200)
+            for key, obj in zip(new_keys, created):
+                index[key] = obj.id
+    return len(to_update), len(to_create)
+
+
+def save_calculation(species_list, year, month, deployment):
+    """Refresh the Calculation rows of the given species for one month cell.
+
+    The cell's images are fetched once and the 10 (image_interval,
+    event_interval) combinations are computed from that one list, instead of
+    re-running the whole query per combination.
+    """
+    if not species_list:
+        return
+    day_start, day_end, days_in_month = calc_core.month_window(year, month)
+    month_stat = calc_core.working_days(_journal_windows(deployment.id), year, month)
+
+    wanted = {sp.strip() for sp in species_list}
+    rows_by_species = collections.defaultdict(list)
+    rows = (Image.objects
+            .filter(deployment_id=deployment.id,
+                    datetime__range=[day_start, day_end],
+                    species__in=wanted)
+            .exclude(is_duplicated='Y')
+            .order_by('datetime')
+            .values_list('species', 'datetime', 'animal_id'))
+    for species, image_datetime, animal_id in rows.iterator(chunk_size=20000):
+        rows_by_species[species].append((image_datetime, animal_id))
+
+    payloads = _cell_payloads(species_list, rows_by_species, month_stat,
+                              day_start, day_end, days_in_month)
+    index, _ = _existing_calculations(deployment, day_start=day_start)
+    _flush_calculations(deployment, payloads, index)
 
 
 def recalc_deployment_month(deployment, year, month, dry_run=False):
@@ -896,8 +993,7 @@ def recalc_deployment_month(deployment, year, month, dry_run=False):
     prune_orphan_calculations() to remove rows for species that no longer appear
     anywhere in the deployment. Returns the sorted list of recomputed species.
     """
-    day_start = make_aware(timezone_tw_to_utc(datetime(year, month, 1)))
-    day_end = day_start + timedelta(days=monthrange(year, month)[1])
+    day_start, day_end, _ = calc_core.month_window(year, month)
     present = {
         s.strip()
         for s in Image.objects
@@ -956,6 +1052,27 @@ def prune_orphan_calculations(deployment, year=None, dry_run=False):
     return orphans, count
 
 
+def _deployment_image_cells(deployment, year=None):
+    """One pass over a deployment's images, bucketed into {(year, month): {species: rows}}."""
+    query = (Image.objects
+             .filter(deployment_id=deployment.id)
+             .exclude(is_duplicated='Y')
+             .order_by('datetime')
+             .values_list('datetime', 'species', 'animal_id'))
+    if year:
+        y_start = calc_core.month_window(year, 1)[0]
+        y_end = calc_core.month_window(year, 12)[1]
+        query = query.filter(datetime__range=[y_start, y_end])
+
+    cells = collections.defaultdict(lambda: collections.defaultdict(list))
+    for image_datetime, species, animal_id in query.iterator(chunk_size=20000):
+        if image_datetime is None:
+            continue
+        for cell in calc_core.bucket_month(image_datetime):
+            cells[cell][species or ''].append((image_datetime, animal_id))
+    return cells
+
+
 def recalc_deployment(deployment, year=None, dry_run=False):
     """Reconcile all of a deployment's Calculation data with its current images.
 
@@ -965,6 +1082,9 @@ def recalc_deployment(deployment, year=None, dry_run=False):
     to a single year. Returns (cell_results, prune_result), where cell_results is
     a list of (year, month, recomputed_species) and prune_result is
     (orphan_species, deleted_row_count).
+
+    The deployment's images, journals and Calculation rows are each read once
+    and every cell is computed from that; rows are written per year in bulk.
     """
     if year:
         years = [year]
@@ -983,13 +1103,66 @@ def recalc_deployment(deployment, year=None, dry_run=False):
 
     prune_result = prune_orphan_calculations(deployment, year=year, dry_run=dry_run)
 
+    journal_windows = _journal_windows(deployment.id)
+    cells = _deployment_image_cells(deployment, year=year)
+    # after the prune, so deleted rows are not resurrected by an in-place update
+    index, species_by_start = _existing_calculations(deployment)
+
     cell_results = []
     for y in years:
+        payloads = []
         for m in range(1, 13):
-            recompute = recalc_deployment_month(deployment, y, m, dry_run=dry_run)
-            if recompute:
-                cell_results.append((y, m, recompute))
+            day_start, day_end, days_in_month = calc_core.month_window(y, m)
+            rows_by_species = cells.get((y, m), {})
+            present = {s.strip() for s in rows_by_species if s and s.strip()}
+            recompute = sorted(present | species_by_start.get(day_start, set()))
+            if not recompute:
+                continue
+            cell_results.append((y, m, recompute))
+            month_stat = calc_core.working_days(journal_windows, y, m)
+            payloads += _cell_payloads(recompute, rows_by_species, month_stat,
+                                       day_start, day_end, days_in_month)
+        # flush per year to keep the payload list bounded
+        _flush_calculations(deployment, payloads, index, dry_run=dry_run)
     return cell_results, prune_result
+
+
+def check_deployment_calculations(deployment, year=None):
+    """Recompute a deployment's cells in memory and compare with the stored rows.
+
+    Writes nothing. Returns (checked, mismatches), where mismatches is a list of
+    (pk, year, month, species, image_interval, event_interval) whose stored data
+    differs from what the current images produce -- i.e. rows a recalc would
+    change. Use it to confirm a recalc is (or is no longer) needed.
+    """
+    journal_windows = _journal_windows(deployment.id)
+    cells = _deployment_image_cells(deployment, year=year)
+
+    query = Calculation.objects.filter(deployment=deployment)
+    if year:
+        query = query.filter(datetime_from__gte=calc_core.month_window(year, 1)[0],
+                             datetime_from__lt=calc_core.month_window(year + 1, 1)[0])
+
+    month_cache = {}
+    checked = 0
+    mismatches = []
+    for df, species, img_int, e_int, data, pk in query.order_by('id').values_list(
+            'datetime_from', 'species', 'image_interval', 'event_interval', 'data', 'id'
+    ).iterator(chunk_size=2000):
+        if df is None:
+            continue
+        tw = timezone_utc_to_tw(df)
+        cell = (tw.year, tw.month)
+        if cell not in month_cache:
+            month_cache[cell] = (calc_core.working_days(journal_windows, *cell),
+                                 monthrange(*cell)[1])
+        month_stat, days_in_month = month_cache[cell]
+        expected = calc_core.calc_payload(cells.get(cell, {}).get(species, []),
+                                          month_stat, days_in_month, img_int, e_int)
+        checked += 1
+        if expected != data:
+            mismatches.append((pk, tw.year, tw.month, species, img_int, e_int))
+    return checked, mismatches
 
 
 def apply_search_filter_projects(projects, query):

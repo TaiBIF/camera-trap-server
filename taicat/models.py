@@ -32,6 +32,8 @@ from django.contrib.gis.geos import Point
 from django.conf import settings
 from django.core.cache import cache, caches
 
+from taicat import calc_core
+
 # put this function in utils will cause circular import
 ## use python tzinfo is better?
 ## tw_tz = timezone(timedelta(hours=+8))
@@ -643,136 +645,24 @@ class Deployment(models.Model):
         '''default
         POD: occasion (回合): 1 天, session (期間): 1 月
         APOA: occation: 1 小時
+
+        The arithmetic lives in taicat.calc_core so the bulk recalculation path
+        (utils.save_calculation / recalc_deployment) can reuse it without
+        re-querying the same images once per interval combination.
         '''
         working_days = self.count_working_day(year, month)[0]
-        #print(self.id, year, month, species, working_days)
-        sum_working_hours = sum(working_days) * 24
-        image_interval_seconds = image_interval * 60
-        event_interval_seconds = event_interval * 60
-        days_in_month = monthrange(year, month)[1]
+        day_start, day_end, days_in_month = calc_core.month_window(year, month)
 
-        # count image num
-        day_start = timezone_tw_to_utc(datetime(year, month, 1))
-        day_start = make_aware(day_start)
-        day_end = day_start + timedelta(days=days_in_month) # ex: 12/1 - 12/31 => 11/30 16:00 => 12/31 16:00
-        day_end = day_end
-        #print(day_start, day_end)
-        query_ym_sp = Image.objects.filter(
-            deployment_id=self.id,
-            #datetime__year=year,
-            #datetime__month=month,
-            datetime__range=[day_start, day_end],
-            species=species,
-        ).exclude(is_duplicated='Y').order_by('datetime')
-        # by_species = query_ym.values('species').annotate(count=Count('species'))
-        last_datetime = None
-        image_count = 0 # OI3
-        event_count = 0
-        image_count_oi2 = 0
-        image_count_oi1 = 0
-        delta_count = 0
-        delta_count_oi1 = 0
-        exist_animals = []
+        rows = list(
+            Image.objects
+            .filter(deployment_id=self.id, datetime__range=[day_start, day_end], species=species)
+            .exclude(is_duplicated='Y')
+            .order_by('datetime')
+            .values_list('datetime', 'animal_id')
+        )
+        result = calc_core.calc_payload(rows, working_days, days_in_month,
+                                        image_interval, event_interval)
 
-        rows = query_ym_sp.values('id', 'datetime', 'animal_id').all()
-        #print(rows.query)
-        #print(len(rows))
-
-        # OI1, OI3, event count
-        for image in rows:
-            image_dt = timezone_utc_to_tw(image['datetime'])
-            # print(image['id'], image_dt)
-            if last_datetime:
-                delta = image_dt - last_datetime
-                delta_seconds = (delta.days * 86400) + delta.seconds
-                delta_count += delta_seconds # 累加
-                delta_count_oi1 += delta_seconds # 累加
-                # print (image.id, image.datetime, delta_seconds, delta_count)
-
-                if image['animal_id']:
-                    # OI1
-                    # 考慮 animal_id, animal_id 跟上一個不同, image_count 加 1
-                    if len(exist_animals) > 0:
-                        if image['animal_id'] != exist_animals[-1]:
-                            image_count_oi1 += 1
-                        elif delta_count >= image_interval_seconds:
-                            image_count_oi1 += 1
-                            delta_count_oi1 = 0
-                    else:
-                        exist_animals.append(image['animal_id'])
-                        image_count_oi1 += 1
-                else:
-                    # OI3
-                    #print(image, image['id'], image_interval_seconds, delta_count)
-                    if delta_count >= image_interval_seconds:
-                        #print ('ocunt!!')
-                        image_count += 1
-                        delta_count = 0
-
-                if delta_seconds >= event_interval_seconds:  # 相鄰照片
-                    event_count += 1
-
-            else:
-                # 第一次事件, 直接加 1
-                event_count = 1
-                # 第一張照片, 直接加 1
-                image_count = 1
-
-                if image['animal_id']:
-                    image_count_oi1 += 1
-
-            last_datetime = image_dt
-
-        # OI2
-        last_datetime = None
-        delta_count = 0
-        for image in query_ym_sp.values('deployment', 'datetime', 'species').order_by().annotate(Count('id')):
-            #print (year, month, rows)
-            if last_datetime:
-                delta = image_dt - last_datetime
-                delta_seconds = (delta.days * 86400) + delta.seconds
-                delta_count += delta_seconds # 累加
-                # print (image.id, image.datetime, delta_seconds, delta_count)
-
-                if delta_count >= image_interval_seconds:
-                    image_count_oi2 += 1
-                    delta_count = 0
-
-            else:
-                # 第一張照片, 直接加 1
-                image_count_oi2 = 1
-
-            last_datetime = image_dt
-
-        by_day = query_ym_sp.values('datetime__day').annotate(count=Count('datetime__day')).order_by('datetime__day')
-        by_hour = query_ym_sp.values('datetime__day', 'datetime__hour').annotate(count=Count('*')).order_by('datetime__day', 'datetime__hour')
-        oi3 = (image_count * 1.0 / sum_working_hours) * 1000 if sum_working_hours > 0 else 'N/A'
-        oi1 = (image_count_oi1 * 1.0 / sum_working_hours) * 1000 if sum_working_hours > 0 else 'N/A'
-        oi2 = (image_count_oi2 * 1.0 / sum_working_hours) * 1000 if sum_working_hours > 0 else 'N/A'
-        pod = by_day.count() * 1.0 / sum(working_days) if sum(working_days) > 0 else 'N/A'
-        # month, day, hour
-        # note: [[0, [0]*24]] * days_in_month => call by reference error (一個改全部變)
-        #print (by_day, by_hour)
-        mdh = [[0, [0 for h in range(24)]] for x in range(days_in_month)]
-        for day in by_day:
-            # print(day, mdh, day['datetime__day']-1, len(mdh))
-            if len(mdh) > day['datetime__day'] - 1:
-                mdh[day['datetime__day']-1][0] = 1
-        for hour in by_hour:
-            if len(mdh) > hour['datetime__day']-1:
-                #mdh[hour['datetime__day']-1][1][hour['datetime__hour']] = 1
-                # shift poa timezone
-                utc_hour = hour['datetime__hour']
-                tw_hour = None
-                if utc_hour < 16:
-                    tw_hour = utc_hour + 8
-                elif utc_hour > 15:
-                    tw_hour = utc_hour - 16
-                mdh[hour['datetime__day']-1][1][tw_hour] = 1
-
-        #print (i['species'], image_count, event_count, oi3, pod, by_day.count(), mdh)
-        # print(year, month, species, working_days)
-        result = [working_days, image_count, event_count, oi1, oi2, oi3, pod, mdh]
         if to_save:
             if c := Calculation.objects.filter(
                     deployment=self,
@@ -795,7 +685,6 @@ class Deployment(models.Model):
                     event_interval=event_interval,
                     data=result
                 )
-                #print('createu')
                 c.save()
 
         return result
