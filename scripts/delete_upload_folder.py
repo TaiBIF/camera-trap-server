@@ -92,14 +92,14 @@ def delete_folder_by_dj(dj, s3_client, dry_run=False):
 
 
 def delete_folder(folder_name, s3_client, dry_run=False):
-    djs = DeploymentJournal.objects.filter(folder_name=folder_name).all()
+    djs = DeploymentJournal.objects.filter(folder_name=folder_name).order_by('id')
 
     if not djs:
         print(f"\n[NOT FOUND] folder_name='{folder_name}'")
         return
 
     if len(djs) > 1:
-        print(f"\n[WARNING] Found {len(djs)} journals for '{folder_name}', deleting the last one")
+        print(f"\n[WARNING] Found {len(djs)} journals for '{folder_name}', deleting the one with the largest id")
         dj = djs[len(djs) - 1]
         delete_folder_by_dj(dj, s3_client, dry_run)
     else:

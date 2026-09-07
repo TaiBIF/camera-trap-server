@@ -44,6 +44,9 @@ from .utils import (
 import pandas as pd
 from openpyxl import Workbook
 
+# Excel's hard sheet limit, header row included
+XLSX_MAX_ROWS = 1048576
+
 
 @shared_task
 def process_project_annotation_download_task(pk, email, is_authorized, args, user_role_name, host, is_contractor, sa_list):
@@ -258,50 +261,53 @@ def process_download_data_task(email, filter_dict, member_id, host, verbose):
     query = apply_search_filter(filter_dict)
     query = query.values_list('project_id', 'project__name', 'image_uuid', 'studyarea__name', 'deployment__name', 'filename', 'datetime', 'species', 'life_stage', 'sex', 'antler', 'animal_id', 'remarks')
     header = ['計畫ID', '計畫名稱', '影像ID', '樣區/子樣區', '相機位置', '檔名', '拍攝時間', '物種', '年齡', '性別', '角況', '個體ID', '備註']
+    tw_tz = timezone(timedelta(hours=+8))
+
+    # .iterator() streams through a server-side cursor; .all() used to cache the
+    # entire result set (millions of rows) in the queryset instead
+    data_rows = 0
     with open(Path(download_dir, csv_filename), 'w') as csvfile:
         spamwriter = csv.writer(csvfile)
         spamwriter.writerow(header)
-        for row in query.all():
-            ''' much slower
-        for i in query.all():
-            row = [
-                i.project_id,
-                i.project.name,
-                i.image_uuid,
-                i.studyarea.name,
-                i.deployment.name,
-                i.filename,
-                i.datetime.strftime('%Y-%m-%d %H:%M:%S') if i.datetime else '',
-                i.species,
-                i.life_stage,
-                i.sex,
-                i.antler,
-                i.animal_id,
-                i.remarks
-            ]
-            row = i
-            '''
-            tw_tz = timezone(timedelta(hours=+8))
-            tz_row = [*row[:6], row[6].astimezone(tw_tz), *row[7:]]
-            spamwriter.writerow(tz_row)
+        for row in query.iterator(chunk_size=2000):
+            dt = row[6]
+            spamwriter.writerow([
+                *row[:6],
+                dt.astimezone(tw_tz) if isinstance(dt, datetime) else dt,
+                *row[7:],
+            ])
+            data_rows += 1
 
     csv_download_url = "https://{}{}{}".format(
         host,
         settings.MEDIA_URL,
         Path('download', csv_filename))
 
-    wb = Workbook()
-    ws = wb.active
-    ws.append(header)
-    for row in query.all():
-        modified_row = [str(dt.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None)) if isinstance(dt, datetime) else dt for dt in row]
-        ws.append(modified_row)
-    wb.save(Path(download_dir, xlsx_filename))
+    # A result set past Excel's row ceiling cannot produce a valid workbook, so
+    # skip it and ship the CSV alone. Checking up front matters: openpyxl only
+    # reclaims its spool files atexit, and a celery worker never exits, so a
+    # part-built workbook we discard would leak that spool for the worker's life.
+    if data_rows + 1 > XLSX_MAX_ROWS:
+        xlsx_download_url = None
+        logger.warning(
+            'download %s has %s rows, over the xlsx limit of %s; sending csv only',
+            base_filename, data_rows, XLSX_MAX_ROWS)
+    else:
+        # write_only spools rows to disk instead of holding every cell in memory
+        wb = Workbook(write_only=True)
+        ws = wb.create_sheet()
+        ws.append(header)
+        for row in query.iterator(chunk_size=2000):
+            ws.append([
+                str(v.astimezone(tw_tz).replace(tzinfo=None)) if isinstance(v, datetime) else v
+                for v in row
+            ])
+        wb.save(Path(download_dir, xlsx_filename))
 
-    xlsx_download_url = "https://{}{}{}".format(
-        host,
-        settings.MEDIA_URL,
-        Path('download', xlsx_filename))
+        xlsx_download_url = "https://{}{}{}".format(
+            host,
+            settings.MEDIA_URL,
+            Path('download', xlsx_filename))
 
     user_role = ''
     if contact := Contact.objects.get(id=member_id):
