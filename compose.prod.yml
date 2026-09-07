@@ -4,6 +4,9 @@ version: '3.7'
 #  asset:
 
 services:
+  # Memory caps below keep one runaway request or task from starving the whole
+  # host (31G, no swap). Without them the kernel OOM killer picks its own
+  # victim, which has taken down postgres and nginx along with the culprit.
   django:
     build:
       context: .
@@ -12,6 +15,11 @@ services:
       - 8001
     command: /srv/start_prod
     restart: always
+    mem_limit: 12g
+  celery:
+    mem_limit: 6g
+  flower:
+    mem_limit: 512m
   nginx:
     image: nginx:alpine
     restart: always

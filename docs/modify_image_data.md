@@ -71,8 +71,18 @@ operations leave `Calculation` stale and need a recalc:
 | `scripts/delete_upload_folder.py` | ❌ no | `scripts/recalc-deployment.py` (the folder's deployment) |
 
 All recalc paths reuse helpers in `taicat/utils.py`:
-`recalc_deployment_month`, `prune_orphan_calculations`, `recalc_deployment`
-(which build on the existing `save_calculation` / `Deployment.calculate`).
+`recalc_deployment_month`, `prune_orphan_calculations`, `recalc_deployment`,
+`check_deployment_calculations` (which build on `save_calculation` and the shared
+math in `taicat/calc_core.py`).
+
+### Cost
+
+The arithmetic lives in `taicat/calc_core.py` as plain functions over a row list,
+so a recalc reads each deployment's images, journals and `Calculation` rows
+**once** and computes every cell (species x month x the 10 interval
+combinations) in memory, writing with `bulk_update` / `bulk_create`. Previously
+each of the 10 combinations re-ran the whole per-species month query, which meant
+roughly 80 queries per cell — a ~4k-image deployment took ~10 minutes.
 
 ### Cell model
 
@@ -130,14 +140,28 @@ python scripts/recalc-deployment.py --from-deployment 13909 --to-deployment 1400
 python scripts/recalc-deployment.py --deployment-id 13896 --dry-run
 # limit to one year
 python scripts/recalc-deployment.py --deployment-id 13896 --year 2024
+# every deployment of a project
+python scripts/recalc-deployment.py --project 329
+# is it actually stale? (writes nothing)
+python scripts/recalc-deployment.py --deployment-id 13896 --verify
 ```
 
 - `--deployment-id` is repeatable; `--from-deployment` / `--to-deployment` are
-  conveniences for a swap. All given deployments are processed.
+  conveniences for a swap; `--project` adds every deployment of a project. All
+  given deployments are processed.
 - `--year` limits both recompute and prune to a single year (orphan species are
   identified deployment-wide, but only that year's rows are deleted).
 - `--dry-run` reports the prune list (species + row count) and the per-cell
   recompute lists without writing.
+- `--verify` recomputes every stored row in memory and reports the ones that
+  differ from what the current images produce, without writing anything. Run it
+  before a batch to see which deployments actually need work, and after one to
+  confirm nothing is left stale.
+
+After a batch of `delete_upload_folder.py` / `swap-deployment.py` runs, the
+deployments to pass in are the `swap_from_deployment` / `swap_to_deployment`
+values and the deleted folders' deployments — `tasks/<date>/result.csv` from the
+`db-task` skill records both.
 
 > Scope: these tools fix **`Calculation`** only. `delete_upload_folder.py` also
 > leaves `ProjectStat`, `ProjectSpecies`, `Species`, `ImageFolder` and
@@ -149,6 +173,7 @@ python scripts/recalc-deployment.py --deployment-id 13896 --year 2024
   `static/js/project_detail.js`, `static/css/project_detail.css`
 - Edit view: `edit_image` in `taicat/views.py`
 - Audit model: `ModifiedImage` in `taicat/models.py`
-- Calculation: `Deployment.calculate` in `taicat/models.py`,
-  `save_calculation` / `recalc_deployment*` in `taicat/utils.py`
+- Calculation: `Deployment.calculate` in `taicat/models.py`, the shared math in
+  `taicat/calc_core.py`, `save_calculation` / `recalc_deployment*` /
+  `check_deployment_calculations` in `taicat/utils.py`
 - See also: [`calculation.md`](calculation.md), [`scripts.md`](scripts.md)
