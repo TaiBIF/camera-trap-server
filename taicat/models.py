@@ -990,6 +990,12 @@ class Image_info(models.Model):
     source_data = models.JSONField(default=dict, blank=True)
     exif = models.JSONField(default=dict, blank=True)
 
+    class Meta:
+        indexes = [
+            # 用image_uuid查exif (e.g. camtrap-dp匯出的cameraModel)，沒有索引會整表掃描
+            models.Index(fields=['image_uuid'], name='taicat_image_info_uuid'),
+        ]
+
 
 class HomePageStat(models.Model):
     count = models.IntegerField(null=True, blank=True)
