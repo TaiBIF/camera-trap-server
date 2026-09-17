@@ -1,0 +1,440 @@
+<title>TaiCAT 自動相機資料使用指南</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F3F5F2; --surface:#FFFFFF; --ink:#1B2620; --muted:#5A6860;
+  --accent:#2E6A57; --accent-soft:#E2EEE8; --warn:#9A5A17; --warn-soft:#F7ECDD;
+  --rule:#D9E1DB; --code-bg:#EBF0EC; --code-block:#F8FAF8;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#111714; --surface:#18201C; --ink:#E2E9E4; --muted:#9BA9A1;
+    --accent:#86C8AE; --accent-soft:#1F3129; --warn:#E3A763; --warn-soft:#33271A;
+    --rule:#2A3530; --code-bg:#1F2924; --code-block:#141B18;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111714; --surface:#18201C; --ink:#E2E9E4; --muted:#9BA9A1;
+  --accent:#86C8AE; --accent-soft:#1F3129; --warn:#E3A763; --warn-soft:#33271A;
+  --rule:#2A3530; --code-bg:#1F2924; --code-block:#141B18;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.75;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px}
+@media (min-width:980px){.wrap{grid-template-columns:210px minmax(0,1fr)}}
+header.top{max-width:1120px;margin:0 auto;padding-block:48px 32px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--serif);font-size:clamp(28px,4.4vw,40px);line-height:1.3;margin:8px 0 12px;text-wrap:balance}
+.lede{max-width:44em;color:var(--muted);margin:0}
+nav.toc{font-size:14px}
+@media (min-width:980px){nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start}}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 10px;border-left:2px solid var(--rule)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-left-color:var(--accent)}
+nav.toc .sub a{padding-left:22px;font-size:13px}
+main{min-width:0}
+section{padding-block:8px 32px}
+h2{font-family:var(--serif);font-size:26px;line-height:1.4;margin:24px 0 12px;text-wrap:balance;scroll-margin-top:24px}
+h3{font-size:18px;font-weight:700;margin:32px 0 8px;scroll-margin-top:24px}
+p{max-width:46em;margin:0 0 14px}
+a{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:1px 6px;border-radius:4px;white-space:nowrap}
+pre{background:var(--code-block);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6;margin:12px 0 20px;tab-size:4}
+pre code{background:none;padding:0;white-space:pre;font-size:inherit}
+pre .c{color:var(--muted)}
+.tbl{overflow-x:auto;margin:12px 0 20px;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.6}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--rule)}
+tr:last-child td{border-bottom:0}
+th{font-weight:500;color:var(--muted);font-size:13px;background:var(--ground);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td:first-child{white-space:nowrap}
+.note{background:var(--warn-soft);border-left:3px solid var(--warn);padding:12px 16px;margin:16px 0;border-radius:0 6px 6px 0;max-width:52em}
+.note strong{color:var(--warn)}
+.note p:last-child,.note ul:last-child{margin-bottom:0}
+.formula{font-family:var(--serif);font-size:19px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 18px;margin:12px 0 18px;max-width:40em}
+.checks{list-style:none;padding:0;margin:12px 0 20px;display:grid;gap:10px;max-width:52em}
+.checks li{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 16px;margin:0}
+.checks b{display:block;margin-bottom:2px}
+.muted{color:var(--muted);font-size:14px}
+ul{padding-left:1.3em;max-width:46em;margin:0 0 14px}
+li{margin-bottom:4px}
+details{margin:12px 0 20px;max-width:100%}
+summary{cursor:pointer;color:var(--accent);font-weight:500}
+footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted)}
+</style>
+
+<header class="top">
+  <div class="eyebrow">Camtrap DP 1.0 · 研究使用指南</div>
+  <h1>自動相機資料：讀取、篩選與分析</h1>
+  <p class="lede">本指南說明如何使用這份 Camtrap DP 格式的自動相機資料：資料包裡有什麼、分析前該篩掉哪些資料，以及如何計算物種紀錄數、相機工作時數、OI3 相對豐度、出現樣點比例與活動時段。文中程式皆已用實際資料測試。</p>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="目錄">
+  <ol>
+    <li><a href="#start">資料包內容</a></li>
+    <li><a href="#datasets">三份資料集</a></li>
+    <li><a href="#read">讀取資料</a></li>
+    <li><a href="#filter">分析前的篩選</a></li>
+    <li><a href="#analysis">常見分析</a></li>
+    <li class="sub"><a href="#a-species">物種與紀錄數</a></li>
+    <li class="sub"><a href="#a-effort">相機工作時數</a></li>
+    <li class="sub"><a href="#a-independent">獨立有效照片</a></li>
+    <li class="sub"><a href="#a-oi3">OI3 相對豐度</a></li>
+    <li class="sub"><a href="#a-occupancy">出現樣點比例</a></li>
+    <li class="sub"><a href="#a-activity">活動時段</a></li>
+    <li><a href="#script">完整分析程式</a></li>
+    <li><a href="#license">授權與引用</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="start">
+<h2>資料包內容</h2>
+<p>每份資料集是一個資料夾，包含四個檔案。所有時間皆為<strong>台灣時間（+08:00）</strong>，座標為 <strong>WGS84 經緯度</strong>，不需再轉換。</p>
+<div class="tbl"><table>
+<thead><tr><th>檔案</th><th>一列代表</th><th>分析時主要用途</th></tr></thead>
+<tbody>
+<tr><td><code>deployments.csv</code></td><td>一台相機在一個位置運作的一段期間</td><td>樣點座標、相機工作時數</td></tr>
+<tr><td><code>observations.csv</code></td><td>一筆辨識結果</td><td>物種、拍攝時間、年齡、性別</td></tr>
+<tr><td><code>media.csv</code></td><td>一張照片</td><td>照片檔名、網址（多數分析用不到）</td></tr>
+<tr><td><code>datapackage.json</code></td><td>整份資料集的說明</td><td>物種中文名、TaiCOL 編號、授權</td></tr>
+</tbody></table></div>
+
+<h3>三個編號</h3>
+<ul>
+<li><code>locationID</code>：<strong>相機位置（樣點）</strong>。同一位置可能有多段運作期間，<strong>以樣點為單位分析時請用 locationID 分組</strong>。</li>
+<li><code>deploymentID</code>：<strong>一段運作期間</strong>，observations 以此對應到 deployments。
+  <ul>
+  <li><code>j-</code> 開頭：有實際架設與回收紀錄，起訖時間精確。</li>
+  <li><code>dep-</code> 開頭：早期資料沒有架設紀錄，一個位置只有一段期間，起訖時間是該位置第一張到最後一張照片的時間。</li>
+  </ul></li>
+<li><code>mediaID</code>：<strong>一張照片</strong>。一張照片拍到兩種動物時，observations 會有兩列、共用同一個 mediaID。</li>
+</ul>
+
+<h3>最常用的欄位</h3>
+<div class="tbl"><table>
+<thead><tr><th>檔案</th><th>欄位</th><th>內容</th></tr></thead>
+<tbody>
+<tr><td>observations</td><td><code>eventStart</code></td><td>拍攝時間，例如 <code>2022-05-04T10:37:10+08:00</code></td></tr>
+<tr><td>observations</td><td><code>observationType</code></td><td><code>animal</code> 動物、<code>blank</code> 空拍或定時測試照、<code>human</code> 人員架設／回收相機</td></tr>
+<tr><td>observations</td><td><code>scientificName</code></td><td>學名（依 TaiCOL）；無法辨識到種的動物為空白</td></tr>
+<tr><td>observations</td><td><code>lifeStage</code>、<code>sex</code>、<code>observationTags</code></td><td>年齡（成體、亞成體、幼體）、性別（雄性、雌性、無法判定）、鹿角狀態（如硬角一尖），皆為中文原始值</td></tr>
+<tr><td>observations</td><td><code>observationComments</code></td><td>備註；學名空白時，原始中文辨識名稱放在最前面（如「鳥」「鼠」）</td></tr>
+<tr><td>deployments</td><td><code>latitude</code>、<code>longitude</code></td><td>相機位置經緯度</td></tr>
+<tr><td>deployments</td><td><code>deploymentStart</code>、<code>deploymentEnd</code></td><td>運作期間起訖</td></tr>
+<tr><td>deployments</td><td><code>timestampIssues</code></td><td><code>true</code> 表示這段期間的照片時間可能有誤</td></tr>
+<tr><td>deployments</td><td><code>deploymentGroups</code></td><td>所屬樣區（如林業署各分署）</td></tr>
+<tr><td>deployments</td><td><code>cameraHeight</code></td><td>注意：此欄為相機位置的<strong>海拔（公尺）</strong>，不是相機離地高度</td></tr>
+</tbody></table></div>
+<p class="muted">完整欄位定義請參考 <a href="https://camtrap-dp.tdwg.org/data/" rel="noopener">Camtrap DP 官方說明</a>。</p>
+</section>
+
+<section id="datasets">
+<h2>三份資料集</h2>
+<div class="tbl"><table>
+<thead><tr><th>資料集</th><th class="num">樣點</th><th class="num">運作期間</th><th class="num">辨識紀錄</th><th class="num">有學名的動物</th><th class="num">物種</th><th>期間</th></tr></thead>
+<tbody>
+<tr><td>287 自動相機動物監測整合計畫(1/4)</td><td class="num">305</td><td class="num">6,567 j- ＋ 304 dep-</td><td class="num">2,072,297</td><td class="num">916,566</td><td class="num">66</td><td>2012 ～ 2025</td></tr>
+<tr><td>288 自動相機動物監測整合計畫</td><td class="num">302</td><td class="num">2,977 j- ＋ 302 dep-</td><td class="num">5,322,812</td><td class="num">2,581,755</td><td class="num">19</td><td>2015 ～ 2022</td></tr>
+<tr><td>329 林業署哺乳動物監測網</td><td class="num">721</td><td class="num">20,166 j-</td><td class="num">20,816,093</td><td class="num">12,873,637</td><td class="num">101</td><td>2007 ～ 2026</td></tr>
+</tbody></table></div>
+<p>287 與 288 大部分是早期資料（<code>dep-</code>），運作期間為照片時間推估；329 全部為有架設紀錄的資料（<code>j-</code>）。</p>
+</section>
+
+<section id="read">
+<h2>讀取資料</h2>
+<p>檔案很大：329 的 <code>observations.csv</code> 約 3.5 GB、兩千萬列，<code>media.csv</code> 約 4.8 GB，用 Excel 或一般 pandas <code>read_csv</code> 可能記憶體不足。建議使用 <a href="https://duckdb.org/" rel="noopener">DuckDB</a>，直接以 SQL 查詢 CSV，不需先載入記憶體。</p>
+<pre><code>pip install duckdb</code></pre>
+<pre><code>import duckdb
+
+con = duckdb.connect()
+con.sql("""
+    SELECT observationType, count(*) AS records
+    FROM read_csv('observations.csv', all_varchar = true)
+    GROUP BY observationType
+""").show()</code></pre>
+<p>也可以在 DuckDB 命令列直接執行下文的 SQL。建議加上 <code>all_varchar = true</code> 以文字讀入所有欄位：時間已是台灣時間，取字串前 10 碼即為日期、第 12–13 碼即為小時，可避免時區自動轉換造成的錯誤。</p>
+<p class="muted">R 使用者可用 <a href="https://inbo.github.io/camtrapdp/" rel="noopener">camtrapdp</a> 套件讀取 <code>datapackage.json</code>；檔案較大時同樣建議搭配 DuckDB。</p>
+</section>
+
+<section id="filter">
+<h2>分析前的篩選</h2>
+<ul class="checks">
+<li><b>只取動物：<code>observationType = 'animal'</code></b>空拍、定時測試照（<code>blank</code>）與人員架設、回收相機的工作照（<code>human</code>）不是物種紀錄。它們仍保留在資料中，可用來確認相機的運作狀況。</li>
+<li><b>學名空白的動物</b>無法辨識到種的紀錄，如「鳥」「鼠或鼩形目」「無法辨識」，學名為空白。做物種層級分析時排除；需要較高分類階層時，可從 <code>observationComments</code> 開頭取得原始名稱。</li>
+<li><b>時間可能有誤的期間：<code>timestampIssues = 'true'</code></b>相機時鐘錯誤等原因，照片時間可能不正確（如 1980 年或未來日期）。分析活動時段、時間序列前建議排除。287 有 7 段、288 有 2 段、329 有 31 段。</li>
+<li><b>座標錯誤的樣點</b>287、288 的 <code>HL13B</code>（緯度 2.34）、288 的 <code>LD-LTMM-023</code>（緯度 21.00）不在臺灣範圍內，空間分析時請排除，或以臺灣範圍（緯度 21.5–26.5、經度 118–123.5）篩選。</li>
+<li><b>早期資料的運作期間：<code>dep-</code></b>期間為第一張到最後一張照片，中間的停機空檔也被算入，<strong>工作時數會被高估、OI3 因而低估</strong>。比較不同樣點或年度時，建議將 <code>j-</code> 與 <code>dep-</code> 分開分析，或只使用 <code>j-</code>。</li>
+<li><b>329 的 2007 年資料</b>早於計畫開始（2015 年），但未被判定為時間錯誤，可能是相機時鐘設定錯誤，使用時請留意。</li>
+</ul>
+</section>
+
+<section id="analysis">
+<h2>常見分析</h2>
+<p>以下 SQL 在資料包資料夾內執行。</p>
+
+<h3 id="a-species">物種與紀錄數</h3>
+<pre><code>SELECT scientificName, count(*) AS records
+FROM read_csv('observations.csv', all_varchar = true)
+WHERE observationType = 'animal' AND scientificName IS NOT NULL
+GROUP BY scientificName
+ORDER BY records DESC;</code></pre>
+<p>中文名與 TaiCOL 物種編號在 <code>datapackage.json</code> 的 <code>taxonomic</code> 清單中，以 <code>scientificName</code> 對應。未辨識到種的原始名稱統計：</p>
+<pre><code>SELECT split_part(observationComments, ' ', 1) AS label, count(*) AS records
+FROM read_csv('observations.csv', all_varchar = true)
+WHERE observationType = 'animal' AND scientificName IS NULL
+GROUP BY label
+ORDER BY records DESC;</code></pre>
+<p class="muted">紀錄數是照片層級的計數，連拍會重複計算，不適合直接比較豐度，請使用下方的獨立有效照片或 OI3。</p>
+
+<h3 id="a-effort">相機工作時數</h3>
+<p>將同一樣點所有運作期間涵蓋的日期取聯集（重疊期間不重複計算），工作時數 = 工作天數 × 24。這與 TaiCAT 網站上計算 OI 值的方式相同。</p>
+<pre><code>WITH d AS (
+  SELECT locationID,
+         CAST(left(deploymentStart, 10) AS DATE) AS start_date,
+         CAST(left(deploymentEnd, 10) AS DATE)   AS end_date
+  FROM read_csv('deployments.csv', all_varchar = true)
+  WHERE timestampIssues = 'false'
+),
+days AS (
+  SELECT DISTINCT locationID,
+         unnest(generate_series(start_date, end_date, INTERVAL 1 DAY)) AS day
+  FROM d
+)
+SELECT locationID, count(*) AS working_days, count(*) * 24 AS working_hours
+FROM days
+GROUP BY locationID
+ORDER BY locationID;</code></pre>
+<p class="muted">若需要特定月份或年度的工作時數，在 <code>days</code> 之後加上 <code>WHERE day BETWEEN '2023-01-01' AND '2023-12-31'</code>。</p>
+
+<h3 id="a-independent">獨立有效照片</h3>
+<p>動物停留在鏡頭前時會被連拍多張。為避免重複計算，同一樣點、同一物種在一段時間內的照片只算一次，稱為「獨立有效照片」。常用間隔為 30 或 60 分鐘，<strong>報告結果時請註明所用的間隔</strong>。</p>
+<p>有兩種常見定義，結果略有差異：</p>
+<div class="tbl"><table>
+<thead><tr><th>定義</th><th>新的一筆的條件</th><th>適用</th></tr></thead>
+<tbody>
+<tr><td>與上一筆<strong>計入</strong>照片相隔</td><td>距離上一張被計入的照片 ≥ 間隔</td><td>與 TaiCAT 網站的 OI 值一致；見<a href="#script">完整分析程式</a></td></tr>
+<tr><td>與<strong>前一張</strong>照片相隔</td><td>距離前一張照片（不論是否計入）≥ 間隔</td><td>文獻中常見，可用 SQL 直接計算</td></tr>
+</tbody></table></div>
+<pre><code><span class="c">-- 「與前一張照片相隔 ≥ 60 分鐘」的獨立有效照片數</span>
+WITH a AS (
+  SELECT d.locationID, o.scientificName,
+         CAST(o.eventStart AS TIMESTAMPTZ) AS t
+  FROM read_csv('observations.csv', all_varchar = true) o
+  JOIN read_csv('deployments.csv', all_varchar = true) d USING (deploymentID)
+  WHERE o.observationType = 'animal' AND o.scientificName IS NOT NULL
+)
+SELECT locationID, scientificName,
+       count(*) FILTER (WHERE prev_t IS NULL OR t - prev_t &gt;= INTERVAL 60 MINUTE)
+         AS independent_photos
+FROM (
+  SELECT *, lag(t) OVER (PARTITION BY locationID, scientificName ORDER BY t) AS prev_t
+  FROM a
+)
+GROUP BY locationID, scientificName;</code></pre>
+
+<h3 id="a-oi3">OI3 相對豐度</h3>
+<div class="formula">OI3 ＝ 獨立有效照片數 ÷ 相機工作時數 × 1000</div>
+<p>即每 1,000 個相機工作小時的獨立有效照片數。將上面兩個結果以 <code>locationID</code> 合併後相除即可。計算一段期間或一個區域的 OI3 時，請先分別加總獨立有效照片數與工作時數，再相除，不要將各樣點的 OI3 直接平均。</p>
+<div class="note"><p><strong>注意：</strong><code>dep-</code> 期間的工作時數被高估，OI3 會偏低；不同間隔、不同定義算出的 OI3 不可直接比較。</p></div>
+
+<h3 id="a-occupancy">出現樣點比例</h3>
+<p>有拍到某物種的樣點數 ÷ 有工作時數的樣點總數，即 naive occupancy（未校正偵測率的出現比例）。若要進行占據模型（occupancy model）分析，可依 <code>eventStart</code> 的日期將每個樣點切成固定長度的調查期（如 7 天），並以工作時數判斷每期是否有相機運作。</p>
+
+<h3 id="a-activity">活動時段</h3>
+<pre><code>SELECT CAST(substr(eventStart, 12, 2) AS INTEGER) AS hour, count(*) AS records
+FROM read_csv('observations.csv', all_varchar = true) o
+JOIN read_csv('deployments.csv', all_varchar = true) d USING (deploymentID)
+WHERE o.scientificName = 'Muntiacus reevesi'
+  AND d.timestampIssues = 'false'
+GROUP BY hour
+ORDER BY hour;</code></pre>
+<p class="muted">建議以獨立有效照片計算活動時段，避免連拍集中在少數時段；完整分析程式的 <code>activity_by_hour.csv</code> 即以獨立有效照片計數。</p>
+</section>
+
+<section id="script">
+<h2>完整分析程式</h2>
+<p>以下 Python 程式一次產出四個表格，已套用<a href="#filter">分析前的篩選</a>（排除時間可能有誤的期間與臺灣範圍外的樣點），獨立有效照片採「與上一筆計入照片相隔 60 分鐘」。將程式存為 <code>camtrap_analysis.py</code> 後執行：</p>
+<pre><code>pip install duckdb
+python camtrap_analysis.py project-329-林業署哺乳動物監測網 output-329</code></pre>
+<div class="tbl"><table>
+<thead><tr><th>輸出檔案</th><th>內容</th></tr></thead>
+<tbody>
+<tr><td><code>species_summary.csv</code></td><td>各物種：中文名、TaiCOL 編號、紀錄數、獨立有效照片數、出現樣點數、出現樣點比例</td></tr>
+<tr><td><code>effort_by_location.csv</code></td><td>各樣點：名稱、經緯度、工作天數、工作時數</td></tr>
+<tr><td><code>oi3_by_location.csv</code></td><td>各樣點 × 物種：獨立有效照片數、工作時數、OI3</td></tr>
+<tr><td><code>activity_by_hour.csv</code></td><td>各物種 0–23 時的獨立有效照片數</td></tr>
+</tbody></table></div>
+<p>以 329（兩千萬筆辨識）測試，執行約 20 秒。可在程式開頭調整 <code>IMAGE_INTERVAL_MIN</code>（間隔分鐘）與 <code>EXCLUDE_TIMESTAMP_ISSUES</code>。</p>
+<details>
+<summary>展開程式碼 camtrap_analysis.py</summary>
+<pre><code>"""
+Camtrap DP 資料包基本分析：物種紀錄數、相機工作時數、OI3、出現樣點比例、活動時段。
+
+用法：
+    pip install duckdb
+    python camtrap_analysis.py &lt;資料包資料夾&gt; [輸出資料夾]
+
+輸出（UTF-8 BOM，可直接用 Excel 開啟）：
+    species_summary.csv    各物種紀錄數、獨立有效照片數、出現樣點數
+    effort_by_location.csv 各相機位置的工作天數與工作時數
+    oi3_by_location.csv    各相機位置 × 物種的 OI3
+    activity_by_hour.csv   各物種 0–23 時的獨立有效照片數
+"""
+
+import csv
+import json
+import sys
+from pathlib import Path
+
+import duckdb
+
+IMAGE_INTERVAL_MIN = 60           # 獨立有效照片的間隔門檻（分鐘）
+EXCLUDE_TIMESTAMP_ISSUES = True   # 排除 timestampIssues = true 的相機期間
+BBOX = (21.5, 26.5, 118.0, 123.5) # 臺灣範圍：緯度下限、上限、經度下限、上限
+
+
+def write_csv(path, header, rows):
+    with open(path, 'w', newline='', encoding='utf-8-sig') as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows(rows)
+
+
+def main(pkg, out):
+    pkg, out = Path(pkg), Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    con = duckdb.connect()
+
+    # 所有欄位先以文字讀入：時間已是 +08:00，直接取字串前 10 碼為日期、第 12–13 碼為小時
+    con.execute(f"""
+        CREATE VIEW deployments AS
+        SELECT * FROM read_csv('{pkg / 'deployments.csv'}', header=true, all_varchar=true)
+    """)
+    con.execute(f"""
+        CREATE VIEW observations AS
+        SELECT * FROM read_csv('{pkg / 'observations.csv'}', header=true, all_varchar=true)
+    """)
+
+    lat_min, lat_max, lon_min, lon_max = BBOX
+    ts_filter = "AND timestampIssues = 'false'" if EXCLUDE_TIMESTAMP_ISSUES else ''
+    con.execute(f"""
+        CREATE TABLE good_deployments AS
+        SELECT deploymentID, locationID, locationName,
+               CAST(latitude AS DOUBLE) AS latitude, CAST(longitude AS DOUBLE) AS longitude,
+               CAST(left(deploymentStart, 10) AS DATE) AS start_date,
+               CAST(left(deploymentEnd, 10) AS DATE) AS end_date
+        FROM deployments
+        WHERE CAST(latitude AS DOUBLE) BETWEEN {lat_min} AND {lat_max}
+          AND CAST(longitude AS DOUBLE) BETWEEN {lon_min} AND {lon_max}
+          {ts_filter}
+    """)
+
+    # 相機工作天數：同一位置各期間涵蓋的日期取聯集（重疊不重複計算），工作時數 = 天數 × 24
+    effort = con.execute("""
+        WITH days AS (
+            SELECT DISTINCT locationID,
+                   unnest(generate_series(start_date, end_date, INTERVAL 1 DAY)) AS day
+            FROM good_deployments
+        )
+        SELECT d.locationID, any_value(g.locationName), any_value(g.latitude),
+               any_value(g.longitude), count(DISTINCT d.day) AS working_days,
+               count(DISTINCT d.day) * 24 AS working_hours
+        FROM days d JOIN good_deployments g USING (locationID)
+        GROUP BY d.locationID ORDER BY d.locationID
+    """).fetchall()
+    write_csv(out / 'effort_by_location.csv',
+              ['locationID', 'locationName', 'latitude', 'longitude',
+               'working_days', 'working_hours'], effort)
+    hours_by_loc = {r[0]: r[5] for r in effort}
+
+    # 動物照片（有學名），依位置、物種、時間排序
+    rows = con.execute("""
+        SELECT g.locationID, o.scientificName, o.eventStart
+        FROM observations o JOIN good_deployments g USING (deploymentID)
+        WHERE o.observationType = 'animal' AND o.scientificName IS NOT NULL
+        ORDER BY g.locationID, o.scientificName, o.eventStart
+    """)
+
+    # 獨立有效照片：與上一張「計入」的照片相隔 &gt;= IMAGE_INTERVAL_MIN 才算新的一張
+    threshold = IMAGE_INTERVAL_MIN * 60
+    from datetime import datetime
+    records = {}      # species -&gt; 紀錄數
+    independent = {}  # (location, species) -&gt; 獨立有效照片數
+    by_hour = {}      # (species, hour) -&gt; 獨立有效照片數
+    key = last_counted = None
+    while batch := rows.fetchmany(100_000):
+        for loc, sp, ts in batch:
+            records[sp] = records.get(sp, 0) + 1
+            t = datetime.fromisoformat(ts)
+            if (loc, sp) != key:
+                key, last_counted = (loc, sp), None
+            if last_counted is None or (t - last_counted).total_seconds() &gt;= threshold:
+                last_counted = t
+                independent[key] = independent.get(key, 0) + 1
+                by_hour[(sp, t.hour)] = by_hour.get((sp, t.hour), 0) + 1
+
+    # 中文名與 TaiCOL 編號取自 datapackage.json
+    meta = json.loads((pkg / 'datapackage.json').read_text(encoding='utf-8'))
+    taxa = {t['scientificName']: t for t in meta.get('taxonomic', [])}
+
+    n_locations = len(hours_by_loc)
+    species_rows = []
+    for sp, n in records.items():
+        locs = [loc for (loc, s) in independent if s == sp]
+        species_rows.append([
+            sp, taxa.get(sp, {}).get('vernacularNames', {}).get('zho', ''),
+            taxa.get(sp, {}).get('taxonID', ''), n,
+            sum(independent[(loc, sp)] for loc in locs), len(locs),
+            round(len(locs) / n_locations, 4) if n_locations else '',
+        ])
+    species_rows.sort(key=lambda r: -r[4])
+    write_csv(out / 'species_summary.csv',
+              ['scientificName', 'vernacularName', 'taxonID', 'records',
+               'independent_photos', 'locations_detected', 'naive_occupancy'],
+              species_rows)
+
+    oi3_rows = []
+    for (loc, sp), n in sorted(independent.items()):
+        hours = hours_by_loc.get(loc, 0)
+        oi3_rows.append([loc, sp, n, hours, round(n / hours * 1000, 4) if hours else ''])
+    write_csv(out / 'oi3_by_location.csv',
+              ['locationID', 'scientificName', 'independent_photos', 'working_hours', 'OI3'],
+              oi3_rows)
+
+    write_csv(out / 'activity_by_hour.csv', ['scientificName', 'hour', 'independent_photos'],
+              [[sp, h, n] for (sp, h), n in sorted(by_hour.items())])
+
+    print(f'image interval: {IMAGE_INTERVAL_MIN} min; locations: {n_locations}; '
+          f'species: {len(records)}; output: {out}')
+
+
+if __name__ == '__main__':
+    if len(sys.argv) &lt; 2:
+        sys.exit('用法：python camtrap_analysis.py &lt;資料包資料夾&gt; [輸出資料夾]')
+    main(sys.argv[1], sys.argv[2] if len(sys.argv) &gt; 2 else 'analysis-output')</code></pre>
+</details>
+</section>
+
+<section id="license">
+<h2>授權與引用</h2>
+<ul>
+<li><strong>辨識資料</strong>：三份資料集皆為 CC0-1.0。</li>
+<li><strong>照片</strong>：287、288 為 CC-BY-4.0，329 為 CC0-1.0。照片目前未公開（<code>filePublic = false</code>），需要照片請與資料提供者聯繫。</li>
+<li>計畫主持人與資料權利單位記載於 <code>datapackage.json</code> 的 <code>contributors</code>；使用資料發表時，請註明資料來源為 TaiCAT 臺灣自動相機資料庫及該計畫名稱。</li>
+</ul>
+</section>
+
+</main>
+</div>
+
+<footer>TaiCAT 臺灣自動相機資料庫 · 自動相機資料使用指南 · 2026-09-17</footer>
