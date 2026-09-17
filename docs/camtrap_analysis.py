@@ -36,14 +36,18 @@ def main(pkg, out):
     out.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()
 
-    # 所有欄位先以文字讀入：時間已是 +08:00，直接取字串前 10 碼為日期、第 12–13 碼為小時
+    # 所有欄位先以文字讀入：時間已是 +08:00，直接取字串前 10 碼為日期、第 12–13 碼為小時。
+    # quote 需明確指定：DuckDB 只取樣前幾萬列判斷格式，若樣本中沒有引號，
+    # 之後含逗號的備註（以引號包住）會被拆錯欄而讀取失敗。
     con.execute(f"""
         CREATE VIEW deployments AS
-        SELECT * FROM read_csv('{pkg / 'deployments.csv'}', header=true, all_varchar=true)
+        SELECT * FROM read_csv('{pkg / 'deployments.csv'}', header=true, quote='"', escape='"',
+                          all_varchar=true)
     """)
     con.execute(f"""
         CREATE VIEW observations AS
-        SELECT * FROM read_csv('{pkg / 'observations.csv'}', header=true, all_varchar=true)
+        SELECT * FROM read_csv('{pkg / 'observations.csv'}', header=true, quote='"', escape='"',
+                          all_varchar=true)
     """)
 
     lat_min, lat_max, lon_min, lon_max = BBOX

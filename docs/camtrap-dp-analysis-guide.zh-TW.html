@@ -67,6 +67,9 @@ ul{padding-left:1.3em;max-width:46em;margin:0 0 14px}
 li{margin-bottom:4px}
 details{margin:12px 0 20px;max-width:100%}
 summary{cursor:pointer;color:var(--accent);font-weight:500}
+.renamed{font-size:12.5px;color:var(--muted)}
+td.muted-cell{color:var(--muted)}
+table.taxa td:first-child{white-space:normal;min-width:220px}
 footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted)}
 </style>
 
@@ -85,6 +88,7 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
     <li><a href="#filter">分析前的篩選</a></li>
     <li><a href="#analysis">常見分析</a></li>
     <li class="sub"><a href="#a-species">物種與紀錄數</a></li>
+    <li class="sub"><a href="#a-taxa">中文名與 TaiCOL 編號</a></li>
     <li class="sub"><a href="#a-effort">相機工作時數</a></li>
     <li class="sub"><a href="#a-independent">獨立有效照片</a></li>
     <li class="sub"><a href="#a-oi3">OI3 相對豐度</a></li>
@@ -159,10 +163,14 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 con = duckdb.connect()
 con.sql("""
     SELECT observationType, count(*) AS records
-    FROM read_csv('observations.csv', all_varchar = true)
+    FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true)
     GROUP BY observationType
 """).show()</code></pre>
-<p>也可以在 DuckDB 命令列直接執行下文的 SQL。建議加上 <code>all_varchar = true</code> 以文字讀入所有欄位：時間已是台灣時間，取字串前 10 碼即為日期、第 12–13 碼即為小時，可避免時區自動轉換造成的錯誤。</p>
+<p>也可以在 DuckDB 命令列直接執行下文的 SQL。讀取 CSV 時請加上兩個設定：</p>
+<ul>
+<li><code>quote = '"', escape = '"'</code>：<strong>必須明確指定</strong>。DuckDB 只取樣檔案開頭數萬列來判斷格式，若樣本中剛好沒有引號，後面以引號包住、含逗號的備註（例如 <code>"工作照 時間設置錯誤, 無法修正"</code>）會被拆成多欄，查詢中途失敗。288 即會發生。</li>
+<li><code>all_varchar = true</code>：以文字讀入所有欄位。時間已是台灣時間，取字串前 10 碼即為日期、第 12–13 碼即為小時，可避免時區自動轉換造成的錯誤。</li>
+</ul>
 <p class="muted">R 使用者可用 <a href="https://inbo.github.io/camtrapdp/" rel="noopener">camtrapdp</a> 套件讀取 <code>datapackage.json</code>；檔案較大時同樣建議搭配 DuckDB。</p>
 </section>
 
@@ -184,17 +192,163 @@ con.sql("""
 
 <h3 id="a-species">物種與紀錄數</h3>
 <pre><code>SELECT scientificName, count(*) AS records
-FROM read_csv('observations.csv', all_varchar = true)
+FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true)
 WHERE observationType = 'animal' AND scientificName IS NOT NULL
 GROUP BY scientificName
 ORDER BY records DESC;</code></pre>
-<p>中文名與 TaiCOL 物種編號在 <code>datapackage.json</code> 的 <code>taxonomic</code> 清單中，以 <code>scientificName</code> 對應。未辨識到種的原始名稱統計：</p>
+<p>中文名與 TaiCOL 物種編號見下一節<a href="#a-taxa">中文名與 TaiCOL 編號</a>。未辨識到種的原始名稱統計：</p>
 <pre><code>SELECT split_part(observationComments, ' ', 1) AS label, count(*) AS records
-FROM read_csv('observations.csv', all_varchar = true)
+FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true)
 WHERE observationType = 'animal' AND scientificName IS NULL
 GROUP BY label
 ORDER BY records DESC;</code></pre>
 <p class="muted">紀錄數是照片層級的計數，連拍會重複計算，不適合直接比較豐度，請使用下方的獨立有效照片或 OI3。</p>
+
+<h3 id="a-taxa">中文名與 TaiCOL 編號</h3>
+<p><code>observations.csv</code> 只有學名 <code>scientificName</code>。每份資料集的 <code>datapackage.json</code> 中有 <code>taxonomic</code> 清單，列出資料中出現的每個學名及其 TaiCOL 物種編號（<code>taxonID</code>）與中文名（<code>vernacularNames.zho</code>），以 <code>scientificName</code> 與 observations 對應：</p>
+<pre><code>"taxonomic": [
+  {
+    "scientificName": "Muntiacus reevesi",
+    "kingdom": "Animalia",
+    "taxonID": "t0096460",
+    "vernacularNames": { "zho": "山羌" }
+  },
+  …
+]</code></pre>
+<p>以 DuckDB 將中文名與 TaiCOL 編號併入物種統計：</p>
+<pre><code>WITH taxa AS (
+  SELECT t.scientificName, t.vernacularNames.zho AS vernacularName, t.taxonID
+  FROM (SELECT unnest(taxonomic) AS t FROM read_json('datapackage.json'))
+)
+SELECT o.scientificName, taxa.vernacularName, taxa.taxonID, count(*) AS records
+FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true) o
+LEFT JOIN taxa USING (scientificName)
+WHERE o.observationType = 'animal' AND o.scientificName IS NOT NULL
+GROUP BY ALL
+ORDER BY records DESC;</code></pre>
+<p>TaiCOL 物種頁面網址為 <code>https://taicol.tw/zh-hant/taxon/</code> 加上 <code>taxonID</code>，可查詢分類階層、保育等級與異名。</p>
+<div class="note">
+<p><strong>中文名的注意事項：</strong><code>datapackage.json</code> 的中文名是資料中使用的原始辨識名稱，同一物種在不同資料集可能不同（例如「帝雉」與「黑長尾雉(帝雉)」、「深山竹雞」與「台灣山鷓鴣」）。跨資料集整合或發表時，請以 <code>taxonID</code> 為準，中文名建議使用下表的 TaiCOL 正式中文名。</p>
+<p>另有 5 個物種 TaiCOL 已更新學名（表中註記「TaiCOL 現用學名」），資料中的學名仍為舊名，但 <code>taxonID</code> 相同，以 <code>taxonID</code> 對應不受影響。</p>
+</div>
+<details>
+<summary>三份資料集的物種對照表（共 110 個學名）</summary>
+<p class="muted">中文名為 TaiCOL 正式中文名；數字為有學名的動物辨識紀錄數，「—」表示該資料集沒有此物種。</p>
+<div class="tbl"><table class="taxa">
+<thead><tr><th>scientificName</th><th>TaiCOL 中文名</th><th>taxonID</th><th class="num">287</th><th class="num">288</th><th class="num">329</th></tr></thead>
+<tbody>
+<tr><td><i>Abroscopus albogularis fulvifacies</i></td><td>棕面鶯</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085154" rel="noopener"><code>t0085154</code></a></td><td class="num">7</td><td class="num muted-cell">—</td><td class="num">130</td></tr>
+<tr><td><i>Accipiter trivirgatus formosae</i><br><span class="renamed">TaiCOL 現用學名：<i>Lophospiza trivirgata formosae</i></span></td><td>鳳頭蒼鷹</td><td><a href="https://taicol.tw/zh-hant/taxon/t0057537" rel="noopener"><code>t0057537</code></a></td><td class="num">1</td><td class="num muted-cell">—</td><td class="num">463</td></tr>
+<tr><td><i>Accipiter virgatus fuscipectus</i><br><span class="renamed">TaiCOL 現用學名：<i>Tachyspiza virgata fuscipectus</i></span></td><td>松雀鷹</td><td><a href="https://taicol.tw/zh-hant/taxon/t0057538" rel="noopener"><code>t0057538</code></a></td><td class="num">6</td><td class="num muted-cell">—</td><td class="num">37</td></tr>
+<tr><td><i>Actinodura morrisoniana</i></td><td>紋翼畫眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0070289" rel="noopener"><code>t0070289</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">3</td></tr>
+<tr><td><i>Alcippe morrisonia</i></td><td>繡眼畫眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0057611" rel="noopener"><code>t0057611</code></a></td><td class="num">5</td><td class="num muted-cell">—</td><td class="num">123</td></tr>
+<tr><td><i>Amaurornis phoenicurus chinensis</i></td><td>白腹秧雞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085213" rel="noopener"><code>t0085213</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">3,813</td></tr>
+<tr><td><i>Anourosorex yamashinai</i></td><td>短尾鼩</td><td><a href="https://taicol.tw/zh-hant/taxon/t0071669" rel="noopener"><code>t0071669</code></a></td><td class="num">9</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Anthus hodgsoni hodgsoni</i></td><td>樹鷚</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085261" rel="noopener"><code>t0085261</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">21</td></tr>
+<tr><td><i>Arborophila crudigularis</i></td><td>臺灣山鷓鴣</td><td><a href="https://taicol.tw/zh-hant/taxon/t0057735" rel="noopener"><code>t0057735</code></a></td><td class="num">2,112</td><td class="num muted-cell">—</td><td class="num">57,230</td></tr>
+<tr><td><i>Ardeola bacchus</i></td><td>池鷺</td><td><a href="https://taicol.tw/zh-hant/taxon/t0072181" rel="noopener"><code>t0072181</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">45</td></tr>
+<tr><td><i>Bambusicola sonorivox</i></td><td>臺灣竹雞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0057884" rel="noopener"><code>t0057884</code></a></td><td class="num">759</td><td class="num muted-cell">—</td><td class="num">26,411</td></tr>
+<tr><td><i>Belomys pearsonii kaleensis</i></td><td>小鼯鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085328" rel="noopener"><code>t0085328</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">13</td></tr>
+<tr><td><i>Brachypteryx goodfellowi</i></td><td>小翼鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0076733" rel="noopener"><code>t0076733</code></a></td><td class="num">3</td><td class="num muted-cell">—</td><td class="num">3</td></tr>
+<tr><td><i>Bubalus bubalis</i></td><td>水牛</td><td><a href="https://taicol.tw/zh-hant/taxon/t0076866" rel="noopener"><code>t0076866</code></a></td><td class="num">9</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Bubulcus ibis coromandus</i><br><span class="renamed">TaiCOL 現用學名：<i>Ardea coromanda</i></span></td><td>黃頭鷺</td><td><a href="https://taicol.tw/zh-hant/taxon/t0029968" rel="noopener"><code>t0029968</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">7,265</td></tr>
+<tr><td><i>Callosciurus erythraeus thaiwanensis</i></td><td>赤腹松鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085369" rel="noopener"><code>t0085369</code></a></td><td class="num">2,945</td><td class="num muted-cell">—</td><td class="num">38,185</td></tr>
+<tr><td><i>Canis familiaris</i></td><td>犬</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085383" rel="noopener"><code>t0085383</code></a></td><td class="num">12,688</td><td class="num">17,396</td><td class="num">183,929</td></tr>
+<tr><td><i>Capra hircus</i></td><td>家羊</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085384" rel="noopener"><code>t0085384</code></a></td><td class="num">1,143</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Capricornis swinhoei</i></td><td>臺灣野山羊</td><td><a href="https://taicol.tw/zh-hant/taxon/t0077405" rel="noopener"><code>t0077405</code></a></td><td class="num">16,879</td><td class="num">57,885</td><td class="num">377,534</td></tr>
+<tr><td><i>Carpodacus formosanus</i></td><td>臺灣朱雀</td><td><a href="https://taicol.tw/zh-hant/taxon/t0030182" rel="noopener"><code>t0030182</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">3</td></tr>
+<tr><td><i>Cervus nippon taiouanus</i></td><td>臺灣梅花鹿</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085426" rel="noopener"><code>t0085426</code></a></td><td class="num muted-cell">—</td><td class="num">12,279</td><td class="num">32,130</td></tr>
+<tr><td><i>Chalcophaps indica indica</i></td><td>翠翼鳩</td><td><a href="https://taicol.tw/zh-hant/taxon/t0030328" rel="noopener"><code>t0030328</code></a></td><td class="num">651</td><td class="num muted-cell">—</td><td class="num">22,040</td></tr>
+<tr><td><i>Columba livia</i></td><td>野鴿</td><td><a href="https://taicol.tw/zh-hant/taxon/t0079031" rel="noopener"><code>t0079031</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">105</td></tr>
+<tr><td><i>Columba pulchricollis</i></td><td>灰林鴿</td><td><a href="https://taicol.tw/zh-hant/taxon/t0079032" rel="noopener"><code>t0079032</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">1,366</td></tr>
+<tr><td><i>Copsychus malabaricus</i></td><td>白腰鵲鴝</td><td><a href="https://taicol.tw/zh-hant/taxon/t0079275" rel="noopener"><code>t0079275</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">6,868</td></tr>
+<tr><td><i>Corvus macrorhynchos colonorum</i></td><td>巨嘴鴉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085499" rel="noopener"><code>t0085499</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">15</td></tr>
+<tr><td><i>Cyanoderma ruficeps praecognitum</i></td><td>山紅頭</td><td><a href="https://taicol.tw/zh-hant/taxon/t0030810" rel="noopener"><code>t0030810</code></a></td><td class="num">2</td><td class="num muted-cell">—</td><td class="num">52</td></tr>
+<tr><td><i>Dendrocitta formosae formosae</i></td><td>樹鵲</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085559" rel="noopener"><code>t0085559</code></a></td><td class="num">4</td><td class="num muted-cell">—</td><td class="num">2,253</td></tr>
+<tr><td><i>Dendrocopos leucotos insularis</i></td><td>大赤啄木</td><td><a href="https://taicol.tw/zh-hant/taxon/t0030933" rel="noopener"><code>t0030933</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">89</td></tr>
+<tr><td><i>Dremomys pernyi owstoni</i></td><td>長吻松鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085590" rel="noopener"><code>t0085590</code></a></td><td class="num">6</td><td class="num muted-cell">—</td><td class="num">8,081</td></tr>
+<tr><td><i>Egretta garzetta garzetta</i></td><td>小白鷺</td><td><a href="https://taicol.tw/zh-hant/taxon/t0028816" rel="noopener"><code>t0028816</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">3,908</td></tr>
+<tr><td><i>Elaphe carinata</i></td><td>王錦蛇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0028821" rel="noopener"><code>t0028821</code></a></td><td class="num">2</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Emberiza spodocephala spodocephala</i></td><td>灰頭黑臉鵐</td><td><a href="https://taicol.tw/zh-hant/taxon/t0028848" rel="noopener"><code>t0028848</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">15</td></tr>
+<tr><td><i>Erythrogenys erythrocnemis</i></td><td>大彎嘴</td><td><a href="https://taicol.tw/zh-hant/taxon/t0103435" rel="noopener"><code>t0103435</code></a></td><td class="num">24</td><td class="num muted-cell">—</td><td class="num">430</td></tr>
+<tr><td><i>Felis catus</i></td><td>貓</td><td><a href="https://taicol.tw/zh-hant/taxon/t0063825" rel="noopener"><code>t0063825</code></a></td><td class="num">9,831</td><td class="num">5,602</td><td class="num">56,442</td></tr>
+<tr><td><i>Ficedula hyperythra innexa</i></td><td>黃胸青鶲</td><td><a href="https://taicol.tw/zh-hant/taxon/t0029205" rel="noopener"><code>t0029205</code></a></td><td class="num">4</td><td class="num muted-cell">—</td><td class="num">57</td></tr>
+<tr><td><i>Garrulax taewanus</i></td><td>臺灣畫眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0064313" rel="noopener"><code>t0064313</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">5,169</td></tr>
+<tr><td><i>Garrulus glandarius taivanus</i></td><td>松鴉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0029283" rel="noopener"><code>t0029283</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">146</td></tr>
+<tr><td><i>Gorsachius melanolophus</i></td><td>黑冠麻鷺</td><td><a href="https://taicol.tw/zh-hant/taxon/t0064796" rel="noopener"><code>t0064796</code></a></td><td class="num">1,113</td><td class="num muted-cell">—</td><td class="num">39,575</td></tr>
+<tr><td><i>Heterophasia auricularis</i></td><td>白耳畫眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0029661" rel="noopener"><code>t0029661</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">29</td></tr>
+<tr><td><i>Hypothymis azurea oberholseri</i></td><td>黑枕藍鶲</td><td><a href="https://taicol.tw/zh-hant/taxon/t0029835" rel="noopener"><code>t0029835</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">126</td></tr>
+<tr><td><i>Hypsipetes leucocephalus leucocephalus</i></td><td>紅嘴黑鵯</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085779" rel="noopener"><code>t0085779</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">507</td></tr>
+<tr><td><i>Lanius cristatus lucionensis</i></td><td>紅尾伯勞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0027308" rel="noopener"><code>t0027308</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">342</td></tr>
+<tr><td><i>Lepus sinensis formosus</i></td><td>臺灣野兔</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085835" rel="noopener"><code>t0085835</code></a></td><td class="num">2,265</td><td class="num">941</td><td class="num">10,528</td></tr>
+<tr><td><i>Liocichla steerii</i></td><td>黃胸藪眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0067566" rel="noopener"><code>t0067566</code></a></td><td class="num">363</td><td class="num muted-cell">—</td><td class="num">1,932</td></tr>
+<tr><td><i>Lonchura striata swinhoei</i></td><td>白腰文鳥</td><td><a href="https://taicol.tw/zh-hant/taxon/t0027556" rel="noopener"><code>t0027556</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">222</td></tr>
+<tr><td><i>Lophura swinhoii</i></td><td>藍腹鷴</td><td><a href="https://taicol.tw/zh-hant/taxon/t0067882" rel="noopener"><code>t0067882</code></a></td><td class="num">10,466</td><td class="num muted-cell">—</td><td class="num">202,247</td></tr>
+<tr><td><i>Macaca cyclopis</i></td><td>臺灣獼猴</td><td><a href="https://taicol.tw/zh-hant/taxon/t0068195" rel="noopener"><code>t0068195</code></a></td><td class="num">96,323</td><td class="num">280,870</td><td class="num">1,157,957</td></tr>
+<tr><td><i>Manis pentadactyla pentadactyla</i></td><td>臺灣穿山甲</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085879" rel="noopener"><code>t0085879</code></a></td><td class="num">1,839</td><td class="num">2,800</td><td class="num">11,118</td></tr>
+<tr><td><i>Martes flavigula chrysospila</i></td><td>黃喉貂</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085880" rel="noopener"><code>t0085880</code></a></td><td class="num">1,358</td><td class="num">4,656</td><td class="num">33,956</td></tr>
+<tr><td><i>Melogale subaurantiaca</i></td><td>鼬貛</td><td><a href="https://taicol.tw/zh-hant/taxon/t0027888" rel="noopener"><code>t0027888</code></a></td><td class="num">75,450</td><td class="num">71,856</td><td class="num">361,679</td></tr>
+<tr><td><i>Muntiacus reevesi</i></td><td>山羌</td><td><a href="https://taicol.tw/zh-hant/taxon/t0096460" rel="noopener"><code>t0096460</code></a></td><td class="num">595,750</td><td class="num">1,763,636</td><td class="num">8,848,133</td></tr>
+<tr><td><i>Muscicapidae</i></td><td>鶲科</td><td><a href="https://taicol.tw/zh-hant/taxon/t0006486" rel="noopener"><code>t0006486</code></a></td><td class="num">4</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Mustela nivalis</i></td><td>小黃鼠狼</td><td><a href="https://taicol.tw/zh-hant/taxon/t0096471" rel="noopener"><code>t0096471</code></a></td><td class="num muted-cell">—</td><td class="num">27</td><td class="num">171</td></tr>
+<tr><td><i>Mustela sibirica taivana</i></td><td>黃鼠狼</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085950" rel="noopener"><code>t0085950</code></a></td><td class="num">325</td><td class="num">3,121</td><td class="num">13,467</td></tr>
+<tr><td><i>Myiomela leucura montium</i></td><td>白尾鴝</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085957" rel="noopener"><code>t0085957</code></a></td><td class="num">176</td><td class="num muted-cell">—</td><td class="num">1,130</td></tr>
+<tr><td><i>Myophonus insularis</i></td><td>臺灣紫嘯鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0080787" rel="noopener"><code>t0080787</code></a></td><td class="num">85</td><td class="num muted-cell">—</td><td class="num">7,231</td></tr>
+<tr><td><i>Niltava vivida</i></td><td>黃腹琉璃</td><td><a href="https://taicol.tw/zh-hant/taxon/t0098057" rel="noopener"><code>t0098057</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">12</td></tr>
+<tr><td><i>Niviventer coninga</i></td><td>刺鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0081716" rel="noopener"><code>t0081716</code></a></td><td class="num">1,574</td><td class="num muted-cell">—</td><td class="num">12</td></tr>
+<tr><td><i>Nucifraga caryocatactes owstoni</i><br><span class="renamed">TaiCOL 現用學名：<i>Nucifraga hemispila owstoni</i></span></td><td>星鴉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085982" rel="noopener"><code>t0085982</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">271</td></tr>
+<tr><td><i>Nycticorax nycticorax nycticorax</i></td><td>夜鷺</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085989" rel="noopener"><code>t0085989</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">2,456</td></tr>
+<tr><td><i>Otus elegans botelensis</i></td><td>蘭嶼角鴞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086030" rel="noopener"><code>t0086030</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">9</td></tr>
+<tr><td><i>Otus lettia erythrocampe</i></td><td>領角鴞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086031" rel="noopener"><code>t0086031</code></a></td><td class="num">1</td><td class="num muted-cell">—</td><td class="num">18</td></tr>
+<tr><td><i>Paguma larvata larvata</i></td><td>白鼻心</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086045" rel="noopener"><code>t0086045</code></a></td><td class="num">18,786</td><td class="num">31,559</td><td class="num">144,173</td></tr>
+<tr><td><i>Parus monticolus insperatus</i></td><td>青背山雀</td><td><a href="https://taicol.tw/zh-hant/taxon/t0031647" rel="noopener"><code>t0031647</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">10</td></tr>
+<tr><td><i>Passer montanus saturatus</i></td><td>麻雀</td><td><a href="https://taicol.tw/zh-hant/taxon/t0031653" rel="noopener"><code>t0031653</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">485</td></tr>
+<tr><td><i>Petaurista grandis</i></td><td>大赤鼯鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086086" rel="noopener"><code>t0086086</code></a></td><td class="num">3</td><td class="num muted-cell">—</td><td class="num">128</td></tr>
+<tr><td><i>Petaurista lena</i></td><td>白面鼯鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086085" rel="noopener"><code>t0086085</code></a></td><td class="num">12</td><td class="num muted-cell">—</td><td class="num">1,576</td></tr>
+<tr><td><i>Phasianus colchicus formosanus</i></td><td>環頸雉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086094" rel="noopener"><code>t0086094</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">66</td></tr>
+<tr><td><i>Picus canus tancolo</i><br><span class="renamed">TaiCOL 現用學名：<i>Gecinus tancolo</i></span></td><td>綠啄木</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086114" rel="noopener"><code>t0086114</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">63</td></tr>
+<tr><td><i>Pitta nympha</i></td><td>八色鳥</td><td><a href="https://taicol.tw/zh-hant/taxon/t0035911" rel="noopener"><code>t0035911</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">69</td></tr>
+<tr><td><i>Pomatorhinus musicus</i></td><td>小彎嘴</td><td><a href="https://taicol.tw/zh-hant/taxon/t0036478" rel="noopener"><code>t0036478</code></a></td><td class="num">35</td><td class="num muted-cell">—</td><td class="num">1,808</td></tr>
+<tr><td><i>Prionailurus bengalensis euptilurus</i></td><td>石虎</td><td><a href="https://taicol.tw/zh-hant/taxon/t0105762" rel="noopener"><code>t0105762</code></a></td><td class="num">1,033</td><td class="num">513</td><td class="num">9,408</td></tr>
+<tr><td><i>Protobothrops mucrosquamatus</i></td><td>龜殼花</td><td><a href="https://taicol.tw/zh-hant/taxon/t0036854" rel="noopener"><code>t0036854</code></a></td><td class="num">1</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Prunella collaris</i></td><td>岩鷚</td><td><a href="https://taicol.tw/zh-hant/taxon/t0075485" rel="noopener"><code>t0075485</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">42</td></tr>
+<tr><td><i>Psilopogon nuchalis</i></td><td>五色鳥</td><td><a href="https://taicol.tw/zh-hant/taxon/t0037193" rel="noopener"><code>t0037193</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">45</td></tr>
+<tr><td><i>Pterorhinus chinensis</i></td><td>黑喉噪眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0032350" rel="noopener"><code>t0032350</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">822</td></tr>
+<tr><td><i>Pterorhinus poecilorhynchus</i></td><td>棕噪眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0066146" rel="noopener"><code>t0066146</code></a></td><td class="num">11</td><td class="num muted-cell">—</td><td class="num">734</td></tr>
+<tr><td><i>Pterorhinus ruficeps</i></td><td>臺灣白喉噪眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0032352" rel="noopener"><code>t0032352</code></a></td><td class="num">1</td><td class="num muted-cell">—</td><td class="num">242</td></tr>
+<tr><td><i>Ptyas dhumnades</i></td><td>過山刀</td><td><a href="https://taicol.tw/zh-hant/taxon/t0049084" rel="noopener"><code>t0049084</code></a></td><td class="num">2</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Pycnonotus sinensis formosae</i></td><td>白頭翁</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086192" rel="noopener"><code>t0086192</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">2,426</td></tr>
+<tr><td><i>Pyrrhula owstoni</i></td><td>灰鷽</td><td><a href="https://taicol.tw/zh-hant/taxon/t0032394" rel="noopener"><code>t0032394</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">6</td></tr>
+<tr><td><i>Rallina eurizonoides formosana</i></td><td>灰腳秧雞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086199" rel="noopener"><code>t0086199</code></a></td><td class="num">7</td><td class="num muted-cell">—</td><td class="num">518</td></tr>
+<tr><td><i>Rusa unicolor swinhoii</i></td><td>臺灣水鹿</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086217" rel="noopener"><code>t0086217</code></a></td><td class="num">8,768</td><td class="num">216,340</td><td class="num">627,877</td></tr>
+<tr><td><i>Schoeniparus brunneus brunneus</i></td><td>頭烏線</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086236" rel="noopener"><code>t0086236</code></a></td><td class="num">127</td><td class="num muted-cell">—</td><td class="num">105</td></tr>
+<tr><td><i>Scolopax rusticola</i></td><td>山鷸</td><td><a href="https://taicol.tw/zh-hant/taxon/t0032689" rel="noopener"><code>t0032689</code></a></td><td class="num">6</td><td class="num muted-cell">—</td><td class="num">970</td></tr>
+<tr><td><i>Spilopelia chinensis</i></td><td>珠頸斑鳩</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086298" rel="noopener"><code>t0086298</code></a></td><td class="num">51</td><td class="num muted-cell">—</td><td class="num">8,738</td></tr>
+<tr><td><i>Spilornis cheela hoya</i></td><td>大冠鷲</td><td><a href="https://taicol.tw/zh-hant/taxon/t0032992" rel="noopener"><code>t0032992</code></a></td><td class="num">127</td><td class="num muted-cell">—</td><td class="num">2,077</td></tr>
+<tr><td><i>Streptopelia orientalis orientalis</i></td><td>金背鳩</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086299" rel="noopener"><code>t0086299</code></a></td><td class="num">6</td><td class="num muted-cell">—</td><td class="num">9,905</td></tr>
+<tr><td><i>Streptopelia tranquebarica humilis</i></td><td>紅鳩</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086301" rel="noopener"><code>t0086301</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">386</td></tr>
+<tr><td><i>Strix nivicolum yamadae</i></td><td>東方灰林鴞</td><td><a href="https://taicol.tw/zh-hant/taxon/t0033094" rel="noopener"><code>t0033094</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">9</td></tr>
+<tr><td><i>Sus scrofa taivanus</i></td><td>臺灣野豬</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086310" rel="noopener"><code>t0086310</code></a></td><td class="num">31,222</td><td class="num">70,675</td><td class="num">324,627</td></tr>
+<tr><td><i>Syrmaticus mikado</i></td><td>黑長尾雉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0046527" rel="noopener"><code>t0046527</code></a></td><td class="num">57</td><td class="num muted-cell">—</td><td class="num">4,506</td></tr>
+<tr><td><i>Tamiops maritimus</i></td><td>條紋松鼠</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086327" rel="noopener"><code>t0086327</code></a></td><td class="num">3</td><td class="num muted-cell">—</td><td class="num">1,426</td></tr>
+<tr><td><i>Tarsiger indicus</i></td><td>白眉林鴝</td><td><a href="https://taicol.tw/zh-hant/taxon/t0099075" rel="noopener"><code>t0099075</code></a></td><td class="num">1</td><td class="num muted-cell">—</td><td class="num">66</td></tr>
+<tr><td><i>Tarsiger johnstoniae</i></td><td>栗背林鴝</td><td><a href="https://taicol.tw/zh-hant/taxon/t0046794" rel="noopener"><code>t0046794</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">1,006</td></tr>
+<tr><td><i>Trochalopteron morrisonianum</i></td><td>臺灣噪眉</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048060" rel="noopener"><code>t0048060</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">12,557</td></tr>
+<tr><td><i>Turdidae</i></td><td>鶇科</td><td><a href="https://taicol.tw/zh-hant/taxon/t0004916" rel="noopener"><code>t0004916</code></a></td><td class="num">9</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Turdus chrysolaus chrysolaus</i></td><td>赤腹鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086400" rel="noopener"><code>t0086400</code></a></td><td class="num">23</td><td class="num muted-cell">—</td><td class="num">3,094</td></tr>
+<tr><td><i>Turdus eunomus</i></td><td>斑點鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048256" rel="noopener"><code>t0048256</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">18</td></tr>
+<tr><td><i>Turdus hortulorum</i></td><td>灰背鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048258" rel="noopener"><code>t0048258</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">6</td></tr>
+<tr><td><i>Turdus niveiceps</i></td><td>白頭鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048260" rel="noopener"><code>t0048260</code></a></td><td class="num">3</td><td class="num muted-cell">—</td><td class="num">685</td></tr>
+<tr><td><i>Turdus obscurus</i></td><td>白眉鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048261" rel="noopener"><code>t0048261</code></a></td><td class="num">17</td><td class="num muted-cell">—</td><td class="num">434</td></tr>
+<tr><td><i>Turdus pallidus</i></td><td>白腹鶇</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048262" rel="noopener"><code>t0048262</code></a></td><td class="num">163</td><td class="num muted-cell">—</td><td class="num">4,930</td></tr>
+<tr><td><i>Urocissa caerulea</i></td><td>臺灣藍鵲</td><td><a href="https://taicol.tw/zh-hant/taxon/t0048427" rel="noopener"><code>t0048427</code></a></td><td class="num">75</td><td class="num muted-cell">—</td><td class="num">1,111</td></tr>
+<tr><td><i>Urosphena squameiceps</i></td><td>短尾鶯</td><td><a href="https://taicol.tw/zh-hant/taxon/t0028457" rel="noopener"><code>t0028457</code></a></td><td class="num">16</td><td class="num muted-cell">—</td><td class="num muted-cell">—</td></tr>
+<tr><td><i>Ursus thibetanus formosanus</i></td><td>臺灣黑熊</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086413" rel="noopener"><code>t0086413</code></a></td><td class="num">39</td><td class="num">699</td><td class="num">3,227</td></tr>
+<tr><td><i>Urva urva formosana</i></td><td>食蟹獴</td><td><a href="https://taicol.tw/zh-hant/taxon/t0085747" rel="noopener"><code>t0085747</code></a></td><td class="num">16,087</td><td class="num">26,031</td><td class="num">109,022</td></tr>
+<tr><td><i>Viverricula indica pallida</i></td><td>麝香貓</td><td><a href="https://taicol.tw/zh-hant/taxon/t0086418" rel="noopener"><code>t0086418</code></a></td><td class="num">5,693</td><td class="num">14,869</td><td class="num">66,714</td></tr>
+<tr><td><i>Yungipicus canicapillus</i></td><td>小啄木</td><td><a href="https://taicol.tw/zh-hant/taxon/t0096707" rel="noopener"><code>t0096707</code></a></td><td class="num muted-cell">—</td><td class="num muted-cell">—</td><td class="num">18</td></tr>
+</tbody></table></div>
+</details>
 
 <h3 id="a-effort">相機工作時數</h3>
 <p>將同一樣點所有運作期間涵蓋的日期取聯集（重疊期間不重複計算），工作時數 = 工作天數 × 24。這與 TaiCAT 網站上計算 OI 值的方式相同。</p>
@@ -202,7 +356,7 @@ ORDER BY records DESC;</code></pre>
   SELECT locationID,
          CAST(left(deploymentStart, 10) AS DATE) AS start_date,
          CAST(left(deploymentEnd, 10) AS DATE)   AS end_date
-  FROM read_csv('deployments.csv', all_varchar = true)
+  FROM read_csv('deployments.csv', quote = '"', escape = '"', all_varchar = true)
   WHERE timestampIssues = 'false'
 ),
 days AS (
@@ -229,8 +383,8 @@ ORDER BY locationID;</code></pre>
 WITH a AS (
   SELECT d.locationID, o.scientificName,
          CAST(o.eventStart AS TIMESTAMPTZ) AS t
-  FROM read_csv('observations.csv', all_varchar = true) o
-  JOIN read_csv('deployments.csv', all_varchar = true) d USING (deploymentID)
+  FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true) o
+  JOIN read_csv('deployments.csv', quote = '"', escape = '"', all_varchar = true) d USING (deploymentID)
   WHERE o.observationType = 'animal' AND o.scientificName IS NOT NULL
 )
 SELECT locationID, scientificName,
@@ -252,8 +406,8 @@ GROUP BY locationID, scientificName;</code></pre>
 
 <h3 id="a-activity">活動時段</h3>
 <pre><code>SELECT CAST(substr(eventStart, 12, 2) AS INTEGER) AS hour, count(*) AS records
-FROM read_csv('observations.csv', all_varchar = true) o
-JOIN read_csv('deployments.csv', all_varchar = true) d USING (deploymentID)
+FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true) o
+JOIN read_csv('deployments.csv', quote = '"', escape = '"', all_varchar = true) d USING (deploymentID)
 WHERE o.scientificName = 'Muntiacus reevesi'
   AND d.timestampIssues = 'false'
 GROUP BY hour
@@ -315,14 +469,18 @@ def main(pkg, out):
     out.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()
 
-    # 所有欄位先以文字讀入：時間已是 +08:00，直接取字串前 10 碼為日期、第 12–13 碼為小時
+    # 所有欄位先以文字讀入：時間已是 +08:00，直接取字串前 10 碼為日期、第 12–13 碼為小時。
+    # quote 需明確指定：DuckDB 只取樣前幾萬列判斷格式，若樣本中沒有引號，
+    # 之後含逗號的備註（以引號包住）會被拆錯欄而讀取失敗。
     con.execute(f"""
         CREATE VIEW deployments AS
-        SELECT * FROM read_csv('{pkg / 'deployments.csv'}', header=true, all_varchar=true)
+        SELECT * FROM read_csv('{pkg / 'deployments.csv'}', header=true, quote='"', escape='"',
+                          all_varchar=true)
     """)
     con.execute(f"""
         CREATE VIEW observations AS
-        SELECT * FROM read_csv('{pkg / 'observations.csv'}', header=true, all_varchar=true)
+        SELECT * FROM read_csv('{pkg / 'observations.csv'}', header=true, quote='"', escape='"',
+                          all_varchar=true)
     """)
 
     lat_min, lat_max, lon_min, lon_max = BBOX
