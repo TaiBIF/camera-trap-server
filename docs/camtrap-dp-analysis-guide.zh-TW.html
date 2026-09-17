@@ -141,13 +141,13 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 <section id="datasets">
 <h2>三份資料集</h2>
 <div class="tbl"><table>
-<thead><tr><th>資料集</th><th class="num">樣點</th><th class="num">運作期間</th><th class="num">辨識紀錄</th><th class="num">有學名的動物</th><th class="num">物種</th><th>期間</th></tr></thead>
+<thead><tr><th>資料集</th><th class="num">樣點</th><th class="num">有架設紀錄的<br>運作期間數（j-）</th><th class="num">照片推估的<br>運作期間數（dep-）</th><th class="num">辨識紀錄</th><th class="num">有學名的動物</th><th class="num">物種</th><th>資料年份</th></tr></thead>
 <tbody>
-<tr><td>287 自動相機動物監測整合計畫(1/4)</td><td class="num">305</td><td class="num">6,567 j- ＋ 304 dep-</td><td class="num">2,072,297</td><td class="num">916,566</td><td class="num">66</td><td>2012 ～ 2025</td></tr>
-<tr><td>288 自動相機動物監測整合計畫</td><td class="num">302</td><td class="num">2,977 j- ＋ 302 dep-</td><td class="num">5,322,812</td><td class="num">2,581,755</td><td class="num">19</td><td>2015 ～ 2022</td></tr>
-<tr><td>329 林業署哺乳動物監測網</td><td class="num">721</td><td class="num">20,166 j-</td><td class="num">20,816,093</td><td class="num">12,873,637</td><td class="num">101</td><td>2007 ～ 2026</td></tr>
+<tr><td>287 自動相機動物監測整合計畫(1/4)</td><td class="num">305</td><td class="num">6,567</td><td class="num">304</td><td class="num">2,072,297</td><td class="num">916,566</td><td class="num">66</td><td>2012 ～ 2025</td></tr>
+<tr><td>288 自動相機動物監測整合計畫</td><td class="num">302</td><td class="num">2,977</td><td class="num">302</td><td class="num">5,322,812</td><td class="num">2,581,755</td><td class="num">19</td><td>2015 ～ 2022</td></tr>
+<tr><td>329 林業署哺乳動物監測網</td><td class="num">721</td><td class="num">20,166</td><td class="num">0</td><td class="num">20,816,093</td><td class="num">12,873,637</td><td class="num">101</td><td>2007 ～ 2026</td></tr>
 </tbody></table></div>
-<p>287 與 288 大部分是早期資料（<code>dep-</code>），運作期間為照片時間推估；329 全部為有架設紀錄的資料（<code>j-</code>）。</p>
+<p>「運作期間數」是 <code>deployments.csv</code> 的列數，依 <code>deploymentID</code> 開頭分開計算。287 與 288 雖然有數千段有架設紀錄的期間（<code>j-</code>），但<strong>超過 99.9% 的照片屬於照片推估的期間（<code>dep-</code>）</strong>，其工作時數會被高估；329 則全部為有架設紀錄的期間。</p>
 </section>
 
 <section id="read">

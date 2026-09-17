@@ -124,11 +124,11 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 <h2>三個計畫的資料</h2>
 <p>計畫 287、288 含有 TaiCAT <strong>舊系統</strong>移轉進來的資料，計畫 329 則完全是<strong>現行系統</strong>上傳的資料。兩者在資料庫中的結構不同，因此 deployment 的產生方式也不同（詳見<a href="#c-deployment">兩種 deployment</a>）。</p>
 <div class="tbl"><table>
-<thead><tr><th>計畫</th><th>資料來源</th><th class="num">deployments</th><th class="num">media</th><th class="num">observations</th><th class="num">有學名的動物</th><th class="num">物種數</th><th>資料期間</th></tr></thead>
+<thead><tr><th>計畫</th><th>資料來源</th><th class="num">deployments<br>（j-）</th><th class="num">deployments<br>（dep-）</th><th class="num">media</th><th class="num">observations</th><th class="num">有學名的動物</th><th class="num">物種數</th><th>資料期間</th></tr></thead>
 <tbody>
-<tr><td><b>287</b> 自動相機動物監測整合計畫(1/4)</td><td><span class="pill legacy">舊系統為主</span></td><td class="num">6,567 j- <br>+ 304 dep-</td><td class="num">2,051,122</td><td class="num">2,072,297</td><td class="num">916,566</td><td class="num">66</td><td>2012-01 ～ 2025-05</td></tr>
-<tr><td><b>288</b> 自動相機動物監測整合計畫</td><td><span class="pill legacy">舊系統＋未連結工作紀錄</span></td><td class="num">2,977 j- <br>+ 302 dep-</td><td class="num">5,319,398</td><td class="num">5,322,812</td><td class="num">2,581,755</td><td class="num">19</td><td>2015-01 ～ 2022-06</td></tr>
-<tr><td><b>329</b> 林業署哺乳動物監測網</td><td><span class="pill">現行系統</span></td><td class="num">20,166 j-</td><td class="num">20,425,370</td><td class="num">20,816,093</td><td class="num">12,873,637</td><td class="num">101</td><td>2007-01 ～ 2026-09</td></tr>
+<tr><td><b>287</b> 自動相機動物監測整合計畫(1/4)</td><td><span class="pill legacy">舊系統為主</span></td><td class="num">6,567</td><td class="num">304</td><td class="num">2,051,122</td><td class="num">2,072,297</td><td class="num">916,566</td><td class="num">66</td><td>2012-01 ～ 2025-05</td></tr>
+<tr><td><b>288</b> 自動相機動物監測整合計畫</td><td><span class="pill legacy">舊系統＋未連結工作紀錄</span></td><td class="num">2,977</td><td class="num">302</td><td class="num">5,319,398</td><td class="num">5,322,812</td><td class="num">2,581,755</td><td class="num">19</td><td>2015-01 ～ 2022-06</td></tr>
+<tr><td><b>329</b> 林業署哺乳動物監測網</td><td><span class="pill">現行系統</span></td><td class="num">20,166</td><td class="num">0</td><td class="num">20,425,370</td><td class="num">20,816,093</td><td class="num">12,873,637</td><td class="num">101</td><td>2007-01 ～ 2026-09</td></tr>
 </tbody></table></div>
 <p class="empty">observations 多於 media，是因為同一張照片可能有多筆辨識（例如一張照片拍到兩種動物）。「資料期間」取自 <code>datapackage.json</code> 的 <code>temporal</code>，已排除明顯錯誤的日期。授權：三個計畫的資料（data）皆為 CC0-1.0；照片（media）287、288 為 CC-BY-4.0，329 為 CC0-1.0。</p>
 </section>
