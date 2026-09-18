@@ -1,9 +1,9 @@
 """
-Camtrap DP 資料包基本分析：物種紀錄數、相機工作時數、OI3、出現樣點比例、活動時段。
+Camtrap DP Data Package 基本分析：物種紀錄數、相機工作時數、OI3、出現樣點比例、活動時段。
 
 用法：
     pip install duckdb
-    python camtrap_analysis.py <資料包資料夾> [輸出資料夾]
+    python camtrap_analysis.py <Data Package 資料夾> [輸出資料夾]
 
 輸出（UTF-8 BOM，可直接用 Excel 開啟）：
     species_summary.csv    各物種紀錄數、獨立有效照片數、出現樣點數
@@ -145,5 +145,5 @@ def main(pkg, out):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        sys.exit('用法：python camtrap_analysis.py <資料包資料夾> [輸出資料夾]')
+        sys.exit('用法：python camtrap_analysis.py <Data Package 資料夾> [輸出資料夾]')
     main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else 'analysis-output')

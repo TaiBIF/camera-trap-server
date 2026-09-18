@@ -1,4 +1,4 @@
-<title>TaiCAT Camtrap DP 資料包說明</title>
+<title>TaiCAT Camtrap DP Data Package 說明</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -76,8 +76,8 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 
 <header class="top">
   <div class="eyebrow">Camtrap DP 1.0 · TaiCAT 臺灣自動相機資料庫</div>
-  <h1>自動相機資料包：欄位說明與資料轉換方式</h1>
-  <p class="lede">本文件說明從 TaiCAT 匯出的 Camtrap DP 資料包內各 CSV 欄位的意義，以及資料庫中的原始資料如何整理、轉換成 Camtrap DP 格式。使用資料進行分析前，建議先閱讀「資料轉換方式」與「使用注意事項」兩節。</p>
+  <h1>自動相機 Data Package：欄位說明與資料轉換方式</h1>
+  <p class="lede">本文件說明從 TaiCAT 匯出的 Camtrap DP Data Package 內各 CSV 欄位的意義，以及資料庫中的原始資料如何整理、轉換成 Camtrap DP 格式。使用資料進行分析前，建議先閱讀「資料轉換方式」與「使用注意事項」兩節。</p>
   <div class="meta">
     <span>規範：<b><a href="https://camtrap-dp.tdwg.org/" rel="noopener">Camtrap DP 1.0</a>（TDWG）</b></span>
     <span>匯出日期：<b>2026-09-17</b></span>
@@ -89,7 +89,7 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 <div class="wrap">
 <nav class="toc" aria-label="目錄">
   <ol>
-    <li><a href="#package">資料包內容</a></li>
+    <li><a href="#package">Data Package 內容</a></li>
     <li><a href="#projects">三個計畫的資料</a></li>
     <li><a href="#fields">欄位說明</a></li>
     <li class="sub"><a href="#f-deployments">deployments.csv</a></li>
@@ -110,7 +110,7 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 <main>
 
 <section id="package">
-<h2>資料包內容</h2>
+<h2>Data Package 內容</h2>
 <p>每個計畫匯出為一個資料夾，內含一個詮釋資料檔與三個資料表。三個資料表以 ID 互相關聯：</p>
 <div class="flow">
   <div><div class="fn">deployments.csv</div><div class="unit">一列 = 一台相機在一個地點的一段運作期間</div><div class="rel">以 <code>deploymentID</code> 被 media 與 observations 引用</div></div>
@@ -315,4 +315,4 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 </main>
 </div>
 
-<footer>TaiCAT 臺灣自動相機資料庫 · Camtrap DP 資料包說明 · 匯出日期 2026-09-17</footer>
+<footer>TaiCAT 臺灣自動相機資料庫 · Camtrap DP Data Package 說明 · 匯出日期 2026-09-17</footer>

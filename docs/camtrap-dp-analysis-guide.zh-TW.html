@@ -76,13 +76,13 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 <header class="top">
   <div class="eyebrow">Camtrap DP 1.0 · 研究使用指南</div>
   <h1>自動相機資料：讀取、篩選與分析</h1>
-  <p class="lede">本指南說明如何使用這份 Camtrap DP 格式的自動相機資料：資料包裡有什麼、分析前該篩掉哪些資料，以及如何計算物種紀錄數、相機工作時數、OI3 相對豐度、出現樣點比例與活動時段。文中程式皆已用實際資料測試。</p>
+  <p class="lede">本指南說明如何使用這份 Camtrap DP 格式的自動相機資料：Data Package 裡有什麼、分析前該篩掉哪些資料，以及如何計算物種紀錄數、相機工作時數、OI3 相對豐度、出現樣點比例與活動時段。文中程式皆已用實際資料測試。</p>
 </header>
 
 <div class="wrap">
 <nav class="toc" aria-label="目錄">
   <ol>
-    <li><a href="#start">資料包內容</a></li>
+    <li><a href="#start">Data Package 內容</a></li>
     <li><a href="#datasets">三份資料集</a></li>
     <li><a href="#read">讀取資料</a></li>
     <li><a href="#filter">分析前的篩選</a></li>
@@ -102,7 +102,7 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
 <main>
 
 <section id="start">
-<h2>資料包內容</h2>
+<h2>Data Package 內容</h2>
 <p>每份資料集是一個資料夾，包含四個檔案。所有時間皆為<strong>台灣時間（+08:00）</strong>，座標為 <strong>WGS84 經緯度</strong>，不需再轉換。</p>
 <div class="tbl"><table>
 <thead><tr><th>檔案</th><th>一列代表</th><th>分析時主要用途</th></tr></thead>
@@ -188,7 +188,7 @@ con.sql("""
 
 <section id="analysis">
 <h2>常見分析</h2>
-<p>以下 SQL 在資料包資料夾內執行。</p>
+<p>以下 SQL 在 Data Package 資料夾內執行。</p>
 
 <h3 id="a-species">物種與紀錄數</h3>
 <pre><code>SELECT scientificName, count(*) AS records
@@ -432,11 +432,11 @@ python camtrap_analysis.py project-329-林業署哺乳動物監測網 output-329
 <details>
 <summary>展開程式碼 camtrap_analysis.py</summary>
 <pre><code>"""
-Camtrap DP 資料包基本分析：物種紀錄數、相機工作時數、OI3、出現樣點比例、活動時段。
+Camtrap DP Data Package 基本分析：物種紀錄數、相機工作時數、OI3、出現樣點比例、活動時段。
 
 用法：
     pip install duckdb
-    python camtrap_analysis.py &lt;資料包資料夾&gt; [輸出資料夾]
+    python camtrap_analysis.py &lt;Data Package 資料夾&gt; [輸出資料夾]
 
 輸出（UTF-8 BOM，可直接用 Excel 開啟）：
     species_summary.csv    各物種紀錄數、獨立有效照片數、出現樣點數
@@ -578,7 +578,7 @@ def main(pkg, out):
 
 if __name__ == '__main__':
     if len(sys.argv) &lt; 2:
-        sys.exit('用法：python camtrap_analysis.py &lt;資料包資料夾&gt; [輸出資料夾]')
+        sys.exit('用法：python camtrap_analysis.py &lt;Data Package 資料夾&gt; [輸出資料夾]')
     main(sys.argv[1], sys.argv[2] if len(sys.argv) &gt; 2 else 'analysis-output')</code></pre>
 </details>
 </section>
