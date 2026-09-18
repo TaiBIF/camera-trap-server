@@ -90,7 +90,7 @@ footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid
     <li class="sub"><a href="#a-species">物種與紀錄數</a></li>
     <li class="sub"><a href="#a-taxa">中文名與 TaiCOL 編號</a></li>
     <li class="sub"><a href="#a-effort">相機工作時數</a></li>
-    <li class="sub"><a href="#a-independent">獨立有效照片</a></li>
+    <li class="sub"><a href="#a-independent">有效照片</a></li>
     <li class="sub"><a href="#a-oi3">OI3 相對豐度</a></li>
     <li class="sub"><a href="#a-occupancy">出現樣點比例</a></li>
     <li class="sub"><a href="#a-activity">活動時段</a></li>
@@ -202,7 +202,7 @@ FROM read_csv('observations.csv', quote = '"', escape = '"', all_varchar = true)
 WHERE observationType = 'animal' AND scientificName IS NULL
 GROUP BY label
 ORDER BY records DESC;</code></pre>
-<p class="muted">紀錄數是照片層級的計數，連拍會重複計算，不適合直接比較豐度，請使用下方的獨立有效照片或 OI3。</p>
+<p class="muted">紀錄數是照片層級的計數，連拍會重複計算，不適合直接比較豐度，請使用下方的有效照片或 OI3。</p>
 
 <h3 id="a-taxa">中文名與 TaiCOL 編號</h3>
 <p><code>observations.csv</code> 只有學名 <code>scientificName</code>。每份資料集的 <code>datapackage.json</code> 中有 <code>taxonomic</code> 清單，列出資料中出現的每個學名及其 TaiCOL 物種編號（<code>taxonID</code>）與中文名（<code>vernacularNames.zho</code>），以 <code>scientificName</code> 與 observations 對應：</p>
@@ -370,8 +370,8 @@ GROUP BY locationID
 ORDER BY locationID;</code></pre>
 <p class="muted">若需要特定月份或年度的工作時數，在 <code>days</code> 之後加上 <code>WHERE day BETWEEN '2023-01-01' AND '2023-12-31'</code>。</p>
 
-<h3 id="a-independent">獨立有效照片</h3>
-<p>動物停留在鏡頭前時會被連拍多張。為避免重複計算，同一樣點、同一物種在一段時間內的照片只算一次，稱為「獨立有效照片」。常用間隔為 30 或 60 分鐘，<strong>報告結果時請註明所用的間隔</strong>。</p>
+<h3 id="a-independent">有效照片</h3>
+<p>動物停留在鏡頭前時會被連拍多張。為避免重複計算，同一樣點、同一物種在一段時間內的照片只算一次，稱為「有效照片」。常用間隔為 30 或 60 分鐘，<strong>報告結果時請註明所用的間隔</strong>。</p>
 <p>有兩種常見定義，結果略有差異：</p>
 <div class="tbl"><table>
 <thead><tr><th>定義</th><th>新的一筆的條件</th><th>適用</th></tr></thead>
@@ -379,7 +379,7 @@ ORDER BY locationID;</code></pre>
 <tr><td>與上一筆<strong>計入</strong>照片相隔</td><td>距離上一張被計入的照片 ≥ 間隔</td><td>與 TaiCAT 網站的 OI 值一致；見<a href="#script">完整分析程式</a></td></tr>
 <tr><td>與<strong>前一張</strong>照片相隔</td><td>距離前一張照片（不論是否計入）≥ 間隔</td><td>文獻中常見，可用 SQL 直接計算</td></tr>
 </tbody></table></div>
-<pre><code><span class="c">-- 「與前一張照片相隔 ≥ 60 分鐘」的獨立有效照片數</span>
+<pre><code><span class="c">-- 「與前一張照片相隔 ≥ 60 分鐘」的有效照片數</span>
 WITH a AS (
   SELECT d.locationID, o.scientificName,
          CAST(o.eventStart AS TIMESTAMPTZ) AS t
@@ -397,8 +397,8 @@ FROM (
 GROUP BY locationID, scientificName;</code></pre>
 
 <h3 id="a-oi3">OI3 相對豐度</h3>
-<div class="formula">OI3 ＝ 獨立有效照片數 ÷ 相機工作時數 × 1000</div>
-<p>即每 1,000 個相機工作小時的獨立有效照片數。將上面兩個結果以 <code>locationID</code> 合併後相除即可。計算一段期間或一個區域的 OI3 時，請先分別加總獨立有效照片數與工作時數，再相除，不要將各樣點的 OI3 直接平均。</p>
+<div class="formula">OI3 ＝ 有效照片數 ÷ 相機工作時數 × 1000</div>
+<p>即每 1,000 個相機工作小時的有效照片數。將上面兩個結果以 <code>locationID</code> 合併後相除即可。計算一段期間或一個區域的 OI3 時，請先分別加總有效照片數與工作時數，再相除，不要將各樣點的 OI3 直接平均。</p>
 <div class="note"><p><strong>注意：</strong><code>dep-</code> 期間的工作時數被高估，OI3 會偏低；不同間隔、不同定義算出的 OI3 不可直接比較。</p></div>
 
 <h3 id="a-occupancy">出現樣點比例</h3>
@@ -412,21 +412,21 @@ WHERE o.scientificName = 'Muntiacus reevesi'
   AND d.timestampIssues = 'false'
 GROUP BY hour
 ORDER BY hour;</code></pre>
-<p class="muted">建議以獨立有效照片計算活動時段，避免連拍集中在少數時段；完整分析程式的 <code>activity_by_hour.csv</code> 即以獨立有效照片計數。</p>
+<p class="muted">建議以有效照片計算活動時段，避免連拍集中在少數時段；完整分析程式的 <code>activity_by_hour.csv</code> 即以有效照片計數。</p>
 </section>
 
 <section id="script">
 <h2>完整分析程式</h2>
-<p>以下 Python 程式一次產出四個表格，已套用<a href="#filter">分析前的篩選</a>（排除時間可能有誤的期間與臺灣範圍外的樣點），獨立有效照片採「與上一筆計入照片相隔 60 分鐘」。將程式存為 <code>camtrap_analysis.py</code> 後執行：</p>
+<p>以下 Python 程式一次產出四個表格，已套用<a href="#filter">分析前的篩選</a>（排除時間可能有誤的期間與臺灣範圍外的樣點），有效照片採「與上一筆計入照片相隔 60 分鐘」。將程式存為 <code>camtrap_analysis.py</code> 後執行：</p>
 <pre><code>pip install duckdb
 python camtrap_analysis.py project-329-林業署哺乳動物監測網 output-329</code></pre>
 <div class="tbl"><table>
 <thead><tr><th>輸出檔案</th><th>內容</th></tr></thead>
 <tbody>
-<tr><td><code>species_summary.csv</code></td><td>各物種：中文名、TaiCOL 編號、紀錄數、獨立有效照片數、出現樣點數、出現樣點比例</td></tr>
+<tr><td><code>species_summary.csv</code></td><td>各物種：中文名、TaiCOL 編號、紀錄數、有效照片數、出現樣點數、出現樣點比例</td></tr>
 <tr><td><code>effort_by_location.csv</code></td><td>各樣點：名稱、經緯度、工作天數、工作時數</td></tr>
-<tr><td><code>oi3_by_location.csv</code></td><td>各樣點 × 物種：獨立有效照片數、工作時數、OI3</td></tr>
-<tr><td><code>activity_by_hour.csv</code></td><td>各物種 0–23 時的獨立有效照片數</td></tr>
+<tr><td><code>oi3_by_location.csv</code></td><td>各樣點 × 物種：有效照片數、工作時數、OI3</td></tr>
+<tr><td><code>activity_by_hour.csv</code></td><td>各物種 0–23 時的有效照片數</td></tr>
 </tbody></table></div>
 <p>以 329（兩千萬筆辨識）測試，執行約 20 秒。可在程式開頭調整 <code>IMAGE_INTERVAL_MIN</code>（間隔分鐘）與 <code>EXCLUDE_TIMESTAMP_ISSUES</code>。</p>
 <details>
@@ -439,10 +439,10 @@ Camtrap DP Data Package 基本分析：物種紀錄數、相機工作時數、OI
     python camtrap_analysis.py &lt;Data Package 資料夾&gt; [輸出資料夾]
 
 輸出（UTF-8 BOM，可直接用 Excel 開啟）：
-    species_summary.csv    各物種紀錄數、獨立有效照片數、出現樣點數
+    species_summary.csv    各物種紀錄數、有效照片數、出現樣點數
     effort_by_location.csv 各相機位置的工作天數與工作時數
     oi3_by_location.csv    各相機位置 × 物種的 OI3
-    activity_by_hour.csv   各物種 0–23 時的獨立有效照片數
+    activity_by_hour.csv   各物種 0–23 時的有效照片數
 """
 
 import csv
@@ -452,7 +452,7 @@ from pathlib import Path
 
 import duckdb
 
-IMAGE_INTERVAL_MIN = 60           # 獨立有效照片的間隔門檻（分鐘）
+IMAGE_INTERVAL_MIN = 60           # 有效照片的間隔門檻（分鐘）
 EXCLUDE_TIMESTAMP_ISSUES = True   # 排除 timestampIssues = true 的相機期間
 BBOX = (21.5, 26.5, 118.0, 123.5) # 臺灣範圍：緯度下限、上限、經度下限、上限
 
@@ -523,12 +523,12 @@ def main(pkg, out):
         ORDER BY g.locationID, o.scientificName, o.eventStart
     """)
 
-    # 獨立有效照片：與上一張「計入」的照片相隔 &gt;= IMAGE_INTERVAL_MIN 才算新的一張
+    # 有效照片：與上一張「計入」的照片相隔 &gt;= IMAGE_INTERVAL_MIN 才算新的一張
     threshold = IMAGE_INTERVAL_MIN * 60
     from datetime import datetime
     records = {}      # species -&gt; 紀錄數
-    independent = {}  # (location, species) -&gt; 獨立有效照片數
-    by_hour = {}      # (species, hour) -&gt; 獨立有效照片數
+    independent = {}  # (location, species) -&gt; 有效照片數
+    by_hour = {}      # (species, hour) -&gt; 有效照片數
     key = last_counted = None
     while batch := rows.fetchmany(100_000):
         for loc, sp, ts in batch:

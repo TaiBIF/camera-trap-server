@@ -58,13 +58,13 @@ Camtrap DP 資料夾，就能依本文件自行計算每個相機位置的**工�
 
 ## 3. OI3 怎麼算
 
-**OI3 的意義**：每 1 000 個相機工作小時，某物種出現的「獨立有效照片」數。
+**OI3 的意義**：每 1 000 個相機工作小時，某物種出現的「有效照片」數。
 
 ```
-OI3 = (獨立有效照片數 / 工作時數) × 1000
+OI3 = (有效照片數 / 工作時數) × 1000
 ```
 
-**什麼是「獨立有效照片」？**
+**什麼是「有效照片」？**
 連拍的照片若彼此間隔太近，會被視為同一次出現。規則是：
 
 - 第一張物種照片算 1 張。
@@ -99,7 +99,7 @@ import sys
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-IMAGE_INTERVAL_MIN = 60   # 影像間隔（分鐘）— 獨立有效照片的判定門檻，可自行調整
+IMAGE_INTERVAL_MIN = 60   # 影像間隔（分鐘）— 有效照片的判定門檻，可自行調整
 
 
 def parse_iso(s):
@@ -129,7 +129,7 @@ def working_days_by_location_month(deployments):
 
 
 def count_independent(timestamps, interval_min):
-    """獨立有效照片數：間隔 < interval 的照片併為同一張。timestamps 需已排序。"""
+    """有效照片數：間隔 < interval 的照片併為同一張。timestamps 需已排序。"""
     threshold = interval_min * 60
     count = 0
     last = None
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 | `species` | 物種名稱 |
 | `working_days` | 該月工作天數 |
 | `working_hours` | 該月工作時數（天數 × 24） |
-| `independent_photos` | 獨立有效照片數 |
+| `independent_photos` | 有效照片數 |
 | `OI3` | 相對豐富度指數 |
 
 用 Excel 開啟（已加 UTF-8 BOM，中文不會亂碼）即可進一步分析或繪圖。
