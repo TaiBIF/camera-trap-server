@@ -5,7 +5,8 @@ Spec: https://camtrap-dp.tdwg.org/  (profile: 1.0)
 
 For each exported project, writes a directory containing:
   datapackage.json     — Frictionless descriptor + Camtrap DP metadata
-  deployments.csv      — one row per DeploymentJournal (camera operation session)
+  deployments.csv      — one row per DeploymentJournal (camera operation session),
+                         plus one per camera location for images with no journal
   media.csv            — one row per Image
   observations.csv     — one row per classified Image (observationLevel=media)
 
@@ -13,6 +14,14 @@ Mapping notes:
   - A Camtrap "deployment" = one DeploymentJournal record (working_start..working_end),
     because the spec defines deployment as a camera at a location for a time period.
     The Deployment.id is exported as locationID, Deployment.name as locationName.
+    Images without a journal link (legacy-system imports) are exported under a
+    per-location deployment (deploymentID dep-{Deployment.id}) whose period is
+    the min/max of their timestamps; projects with no journals use only these.
+  - Test locations (placeholder coordinates 1, 1) are not exported, nor their images.
+  - Coordinates are WGS84. Deployments stored as TWD97 TM2 metres are reprojected.
+  - timestampIssues=true when a deployment's own period or any of its media
+    timestamps is implausible (before 2000 or after the export), or media fall
+    more than 1 day outside the deployment period. Media are still exported.
   - Image.datetime is stored in UTC, shifted to +08:00 on output.
   - DeploymentJournal.working_start/end is stored as naive Taipei time, tagged +08:00.
   - Image.species is a free-text label that also encodes test/blank/human shots.
@@ -49,6 +58,7 @@ import os
 import re
 import sys
 import zipfile
+from collections import namedtuple
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -59,6 +69,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 django.setup()
 
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.db.models import Max, Min, Q
 
 from taicat.models import (
@@ -151,24 +162,63 @@ def license_entry(code, scope):
     return {**entry, 'scope': scope}
 
 
-def to_iso_tw(dt, assume_naive_tw=False):
-    """Format datetime as ISO 8601 with +08:00. Returns '' for None.
+def as_tw(dt, assume_naive_tw=False):
+    """Return dt as an aware +08:00 datetime, or None.
 
     assume_naive_tw=True  → input is naive Taipei time (DeploymentJournal)
     assume_naive_tw=False → input is UTC (Image.datetime), convert to +08:00
     """
     if dt is None:
-        return ''
-    if assume_naive_tw:
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=TW_TZ)
-        else:
-            dt = dt.astimezone(TW_TZ)
-    else:
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        dt = dt.astimezone(TW_TZ)
-    return dt.isoformat(timespec='seconds')
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=TW_TZ if assume_naive_tw else timezone.utc)
+    return dt.astimezone(TW_TZ)
+
+
+def to_iso_tw(dt, assume_naive_tw=False):
+    """Format datetime as ISO 8601 with +08:00. Returns '' for None."""
+    dt = as_tw(dt, assume_naive_tw)
+    return dt.isoformat(timespec='seconds') if dt else ''
+
+
+# Timestamps before PLAUSIBLE_START or after the export time cannot be real
+# captures (camera clocks reset to 1980, set years ahead, typos like 0321).
+# Such images are still exported, but their deployment gets timestampIssues=true,
+# as does a deployment with media more than TIMESTAMP_TOLERANCE outside its
+# deploymentStart..deploymentEnd.
+PLAUSIBLE_START = datetime(2000, 1, 1, tzinfo=TW_TZ)
+EXPORT_TIME = datetime.now(TW_TZ).replace(microsecond=0)
+TIMESTAMP_TOLERANCE = timedelta(days=1)
+
+
+def timestamp_plausible(dt):
+    return PLAUSIBLE_START <= dt <= EXPORT_TIME
+
+
+def is_placeholder_location(dep):
+    """True for test / dummy camera locations. These are entered with the
+    placeholder coordinates (1, 1) — e.g. project 329's test, test0621 — and
+    their images must not be published."""
+    return dep.latitude == 1 and dep.longitude == 1
+
+
+def wgs84_coordinates(dep):
+    """Return (latitude, longitude) in WGS84 degrees for a Deployment, '' if unset.
+
+    Deployments marked TWD97 usually store TM2 zone 121 metres (EPSG:3826) in
+    longitude/latitude, which Camtrap DP cannot take; those are reprojected to
+    EPSG:4326. Values already in degrees are kept as they are — the same rule
+    taicat.utils.find_named_area uses.
+    """
+    if dep.latitude is None or dep.longitude is None:
+        return '', ''
+    x, y = float(dep.longitude), float(dep.latitude)
+    in_degrees = 114.32 <= x <= 123.61 and 17.36 <= y <= 26.96
+    if dep.geodetic_datum != 'TWD97' or in_degrees:
+        return dep.latitude, dep.longitude
+    pnt = Point(x=x, y=y, srid=3826)
+    pnt.transform(4326)
+    return f'{pnt.y:.8f}', f'{pnt.x:.8f}'
 
 
 def load_species_map(path):
@@ -310,22 +360,19 @@ def build_camera_model_map(project, group_field):
     return result
 
 
-def media_url(image):
-    """Build the public media URL using the same logic as Image.get_associated_media."""
-    if image.from_mongo:
-        return f'https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/{image.file_url}'
-    bucket = image.specific_bucket or getattr(settings, 'AWS_S3_BUCKET', '')
-    return f'https://{bucket}.s3.ap-northeast-1.amazonaws.com/{image.image_uuid}-m.jpg'
-
-
 # Camtrap DP deployments-table required fields (besides deploymentID, which is
 # always set). A row missing any of these is invalid, so it is skipped — and its
-# media/observations drop out automatically via resolve_ref().
+# media/observations are never fetched.
 REQUIRED_DEPLOYMENT_FIELDS = ('latitude', 'longitude', 'deploymentStart', 'deploymentEnd')
 
 
 def deployment_row_valid(row):
     return all(row[f] != '' for f in REQUIRED_DEPLOYMENT_FIELDS)
+
+
+# One Camtrap deployment to export: its deployments.csv row, the Image filter
+# selecting its media, and its period as aware +08:00 datetimes.
+Unit = namedtuple('Unit', 'row image_filter start end')
 
 
 class GeoTemporal:
@@ -336,15 +383,16 @@ class GeoTemporal:
     def __init__(self):
         self.lons, self.lats, self.starts, self.ends = [], [], [], []
 
-    def add(self, row):
+    def add(self, row, start, end):
         try:
             self.lons.append(float(row['longitude']))
             self.lats.append(float(row['latitude']))
         except (TypeError, ValueError):
             pass
-        if row['deploymentStart']:
+        # implausible dates (clock resets etc.) would stretch the package period
+        if timestamp_plausible(start):
             self.starts.append(row['deploymentStart'])
-        if row['deploymentEnd']:
+        if timestamp_plausible(end):
             self.ends.append(row['deploymentEnd'])
 
     def spatial(self):
@@ -372,12 +420,41 @@ class GeoTemporal:
         }
 
 
-def write_deployments(project, out_dir, geo):
-    """Write deployments.csv. One row per effective DeploymentJournal.
+def deployment_row(deployment_id, dep, start, end, camera_model, groups, comments):
+    lat, lon = wgs84_coordinates(dep)
+    period_ok = start is not None and end is not None and \
+        timestamp_plausible(start) and timestamp_plausible(end)
+    return {
+        'deploymentID': deployment_id,
+        'locationID': f'loc-{dep.id}',
+        'locationName': dep.name,
+        'latitude': lat,
+        'longitude': lon,
+        'coordinateUncertainty': '',
+        'deploymentStart': start.isoformat(timespec='seconds') if start else '',
+        'deploymentEnd': end.isoformat(timespec='seconds') if end else '',
+        'setupBy': '',
+        'cameraID': '',
+        'cameraModel': camera_model,
+        'cameraDelay': '',
+        'cameraHeight': dep.altitude if dep.altitude is not None else '',
+        'cameraDepth': '',
+        'cameraTilt': '',
+        'cameraHeading': '',
+        'detectionDistance': '',
+        'timestampIssues': 'false' if period_ok else 'true',
+        'baitUse': '',
+        'featureType': '',
+        'habitat': dep.vegetation or dep.landcover or '',
+        'deploymentGroups': groups,
+        'deploymentTags': '',
+        'deploymentComments': comments,
+    }
 
-    Returns set of journal ids that were written (used to filter media/obs).
-    Feeds written rows' coordinates/dates into the GeoTemporal accumulator.
-    """
+
+def journal_units(project, geo):
+    """One Camtrap deployment per effective DeploymentJournal (a camera at a
+    location for one working period, working_start..working_end)."""
     # is_gap may be NULL (legacy) or False; both mean "not a gap" — match the
     # idiom used by Deployment.count_working_day (taicat/models.py).
     journals = (
@@ -390,237 +467,233 @@ def write_deployments(project, out_dir, geo):
 
     camera_models = build_camera_model_map(project, 'deployment_journal_id')
 
-    written_ids = set()
-    path = out_dir / 'deployments.csv'
-    with path.open('w', newline='', encoding='utf-8') as fh:
-        writer = csv.DictWriter(fh, fieldnames=DEPLOYMENT_COLUMNS)
-        writer.writeheader()
-        for j in journals.iterator(chunk_size=500):
-            dep = j.deployment
-            if dep is None or dep.deprecated:
-                continue
-            location_name = dep.name
-            if j.studyarea_id and dep.study_area_id != j.studyarea_id:
-                # journal recorded under a different study area; keep deployment name only
-                pass
-            row = {
-                'deploymentID': f'j-{j.id}',
-                'locationID': f'loc-{dep.id}',
-                'locationName': location_name,
-                'latitude': dep.latitude if dep.latitude is not None else '',
-                'longitude': dep.longitude if dep.longitude is not None else '',
-                'coordinateUncertainty': '',
-                'deploymentStart': to_iso_tw(j.working_start, assume_naive_tw=True),
-                'deploymentEnd': to_iso_tw(j.working_end, assume_naive_tw=True),
-                'setupBy': '',
-                'cameraID': '',
-                'cameraModel': camera_models.get(j.id, ''),
-                'cameraDelay': '',
-                'cameraHeight': dep.altitude if dep.altitude is not None else '',
-                'cameraDepth': '',
-                'cameraTilt': '',
-                'cameraHeading': '',
-                'detectionDistance': '',
-                'timestampIssues': 'false',
-                'baitUse': '',
-                'featureType': '',
-                'habitat': dep.vegetation or dep.landcover or '',
-                'deploymentGroups': j.studyarea.name if j.studyarea_id else '',
-                'deploymentTags': '',
-                'deploymentComments': j.folder_name or '',
-            }
-            if not deployment_row_valid(row):
-                # missing a required field (e.g. null working_start/end); skip
-                continue
-            writer.writerow(row)
-            geo.add(row)
-            written_ids.add(j.id)
-    return written_ids
+    units = []
+    for j in journals.iterator(chunk_size=500):
+        dep = j.deployment
+        if dep is None or dep.deprecated or is_placeholder_location(dep):
+            continue
+        start = as_tw(j.working_start, assume_naive_tw=True)
+        end = as_tw(j.working_end, assume_naive_tw=True)
+        row = deployment_row(
+            f'j-{j.id}', dep, start, end, camera_models.get(j.id, ''),
+            j.studyarea.name if j.studyarea_id else '', j.folder_name or '')
+        if not deployment_row_valid(row):
+            # missing a required field (e.g. null working_start/end); skip
+            continue
+        geo.add(row, start, end)
+        units.append(Unit(row, {'deployment_journal_id': j.id}, start, end))
+    return units
 
 
-def write_deployments_legacy(project, out_dir, geo):
-    """Write deployments.csv for old projects that have no DeploymentJournal rows.
+def location_units(project, geo, unlinked_only):
+    """One Camtrap deployment per Deployment (camera location), for images that
+    are not linked to a DeploymentJournal.
 
-    One Camtrap deployment per Deployment record; the working period is derived
-    from the min/max Image.datetime observed at that deployment (UTC → +08:00).
-
-    Returns the set of deployment ids that were written (used to filter media/obs).
-    Feeds written rows' coordinates/dates into the GeoTemporal accumulator.
+    Used for old projects with no journals at all, and — with unlinked_only=True —
+    for images in journal projects that carry no deployment_journal_id (imports
+    from the legacy system, older uploads). The working period is the min/max
+    plausible Image.datetime at that location; implausible datetimes are only
+    used when a location has nothing else.
     """
-    # min/max image datetime per deployment (UTC, like all Image.datetime values)
+    images = Image.objects.filter(project_id=project.id).exclude(is_duplicated='Y')
+    if unlinked_only:
+        images = images.filter(deployment_journal_id__isnull=True)
+    plausible = Q(datetime__gte=PLAUSIBLE_START, datetime__lte=EXPORT_TIME)
     ranges = {
-        r['deployment_id']: (r['dt_min'], r['dt_max'])
+        r['deployment_id']: (r['ok_min'] or r['dt_min'], r['ok_max'] or r['dt_max'])
         for r in (
-            Image.objects
-            .filter(project_id=project.id)
-            .exclude(is_duplicated='Y')
+            images
             .values('deployment_id')
-            .annotate(dt_min=Min('datetime'), dt_max=Max('datetime'))
+            .annotate(dt_min=Min('datetime'), dt_max=Max('datetime'),
+                      ok_min=Min('datetime', filter=plausible),
+                      ok_max=Max('datetime', filter=plausible))
         )
         if r['deployment_id'] is not None
     }
+    if not ranges:
+        return []
 
     deployments = (
         Deployment.objects
-        .filter(project_id=project.id, deprecated=False)
+        .filter(project_id=project.id, deprecated=False, id__in=list(ranges))
         .select_related('study_area')
         .order_by('id')
     )
 
     camera_models = build_camera_model_map(project, 'deployment_id')
 
-    written_ids = set()
-    path = out_dir / 'deployments.csv'
-    with path.open('w', newline='', encoding='utf-8') as fh:
+    image_filter = {'deployment_journal_id__isnull': True} if unlinked_only else {}
+    units = []
+    for dep in deployments.iterator(chunk_size=500):
+        if is_placeholder_location(dep):
+            continue
+        dt_min, dt_max = ranges[dep.id]
+        start, end = as_tw(dt_min), as_tw(dt_max)
+        row = deployment_row(
+            f'dep-{dep.id}', dep, start, end, camera_models.get(dep.id, ''),
+            dep.study_area.name if dep.study_area_id else '', '')
+        if not deployment_row_valid(row):
+            continue
+        geo.add(row, start, end)
+        units.append(Unit(row, {'deployment_id': dep.id, **image_filter}, start, end))
+    return units
+
+
+def write_deployments(out_dir, units, timestamp_issues):
+    """Write deployments.csv; timestamp_issues holds the deploymentIDs whose media
+    fell outside their period (found while writing media)."""
+    with (out_dir / 'deployments.csv').open('w', newline='', encoding='utf-8') as fh:
         writer = csv.DictWriter(fh, fieldnames=DEPLOYMENT_COLUMNS)
         writer.writeheader()
-        for dep in deployments.iterator(chunk_size=500):
-            dt_min, dt_max = ranges.get(dep.id, (None, None))
-            row = {
-                'deploymentID': f'dep-{dep.id}',
-                'locationID': f'loc-{dep.id}',
-                'locationName': dep.name,
-                'latitude': dep.latitude if dep.latitude is not None else '',
-                'longitude': dep.longitude if dep.longitude is not None else '',
-                'coordinateUncertainty': '',
-                'deploymentStart': to_iso_tw(dt_min, assume_naive_tw=False),
-                'deploymentEnd': to_iso_tw(dt_max, assume_naive_tw=False),
-                'setupBy': '',
-                'cameraID': '',
-                'cameraModel': camera_models.get(dep.id, ''),
-                'cameraDelay': '',
-                'cameraHeight': dep.altitude if dep.altitude is not None else '',
-                'cameraDepth': '',
-                'cameraTilt': '',
-                'cameraHeading': '',
-                'detectionDistance': '',
-                'timestampIssues': 'false',
-                'baitUse': '',
-                'featureType': '',
-                'habitat': dep.vegetation or dep.landcover or '',
-                'deploymentGroups': dep.study_area.name if dep.study_area_id else '',
-                'deploymentTags': '',
-                'deploymentComments': '',
-            }
-            if not deployment_row_valid(row):
-                # missing a required field (e.g. no images → no start/end); skip
-                continue
+        for unit in units:
+            row = unit.row
+            if row['deploymentID'] in timestamp_issues:
+                row = {**row, 'timestampIssues': 'true'}
             writer.writerow(row)
-            geo.add(row)
-            written_ids.add(dep.id)
-    return written_ids
 
 
-def write_media_and_observations(project, resolve_ref, out_dir, species_map):
-    """Stream images for the project and write both media.csv and observations.csv.
+# Only the Image columns the writer reads, fetched as plain tuples (in this
+# order) rather than model instances — building a Django object per row was a
+# large share of the runtime on multi-million-image projects. Skipping the JSON
+# columns (annotation, source_data, remarks2) also avoids detoasting them.
+IMAGE_EXPORT_FIELDS = (
+    'id', 'species', 'datetime', 'image_uuid', 'remarks', 'from_mongo',
+    'file_url', 'specific_bucket', 'filename', 'folder_name', 'life_stage',
+    'sex', 'animal_id', 'antler',
+)
 
-    resolve_ref(img) returns the deploymentID this image belongs to, or None to
-    skip it. This lets the journal-based and legacy (deployment-based) exports
-    share the same media/observation writer.
+
+def write_media_and_observations(project, units, out_dir, species_map):
+    """Fetch images unit by unit and write both media.csv and observations.csv.
+
+    Images are queried one Unit (deployment) at a time via its image_filter,
+    which hits the deployment_journal_id / deployment_id index, instead of one
+    project-wide `ORDER BY id` query: outside a
+    transaction Django opens its server-side cursor WITH HOLD, so PostgreSQL
+    materializes the whole result before returning a row — for a large project
+    (e.g. 329, ~21M images) that is many GB of sort + temp files and can take
+    the server down. Images whose unit was not written are never fetched.
 
     For animal observations, the Chinese label is resolved to a Latin
     scientificName via species_map. Labels with no Latin name keep
     observationType=animal but with an empty scientificName, and the original
     label is preserved in observationComments so the identification is not lost.
 
-    Returns (n_media, n_obs, taxa) where taxa maps scientificName ->
-    {'taxonID', 'vernacular'} for every taxon actually written (used to build the
-    package-level taxonomic block).
+    Returns (n_media, n_obs, taxa, timestamp_issues) where taxa maps
+    scientificName -> {'taxonID', 'vernacular'} for every taxon actually written
+    (used to build the package-level taxonomic block), and timestamp_issues is
+    the set of deploymentIDs with media timestamps that are implausible or more
+    than TIMESTAMP_TOLERANCE outside the deployment period.
     """
     media_path = out_dir / 'media.csv'
     obs_path = out_dir / 'observations.csv'
+    file_public = 'true' if project.is_public else 'false'
+    default_bucket = getattr(settings, 'AWS_S3_BUCKET', '')
 
-    qs = (
-        Image.objects
-        .filter(project_id=project.id)
-        .exclude(is_duplicated='Y')
-        .order_by('id')
-    )
+    # There are only a few hundred distinct labels, so classify and resolve
+    # each one once instead of once per image.
+    label_cache = {}
+
+    def classify_label(species):
+        if species not in label_cache:
+            obs = classify_observation(species)
+            info = None
+            if obs is not None and obs['observationType'] == 'animal':
+                info = resolve_species(species_map, species or '')
+            label_cache[species] = (obs, info)
+        return label_cache[species]
 
     n_media = 0
     n_obs = 0
     taxa = {}
+    timestamp_issues = set()
     with media_path.open('w', newline='', encoding='utf-8') as mf, \
          obs_path.open('w', newline='', encoding='utf-8') as of:
-        media_writer = csv.DictWriter(mf, fieldnames=MEDIA_COLUMNS)
-        obs_writer = csv.DictWriter(of, fieldnames=OBSERVATION_COLUMNS)
-        media_writer.writeheader()
-        obs_writer.writeheader()
+        media_writer = csv.writer(mf)
+        obs_writer = csv.writer(of)
+        media_writer.writerow(MEDIA_COLUMNS)
+        obs_writer.writerow(OBSERVATION_COLUMNS)
 
-        for img in qs.iterator(chunk_size=2000):
-            deployment_ref = resolve_ref(img)
-            if deployment_ref is None:
-                continue
-            obs = classify_observation(img.species)
-            if obs is None:
-                # EXCLUDE_SPECIES (real people/hunters): not exported (privacy)
-                continue
-            ts = to_iso_tw(img.datetime, assume_naive_tw=False)
-            if not ts:
-                # null datetime → empty required timestamp / eventStart / eventEnd
-                continue
-            media_id = img.image_uuid or f'img-{img.id}'
+        for i, unit in enumerate(units, 1):
+            if i % 500 == 0:
+                print(f'  ... {i}/{len(units)} units, {n_media} media', flush=True)
+            deployment_ref = unit.row['deploymentID']
+            # Media timestamps are ISO strings in the same +08:00 format, so the
+            # allowed window compares as strings. Clamping before applying the
+            # tolerance keeps year-1 / far-future datetimes from overflowing.
+            ts_min = (max(unit.start, PLAUSIBLE_START + TIMESTAMP_TOLERANCE)
+                      - TIMESTAMP_TOLERANCE).isoformat(timespec='seconds')
+            ts_max = (min(unit.end, EXPORT_TIME - TIMESTAMP_TOLERANCE)
+                      + TIMESTAMP_TOLERANCE).isoformat(timespec='seconds')
+            rows = (
+                Image.objects
+                .filter(project_id=project.id, **unit.image_filter)
+                .exclude(is_duplicated='Y')
+                .order_by('id')
+                .values_list(*IMAGE_EXPORT_FIELDS)
+            )
+            # An image with several annotations (e.g. two species in one frame)
+            # is stored as several Image rows sharing image_uuid. Camtrap DP wants
+            # one media row with several observations, so write each mediaID once.
+            # Shared image_uuids never span deployments, so a per-unit set suffices.
+            media_written = set()
+            for (img_id, species, dt, image_uuid, remarks, from_mongo, file_url,
+                 specific_bucket, filename, folder_name, life_stage, sex,
+                 animal_id, antler) in rows.iterator(chunk_size=2000):
+                obs, info = classify_label(species)
+                if obs is None:
+                    # EXCLUDE_SPECIES (real people/hunters): not exported (privacy)
+                    continue
+                ts = to_iso_tw(dt, assume_naive_tw=False)
+                if not ts:
+                    # null datetime → empty required timestamp / eventStart / eventEnd
+                    continue
+                if not ts_min <= ts <= ts_max:
+                    timestamp_issues.add(deployment_ref)
+                media_id = image_uuid or f'img-{img_id}'
 
-            # Resolve scientificName for animal observations via the TaiCOL map.
-            label = (img.species or '').strip()
-            comments = img.remarks or ''
-            scientific = ''
-            if obs['observationType'] == 'animal':
-                info = resolve_species(species_map, img.species or '')
-                latin = (info or {}).get('sci') or ''
-                if latin:
-                    scientific = latin
-                    taxa.setdefault(latin, {
+                # Resolve scientificName for animal observations via the TaiCOL map.
+                label = (species or '').strip()
+                comments = remarks or ''
+                scientific = (info or {}).get('sci') or ''
+                if scientific:
+                    taxa.setdefault(scientific, {
                         'taxonID': (info or {}).get('taxon_id') or '',
                         'vernacular': label,
                     })
-            # Keep the original Chinese label verbatim in observationComments
-            # whenever it is not already carried by scientificName — i.e. the
-            # test/blank/setup shots (測試/空拍/工作照…) and animals with no
-            # TaiCOL match. Mapped animals keep it as the taxonomic vernacular.
-            if not scientific and label:
-                comments = f'{label} {comments}'.strip()
+                # Keep the original Chinese label verbatim in observationComments
+                # whenever it is not already carried by scientificName — i.e. the
+                # test/blank/setup shots (測試/空拍/工作照…) and animals with no
+                # TaiCOL match. Mapped animals keep it as the taxonomic vernacular.
+                if not scientific and label:
+                    comments = f'{label} {comments}'.strip()
 
-            media_writer.writerow({
-                'mediaID': media_id,
-                'deploymentID': deployment_ref,
-                'captureMethod': obs['captureMethod'],
-                'timestamp': ts,
-                'filePath': media_url(img),
-                'filePublic': 'true' if project.is_public else 'false',
-                'fileName': img.filename or '',
-                'fileMediatype': 'image/jpeg',
-                'exifData': '',
-                'favorite': '',
-                'mediaComments': img.folder_name or '',
-            })
-            n_media += 1
+                # same URL logic as Image.get_associated_media
+                if from_mongo:
+                    file_path = f'https://d3gg2vsgjlos1e.cloudfront.net/annotation-images/{file_url}'
+                else:
+                    file_path = (f'https://{specific_bucket or default_bucket}'
+                                 f'.s3.ap-northeast-1.amazonaws.com/{image_uuid}-m.jpg')
 
-            obs_writer.writerow({
-                'observationID': f'obs-{img.id}',
-                'deploymentID': deployment_ref,
-                'mediaID': media_id,
-                'eventID': media_id,
-                'eventStart': ts,
-                'eventEnd': ts,
-                'observationLevel': 'media',
-                'observationType': obs['observationType'],
-                'cameraSetupType': obs['cameraSetupType'],
-                'scientificName': scientific,
-                'count': obs['count'],
-                'lifeStage': img.life_stage or '',
-                'sex': img.sex or '',
-                'behavior': '',
-                'individualID': img.animal_id or '',
-                'classificationMethod': 'human',
-                'classifiedBy': '',
-                'classificationTimestamp': '',
-                'classificationProbability': '',
-                'observationTags': img.antler or '',
-                'observationComments': comments,
-            })
-            n_obs += 1
-    return n_media, n_obs, taxa
+                if media_id not in media_written:
+                    media_written.add(media_id)
+                    # column order: MEDIA_COLUMNS
+                    media_writer.writerow((
+                        media_id, deployment_ref, obs['captureMethod'], ts, file_path,
+                        file_public, filename or '', 'image/jpeg', '', '',
+                        folder_name or '',
+                    ))
+                    n_media += 1
+
+                # column order: OBSERVATION_COLUMNS
+                obs_writer.writerow((
+                    f'obs-{img_id}', deployment_ref, media_id, media_id, ts, ts,
+                    'media', obs['observationType'], obs['cameraSetupType'],
+                    scientific, obs['count'], life_stage or '', sex or '', '',
+                    animal_id or '', 'human', '', '', '', antler or '', comments,
+                ))
+                n_obs += 1
+    return n_media, n_obs, taxa, timestamp_issues
 
 
 def build_taxonomic(taxa):
@@ -778,29 +851,29 @@ def export_project(project, base_dir, species_map, make_zip=False):
 
     geo = GeoTemporal()
     if has_journals:
-        unit_ids = write_deployments(project, out_dir, geo)
-        def resolve_ref(img):
-            if img.deployment_journal_id in unit_ids:
-                return f'j-{img.deployment_journal_id}'
-            return None
+        units = journal_units(project, geo)
+        # Images with no journal link (legacy-system imports, older uploads)
+        # would otherwise be dropped; export them per camera location instead.
+        location = location_units(project, geo, unlinked_only=True)
+        print(f'  deployments: {len(units)} journal + {len(location)} location-based')
+        units += location
     else:
         # old project: no journal linking — build straight from taicat_deployment
         print('  (no DeploymentJournal records; using deployment-based export)')
-        unit_ids = write_deployments_legacy(project, out_dir, geo)
-        def resolve_ref(img):
-            if img.deployment_id in unit_ids:
-                return f'dep-{img.deployment_id}'
-            return None
+        units = location_units(project, geo, unlinked_only=False)
+        print(f'  deployments: {len(units)}')
 
-    print(f'  deployments: {len(unit_ids)}')
-
-    n_media, n_obs, taxa = write_media_and_observations(
-        project, resolve_ref, out_dir, species_map)
+    n_media, n_obs, taxa, timestamp_issues = write_media_and_observations(
+        project, units, out_dir, species_map)
+    write_deployments(out_dir, units, timestamp_issues)
+    n_issues = sum(1 for u in units
+                   if u.row['timestampIssues'] == 'true' or u.row['deploymentID'] in timestamp_issues)
     print(f'  media:       {n_media}')
     print(f'  observations:{n_obs}')
     print(f'  taxa:        {len(taxa)}')
+    print(f'  timestampIssues: {n_issues} deployments')
 
-    descriptor = build_datapackage(project, len(unit_ids), n_media, n_obs, taxa, geo)
+    descriptor = build_datapackage(project, len(units), n_media, n_obs, taxa, geo)
     with (out_dir / 'datapackage.json').open('w', encoding='utf-8') as fh:
         json.dump(descriptor, fh, ensure_ascii=False, indent=2)
 

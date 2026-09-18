@@ -61,7 +61,7 @@ equivalent source in the exported package:
 | `calculate` needs | From the live DB | From the Camtrap DP package |
 |-------------------|------------------|------------------------------|
 | The species photos (datetime, individual id) | `Image` rows for the deployment / species, `is_duplicated != 'Y'` | `observations.csv` rows filtered by `scientificName` (duplicates already excluded at export) |
-| The capture timestamp | `Image.datetime` (stored UTC, shifted +08:00 in code) | `observations.csv.timestamp` — **already `+08:00`**, no shift needed |
+| The capture timestamp | `Image.datetime` (stored UTC, shifted +08:00 in code) | `observations.csv.eventStart` — **already `+08:00`**, no shift needed |
 | The individual id | `Image.animal_id` | `observations.csv.individualID` |
 | Camera working time | `Deployment.count_working_day()` from `DeploymentJournal` (gaps excluded) | `deployments.csv` `deploymentStart` / `deploymentEnd` ranges |
 
@@ -73,10 +73,10 @@ equivalent source in the exported package:
 |--------|---------|------------------------|
 | `deploymentID` | `j-<journal_id>` (or `dep-<id>` for legacy projects) | groups photos per camera session |
 | `mediaID` | image uuid | `Image.image_uuid` |
-| `timestamp` / `eventStart` | capture time, `+08:00` | `Image.datetime` (after TW shift) |
-| `scientificName` | species name | `Image.species` |
+| `eventStart` / `eventEnd` | capture time, `+08:00` (both equal the photo time; `observations.csv` has no `timestamp` column — that one is in `media.csv`) | `Image.datetime` (after TW shift) |
+| `scientificName` | Latin name (TaiCOL), e.g. `Muntiacus reevesi`; empty for animals not identified to species | `Image.species` (Chinese label, mapped at export) |
 | `individualID` | individual animal id | `Image.animal_id` |
-| `observationType` | `animal` or `blank` | `'animal' if species else 'blank'` |
+| `observationType` | `animal`, `blank` (blank / time-lapse test) or `human` (camera setup) | derived from the `Image.species` label |
 
 **`deployments.csv`** (one row per camera working session):
 
@@ -134,9 +134,11 @@ def working_days_in_month(dep_rows, year, month):
     return len(days)
 ```
 
-> **Legacy projects** export `deploymentID = dep-<id>` and derive
-> `deploymentStart`/`deploymentEnd` from the min/max photo datetime (see
-> `write_deployments_legacy`). There the effort is only an approximation of the
+> **Photos without a DeploymentJournal** (legacy projects, and the legacy-system
+> images inside journal projects such as 287/288) are exported under
+> `deploymentID = dep-<id>`, one per camera location, with
+> `deploymentStart`/`deploymentEnd` derived from the min/max photo datetime (see
+> `location_units`). There the effort is only an approximation of the
 > true working period — flag any index computed from legacy packages as
 > approximate.
 
@@ -153,13 +155,13 @@ rows, matching the intent of the model.
 
 ```python
 def count_oi3(obs, image_interval_min):
-    """obs: species rows (observationType='animal') sorted by timestamp."""
+    """obs: species rows (observationType='animal') sorted by eventStart."""
     threshold = image_interval_min * 60
     count = 0
     last = None
     delta_acc = 0          # seconds accumulated since the last *counted* photo
     for o in obs:
-        t = parse_iso(o['timestamp'])
+        t = parse_iso(o['eventStart'])
         if last is None:
             count = 1               # first photo always counts
         else:
@@ -180,14 +182,14 @@ is the value most projects use.
 
 ```python
 def count_oi1(obs, image_interval_min):
-    """obs sorted by timestamp; uses individualID."""
+    """obs sorted by eventStart; uses individualID."""
     threshold = image_interval_min * 60
     count = 0
     last = None
     delta_acc = 0
     prev_individual = None
     for o in obs:
-        t = parse_iso(o['timestamp'])
+        t = parse_iso(o['eventStart'])
         ind = (o.get('individualID') or '').strip()
         if last is None:
             count = 1 if ind else 0     # first photo counts only if it has an id
@@ -235,7 +237,7 @@ def oi(count, working_days):
 
 ```python
 def count_pod(obs, working_days):
-    days_with_species = {parse_iso(o['timestamp']).date() for o in obs}
+    days_with_species = {parse_iso(o['eventStart']).date() for o in obs}
     return len(days_with_species) / working_days if working_days > 0 else None
 ```
 
@@ -254,11 +256,11 @@ mdh[day] = [day_has_species(0/1), [hour_0_has_species, ... hour_23]]
 ```
 
 From `observations.csv` this is just: for each species photo, mark
-`mdh[timestamp.day-1][0] = 1` and `mdh[timestamp.day-1][1][timestamp.hour] = 1`.
+`mdh[eventStart.day-1][0] = 1` and `mdh[eventStart.day-1][1][eventStart.hour] = 1`.
 
 > The model shifts hours from UTC to Taipei (`utc_hour + 8`) because
-> `Image.datetime` is stored UTC. **In the Camtrap DP export the `timestamp` is
-> already `+08:00`, so no hour shift is required** — use `timestamp.hour`
+> `Image.datetime` is stored UTC. **In the Camtrap DP export `eventStart` is
+> already `+08:00`, so no hour shift is required** — use `eventStart.hour`
 > directly.
 
 ---
@@ -280,7 +282,7 @@ deployments  = load('deployments.csv')
 observations = load('observations.csv')
 
 location_id   = 'loc-12345'
-species       = '山羌'
+species       = 'Muntiacus reevesi'   # 山羌; scientificName is the Latin name
 year, month   = 2024, 3
 image_interval = 30        # minutes
 event_interval = 60        # minutes (only for event_count)
@@ -298,10 +300,10 @@ obs = [
     if o['deploymentID'] in dep_ids
     and o['observationType'] == 'animal'
     and o['scientificName'] == species
-    and parse_iso(o['timestamp']).year == year
-    and parse_iso(o['timestamp']).month == month
+    and parse_iso(o['eventStart']).year == year
+    and parse_iso(o['eventStart']).month == month
 ]
-obs.sort(key=lambda o: o['timestamp'])
+obs.sort(key=lambda o: o['eventStart'])
 
 # 4. indices
 oi1 = oi(count_oi1(obs, image_interval), wdays)
@@ -325,12 +327,14 @@ in-DB result. Known reasons:
    the window from photo min/max and are only approximate.
 2. **Month boundary / timezone.** The model selects images using a UTC range
    that corresponds to the Taipei month; the package timestamps are already
-   `+08:00`, so filtering directly on `timestamp.month` is the natural
+   `+08:00`, so filtering directly on `eventStart.month` is the natural
    equivalent and avoids the UTC↔TW edge handling.
 3. **OI2 bug.** The live OI2 is broken (stale `image_dt`); the recipe above uses
    the intended definition (OI3 rule over all species rows).
 4. **Duplicates.** `is_duplicated = 'Y'` images are excluded *at export time*, so
    the package already matches the model's `.exclude(is_duplicated='Y')`.
+   An image with several annotations becomes several observation rows sharing one
+   `mediaID` and the same `eventStart`; the interval rule counts them once.
 5. **Individual IDs.** `OI1` only diverges from `OI2`/`OI3` when
    `individualID` is populated; for most projects it is empty and the three
    numerators converge.

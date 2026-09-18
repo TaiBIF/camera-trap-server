@@ -1,0 +1,318 @@
+<title>TaiCAT Camtrap DP Data Package 說明</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F3F5F2; --surface:#FFFFFF; --ink:#1B2620; --muted:#5A6860;
+  --accent:#2E6A57; --accent-soft:#E2EEE8; --warn:#9A5A17; --warn-soft:#F7ECDD;
+  --rule:#D9E1DB; --code-bg:#EBF0EC;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#111714; --surface:#18201C; --ink:#E2E9E4; --muted:#9BA9A1;
+    --accent:#86C8AE; --accent-soft:#1F3129; --warn:#E3A763; --warn-soft:#33271A;
+    --rule:#2A3530; --code-bg:#1F2924;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111714; --surface:#18201C; --ink:#E2E9E4; --muted:#9BA9A1;
+  --accent:#86C8AE; --accent-soft:#1F3129; --warn:#E3A763; --warn-soft:#33271A;
+  --rule:#2A3530; --code-bg:#1F2924;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.75;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px}
+@media (min-width:980px){.wrap{grid-template-columns:220px minmax(0,1fr)}}
+header.top{max-width:1120px;margin:0 auto;padding-block:48px 32px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--serif);font-size:clamp(28px,4.4vw,40px);line-height:1.3;margin:8px 0 12px;text-wrap:balance}
+.lede{max-width:44em;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:20px;font-size:14px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:500}
+nav.toc{font-size:14px}
+@media (min-width:980px){nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start}}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 10px;border-left:2px solid var(--rule)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-left-color:var(--accent)}
+nav.toc .sub a{padding-left:22px;font-size:13px}
+main{min-width:0}
+section{padding-block:8px 32px}
+h2{font-family:var(--serif);font-size:26px;line-height:1.4;margin:24px 0 12px;text-wrap:balance;scroll-margin-top:24px}
+h3{font-size:18px;font-weight:700;margin:32px 0 8px;scroll-margin-top:24px}
+p{max-width:46em;margin:0 0 14px}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code,.f{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.tbl{overflow-x:auto;margin:12px 0 20px;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.6}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--rule)}
+tr:last-child td{border-bottom:0}
+th{font-weight:500;color:var(--muted);font-size:13px;background:var(--ground);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td .ex{font-family:var(--mono);font-size:12.5px;color:var(--muted);word-break:break-all}
+td:first-child{white-space:nowrap}
+.fields td:nth-child(2){min-width:240px}
+.req{font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:2px;font-family:var(--sans)}
+.note{background:var(--warn-soft);border-left:3px solid var(--warn);padding:12px 16px;margin:16px 0;border-radius:0 6px 6px 0;max-width:52em}
+.note strong{color:var(--warn)}
+.note p:last-child,.note ul:last-child{margin-bottom:0}
+.empty{color:var(--muted);font-size:14px;max-width:52em}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0 8px}
+.flow div{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.flow .fn{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:500}
+.flow .unit{font-size:14px;color:var(--muted);margin-top:2px}
+.flow .rel{font-size:13.5px;margin-top:8px}
+.pill{display:inline-block;font-size:12px;padding:0 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.legacy{background:var(--warn-soft);color:var(--warn)}
+ul{padding-left:1.3em;max-width:46em;margin:0 0 14px}
+li{margin-bottom:4px}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.6}
+footer{max-width:1120px;margin:40px auto 0;padding-top:20px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted)}
+</style>
+
+<header class="top">
+  <div class="eyebrow">Camtrap DP 1.0 · TaiCAT 臺灣自動相機資料庫</div>
+  <h1>自動相機 Data Package：欄位說明與資料轉換方式</h1>
+  <p class="lede">本文件說明從 TaiCAT 匯出的 Camtrap DP Data Package 內各 CSV 欄位的意義，以及資料庫中的原始資料如何整理、轉換成 Camtrap DP 格式。使用資料進行分析前，建議先閱讀「資料轉換方式」與「使用注意事項」兩節。</p>
+  <div class="meta">
+    <span>規範：<b><a href="https://camtrap-dp.tdwg.org/" rel="noopener">Camtrap DP 1.0</a>（TDWG）</b></span>
+    <span>匯出日期：<b>2026-09-17</b></span>
+    <span>時區：<b>台灣時間 UTC+08:00</b></span>
+    <span>座標：<b>WGS84 十進位度</b></span>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="目錄">
+  <ol>
+    <li><a href="#package">Data Package 內容</a></li>
+    <li><a href="#projects">三個計畫的資料</a></li>
+    <li><a href="#fields">欄位說明</a></li>
+    <li class="sub"><a href="#f-deployments">deployments.csv</a></li>
+    <li class="sub"><a href="#f-media">media.csv</a></li>
+    <li class="sub"><a href="#f-observations">observations.csv</a></li>
+    <li class="sub"><a href="#f-datapackage">datapackage.json</a></li>
+    <li><a href="#convert">資料轉換方式</a></li>
+    <li class="sub"><a href="#c-structure">資料結構對應</a></li>
+    <li class="sub"><a href="#c-deployment">兩種 deployment</a></li>
+    <li class="sub"><a href="#c-labels">物種標籤分類</a></li>
+    <li class="sub"><a href="#c-names">學名對應</a></li>
+    <li class="sub"><a href="#c-time">時間與座標</a></li>
+    <li class="sub"><a href="#c-exclude">排除與合併規則</a></li>
+    <li><a href="#caveats">使用注意事項</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="package">
+<h2>Data Package 內容</h2>
+<p>每個計畫匯出為一個資料夾，內含一個詮釋資料檔與三個資料表。三個資料表以 ID 互相關聯：</p>
+<div class="flow">
+  <div><div class="fn">deployments.csv</div><div class="unit">一列 = 一台相機在一個地點的一段運作期間</div><div class="rel">以 <code>deploymentID</code> 被 media 與 observations 引用</div></div>
+  <div><div class="fn">media.csv</div><div class="unit">一列 = 一張照片</div><div class="rel">以 <code>deploymentID</code> 指向所屬的 deployment</div></div>
+  <div><div class="fn">observations.csv</div><div class="unit">一列 = 一筆辨識結果</div><div class="rel">以 <code>mediaID</code> 指向照片；一張照片可有多筆辨識</div></div>
+</div>
+<p><code>datapackage.json</code> 則記錄計畫名稱、授權、主持人、資料的空間範圍與時間範圍，以及資料中出現的所有物種清單（含 TaiCOL 編號與中文名）。</p>
+</section>
+
+<section id="projects">
+<h2>三個計畫的資料</h2>
+<p>計畫 287、288 含有 TaiCAT <strong>舊系統</strong>移轉進來的資料，計畫 329 則完全是<strong>現行系統</strong>上傳的資料。兩者在資料庫中的結構不同，因此 deployment 的產生方式也不同（詳見<a href="#c-deployment">兩種 deployment</a>）。</p>
+<div class="tbl"><table>
+<thead><tr><th>計畫</th><th>資料來源</th><th class="num">deployments<br>（j-）</th><th class="num">deployments<br>（dep-）</th><th class="num">media</th><th class="num">observations</th><th class="num">有學名的動物</th><th class="num">物種數</th><th>資料期間</th></tr></thead>
+<tbody>
+<tr><td><b>287</b> 自動相機動物監測整合計畫(1/4)</td><td><span class="pill legacy">舊系統為主</span></td><td class="num">6,567</td><td class="num">304</td><td class="num">2,051,122</td><td class="num">2,072,297</td><td class="num">916,566</td><td class="num">66</td><td>2012-01 ～ 2025-05</td></tr>
+<tr><td><b>288</b> 自動相機動物監測整合計畫</td><td><span class="pill legacy">舊系統＋未連結工作紀錄</span></td><td class="num">2,977</td><td class="num">302</td><td class="num">5,319,398</td><td class="num">5,322,812</td><td class="num">2,581,755</td><td class="num">19</td><td>2015-01 ～ 2022-06</td></tr>
+<tr><td><b>329</b> 林業署哺乳動物監測網</td><td><span class="pill">現行系統</span></td><td class="num">20,166</td><td class="num">0</td><td class="num">20,425,370</td><td class="num">20,816,093</td><td class="num">12,873,637</td><td class="num">101</td><td>2007-01 ～ 2026-09</td></tr>
+</tbody></table></div>
+<p class="empty">observations 多於 media，是因為同一張照片可能有多筆辨識（例如一張照片拍到兩種動物）。「資料期間」取自 <code>datapackage.json</code> 的 <code>temporal</code>，已排除明顯錯誤的日期。授權：三個計畫的資料（data）皆為 CC0-1.0；照片（media）287、288 為 CC-BY-4.0，329 為 CC0-1.0。</p>
+</section>
+
+<section id="fields">
+<h2>欄位說明</h2>
+<p>以下只列出<strong>有填值</strong>的欄位；Camtrap DP 標準中其餘欄位目前 TaiCAT 沒有對應資料，在 CSV 中保留為空白欄。<span class="req">必填</span> 表示 Camtrap DP 規定必須有值。範例值取自計畫 329 的實際資料。</p>
+
+<h3 id="f-deployments">deployments.csv — 相機佈設</h3>
+<div class="tbl"><table class="fields">
+<thead><tr><th>欄位</th><th>說明</th><th>範例</th><th>資料庫來源</th></tr></thead>
+<tbody>
+<tr><td><span class="f">deploymentID</span><span class="req">必填</span></td><td>佈設的唯一代碼。<code>j-</code> 開頭為依「工作紀錄」產生；<code>dep-</code> 開頭為依「相機位置」產生（舊系統資料），見<a href="#c-deployment">兩種 deployment</a>。</td><td><span class="ex">j-21145</span></td><td>DeploymentJournal.id 或 Deployment.id</td></tr>
+<tr><td><span class="f">locationID</span></td><td>相機位置代碼。同一位置的多次佈設共用同一個 locationID，可用來合併同一樣點的資料。</td><td><span class="ex">loc-13896</span></td><td>Deployment.id</td></tr>
+<tr><td><span class="f">locationName</span></td><td>相機位置名稱（樣點名稱）。</td><td><span class="ex">CY-LTMM-001</span></td><td>Deployment.name</td></tr>
+<tr><td><span class="f">latitude</span><span class="req">必填</span></td><td>緯度，WGS84 十進位度。原始資料為 TWD97 二度分帶（公尺）者已轉換。</td><td><span class="ex">23.39395798</span></td><td>Deployment.latitude</td></tr>
+<tr><td><span class="f">longitude</span><span class="req">必填</span></td><td>經度，WGS84 十進位度。</td><td><span class="ex">120.71551470</span></td><td>Deployment.longitude</td></tr>
+<tr><td><span class="f">deploymentStart</span><span class="req">必填</span></td><td>相機開始運作時間（ISO 8601，+08:00）。</td><td><span class="ex">2022-05-03T08:00:00+08:00</span></td><td>工作紀錄起始時間，或該位置最早照片時間</td></tr>
+<tr><td><span class="f">deploymentEnd</span><span class="req">必填</span></td><td>相機結束運作時間。可與 deploymentStart 相減推算相機工作時數（努力量）。</td><td><span class="ex">2022-05-31T08:00:00+08:00</span></td><td>工作紀錄結束時間，或該位置最晚照片時間</td></tr>
+<tr><td><span class="f">cameraModel</span></td><td>相機廠牌與型號，格式為「廠牌-型號」。取自照片 EXIF，無資料時留白。</td><td><span class="ex">RECONYX-HYPERFIRE 2 COVERT</span></td><td>Image_info.exif 的 Make / Model</td></tr>
+<tr><td><span class="f">cameraHeight</span></td><td>注意：此欄目前放的是<strong>相機位置的海拔高度（公尺）</strong>，不是相機離地高度。</td><td><span class="ex">1211</span></td><td>Deployment.altitude</td></tr>
+<tr><td><span class="f">timestampIssues</span></td><td><code>true</code> 表示這個佈設的照片時間可能有誤（相機時鐘錯誤等），分析時間活動模式前建議排除或檢查。判斷規則見<a href="#c-time">時間與座標</a>。</td><td><span class="ex">false</span></td><td>匯出時檢查產生</td></tr>
+<tr><td><span class="f">habitat</span></td><td>植被或土地覆蓋類型。部分資料為 <code>none</code>、<code>none selected</code>，代表未填寫。</td><td><span class="ex">none selected</span></td><td>Deployment.vegetation，無則 landcover</td></tr>
+<tr><td><span class="f">deploymentGroups</span></td><td>所屬樣區，例如林業署各分署。可用來分組統計。</td><td><span class="ex">嘉義分署</span></td><td>StudyArea.name</td></tr>
+<tr><td><span class="f">deploymentComments</span></td><td>上傳時的資料夾名稱，通常包含相機編號與起訖日期，可用來對照原始檔案。dep- 佈設無此值。</td><td><span class="ex">CY60A-20220503-20220531</span></td><td>DeploymentJournal.folder_name</td></tr>
+</tbody></table></div>
+<p class="empty">未填欄位：coordinateUncertainty、setupBy、cameraID、cameraDelay、cameraDepth、cameraTilt、cameraHeading、detectionDistance、baitUse、featureType、deploymentTags。</p>
+
+<h3 id="f-media">media.csv — 照片</h3>
+<div class="tbl"><table class="fields">
+<thead><tr><th>欄位</th><th>說明</th><th>範例</th><th>資料庫來源</th></tr></thead>
+<tbody>
+<tr><td><span class="f">mediaID</span><span class="req">必填</span></td><td>照片唯一代碼。</td><td><span class="ex">66b7334d3c8038375040384c</span></td><td>Image.image_uuid</td></tr>
+<tr><td><span class="f">deploymentID</span><span class="req">必填</span></td><td>照片所屬的佈設，對應 deployments.csv。</td><td><span class="ex">j-21145</span></td><td>—</td></tr>
+<tr><td><span class="f">captureMethod</span></td><td>拍攝方式：<code>activityDetection</code> 為動物觸發拍攝；<code>timeLapse</code> 為定時拍攝的測試照（確認相機運作用）。</td><td><span class="ex">activityDetection</span></td><td>由物種標籤判斷，見<a href="#c-labels">物種標籤分類</a></td></tr>
+<tr><td><span class="f">timestamp</span><span class="req">必填</span></td><td>拍攝時間（ISO 8601，+08:00）。</td><td><span class="ex">2022-05-04T10:37:10+08:00</span></td><td>Image.datetime（UTC 轉台灣時間）</td></tr>
+<tr><td><span class="f">filePath</span><span class="req">必填</span></td><td>照片檔案網址（中尺寸縮圖）。</td><td><span class="ex">https://camera-trap-21-prod.s3…/66b7…-m.jpg</span></td><td>依儲存位置組成</td></tr>
+<tr><td><span class="f">filePublic</span><span class="req">必填</span></td><td>照片是否公開。目前三個計畫皆為 <code>false</code>，照片網址可能無法直接瀏覽，需要照片請與資料提供者聯繫。</td><td><span class="ex">false</span></td><td>Project.is_public</td></tr>
+<tr><td><span class="f">fileName</span></td><td>原始檔名。</td><td><span class="ex">RCNX0002.JPG</span></td><td>Image.filename</td></tr>
+<tr><td><span class="f">fileMediatype</span><span class="req">必填</span></td><td>檔案格式，固定為 <code>image/jpeg</code>。</td><td><span class="ex">image/jpeg</span></td><td>—</td></tr>
+<tr><td><span class="f">mediaComments</span></td><td>上傳時的資料夾名稱。</td><td><span class="ex">CY60A-20220503-20220531</span></td><td>Image.folder_name</td></tr>
+</tbody></table></div>
+<p class="empty">未填欄位：exifData、favorite。</p>
+
+<h3 id="f-observations">observations.csv — 辨識結果</h3>
+<div class="tbl"><table class="fields">
+<thead><tr><th>欄位</th><th>說明</th><th>範例</th><th>資料庫來源</th></tr></thead>
+<tbody>
+<tr><td><span class="f">observationID</span><span class="req">必填</span></td><td>辨識紀錄唯一代碼。</td><td><span class="ex">obs-19138540</span></td><td>Image.id</td></tr>
+<tr><td><span class="f">deploymentID</span><span class="req">必填</span></td><td>所屬佈設。</td><td><span class="ex">j-21145</span></td><td>—</td></tr>
+<tr><td><span class="f">mediaID</span></td><td>對應的照片。</td><td><span class="ex">66b7334d3c8038375040384c</span></td><td>Image.image_uuid</td></tr>
+<tr><td><span class="f">eventID</span></td><td>事件代碼。TaiCAT 以單張照片為辨識單位，因此與 mediaID 相同；未將連拍照片合併為事件。</td><td><span class="ex">66b7334d3c8038375040384c</span></td><td>—</td></tr>
+<tr><td><span class="f">eventStart</span> / <span class="f">eventEnd</span><span class="req">必填</span></td><td>事件起訖時間，皆等於照片拍攝時間。</td><td><span class="ex">2022-05-04T10:37:10+08:00</span></td><td>Image.datetime</td></tr>
+<tr><td><span class="f">observationLevel</span><span class="req">必填</span></td><td>固定為 <code>media</code>，表示辨識是針對單張照片。</td><td><span class="ex">media</span></td><td>—</td></tr>
+<tr><td><span class="f">observationType</span><span class="req">必填</span></td><td><code>animal</code> 動物、<code>blank</code> 空拍或測試照、<code>human</code> 人員架設／回收相機。</td><td><span class="ex">animal</span></td><td>由物種標籤判斷</td></tr>
+<tr><td><span class="f">cameraSetupType</span></td><td><code>setup</code> 表示架設或回收相機時的工作照；其他留白。</td><td><span class="ex">（空白）</span></td><td>由物種標籤判斷</td></tr>
+<tr><td><span class="f">scientificName</span></td><td>拉丁學名，依 TaiCOL 對應。無法對應到單一物種的動物（如「鳥」「鼠」「無法辨識」）留白。</td><td><span class="ex">Muntiacus reevesi</span></td><td>Image.species 經 TaiCOL 對照</td></tr>
+<tr><td><span class="f">count</span></td><td>個體數。TaiCAT 每筆辨識代表一筆動物紀錄，動物固定為 <code>1</code>；空拍、工作照留白。</td><td><span class="ex">1</span></td><td>—</td></tr>
+<tr><td><span class="f">lifeStage</span></td><td>年齡（原始中文值：成體、亞成體、幼體）。</td><td><span class="ex">成體</span></td><td>Image.life_stage</td></tr>
+<tr><td><span class="f">sex</span></td><td>性別（原始中文值：雄性、雌性、無法判定）。</td><td><span class="ex">雄性</span></td><td>Image.sex</td></tr>
+<tr><td><span class="f">individualID</span></td><td>個體編號（如有辨識個體）。</td><td><span class="ex">—</span></td><td>Image.animal_id</td></tr>
+<tr><td><span class="f">classificationMethod</span></td><td>固定為 <code>human</code>，表示由人工辨識。</td><td><span class="ex">human</span></td><td>—</td></tr>
+<tr><td><span class="f">observationTags</span></td><td>鹿角狀態（水鹿、山羌、梅花鹿等），原始中文值。</td><td><span class="ex">硬角一尖</span></td><td>Image.antler</td></tr>
+<tr><td><span class="f">observationComments</span></td><td>辨識備註。<strong>沒有學名的紀錄，原始中文物種標籤會放在最前面</strong>（如「測試」「空拍」「鳥」），可用來回溯原始辨識。</td><td><span class="ex">測試</span></td><td>Image.species ＋ Image.remarks</td></tr>
+</tbody></table></div>
+<p class="empty">未填欄位：behavior、classifiedBy、classificationTimestamp、classificationProbability。lifeStage 與 sex 保留原始中文值，未轉換為 Camtrap DP 建議的英文詞彙（如 adult、female）。</p>
+
+<h3 id="f-datapackage">datapackage.json — 詮釋資料</h3>
+<div class="tbl"><table>
+<thead><tr><th>欄位</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td><span class="f">title</span> / <span class="f">project</span></td><td>計畫名稱、簡稱、說明。</td></tr>
+<tr><td><span class="f">contributors</span></td><td>計畫主持人（principalInvestigator）與執行單位（rightsHolder）。</td></tr>
+<tr><td><span class="f">licenses</span></td><td>授權；<code>scope: data</code> 為辨識資料，<code>scope: media</code> 為照片。</td></tr>
+<tr><td><span class="f">spatial</span></td><td>所有佈設座標的範圍（GeoJSON bbox）。</td></tr>
+<tr><td><span class="f">temporal</span></td><td>資料的起訖日期，已排除 2000 年以前與未來的錯誤日期。</td></tr>
+<tr><td><span class="f">taxonomic</span></td><td>資料中出現的物種清單：<code>scientificName</code> 學名、<code>taxonID</code> TaiCOL 物種編號、<code>vernacularNames.zho</code> 中文名。中文名為資料中使用的原始標籤，可能與 TaiCOL 正式中文名略有不同。</td></tr>
+</tbody></table></div>
+<pre>{
+  "scientificName": "Capricornis swinhoei",
+  "kingdom": "Animalia",
+  "taxonID": "t0077405",
+  "vernacularNames": { "zho": "野山羊" }
+}</pre>
+</section>
+
+<section id="convert">
+<h2>資料轉換方式</h2>
+
+<h3 id="c-structure">資料結構對應</h3>
+<p>TaiCAT 資料庫中與匯出相關的主要資料表，對應到 Camtrap DP 的方式如下：</p>
+<div class="tbl"><table>
+<thead><tr><th>TaiCAT 資料表</th><th>內容</th><th>Camtrap DP</th></tr></thead>
+<tbody>
+<tr><td><code>Deployment</code></td><td>相機位置：樣點名稱、座標、海拔、植被</td><td>locationID、locationName、座標等位置欄位</td></tr>
+<tr><td><code>DeploymentJournal</code></td><td>工作紀錄：某位置某次架設到回收的起訖時間（現行系統上傳時建立）</td><td>一筆工作紀錄 = 一個 deployment（<code>j-</code>）</td></tr>
+<tr><td><code>StudyArea</code></td><td>樣區（如林業署分署）</td><td>deploymentGroups</td></tr>
+<tr><td><code>Image</code></td><td>一筆照片辨識：拍攝時間、物種標籤、年齡、性別、備註</td><td>media ＋ observation</td></tr>
+<tr><td><code>Image_info</code></td><td>照片 EXIF</td><td>cameraModel</td></tr>
+<tr><td><code>Project</code></td><td>計畫名稱、主持人、授權、公開狀態</td><td>datapackage.json、filePublic</td></tr>
+</tbody></table></div>
+
+<h3 id="c-deployment">兩種 deployment：現行系統與舊系統</h3>
+<p>Camtrap DP 定義的 deployment 是「一台相機在一個地點運作的一段期間」。TaiCAT 依照片有沒有連結到工作紀錄，用兩種方式產生 deployment：</p>
+<div class="tbl"><table>
+<thead><tr><th></th><th>工作紀錄型 <code>j-</code></th><th>位置型 <code>dep-</code></th></tr></thead>
+<tbody>
+<tr><td>適用資料</td><td>現行系統上傳、連結到工作紀錄的照片<br><span class="pill">329 全部</span> <span class="pill">287、288 部分</span></td><td>舊系統移轉的照片，以及未連結工作紀錄的照片<br><span class="pill legacy">287、288</span></td></tr>
+<tr><td>一個 deployment 代表</td><td>一次架設到回收的期間</td><td>一個相機位置的全部照片</td></tr>
+<tr><td>deploymentStart / End</td><td>工作紀錄登記的起訖時間</td><td>該位置照片的最早與最晚拍攝時間</td></tr>
+<tr><td>同一位置多次架設</td><td>分成多個 deployment</td><td>合併成一個 deployment</td></tr>
+</tbody></table></div>
+<p><strong>為什麼舊系統資料要用位置型？</strong>舊系統只記錄了照片與相機位置，沒有每次架設、回收的起訖時間。若把整個計畫當成一個 deployment，所有樣點的座標會混在一起；若每張照片當成一個 deployment，運作期間會是 0。以「一個位置 = 一個 deployment」折衷，保留了樣點的真實座標，並以照片時間推估運作期間。</p>
+<div class="note">
+<p><strong>計算努力量（相機工作時數）時請注意：</strong><code>dep-</code> 佈設的期間是從第一張到最後一張照片，中間若有相機停機或多次回收的空檔也會算進去，因此會<strong>高估</strong>工作時數。<code>j-</code> 佈設的期間則來自實際的工作紀錄，較精確。建議分析時以 deploymentID 前綴區分兩者。</p>
+</div>
+<p>計畫 287、288 同時有兩種 deployment：有工作紀錄的照片歸在 <code>j-</code>，其餘歸在同一位置的 <code>dep-</code>，兩者以 <code>locationID</code> 對應到相同的相機位置。每張照片只會出現在其中一種，不會重複。</p>
+
+<h3 id="c-labels">物種標籤分類</h3>
+<p>TaiCAT 沒有獨立欄位記錄「這是不是測試照、空拍」，這些資訊寫在物種標籤中。匯出時依標籤轉換為 Camtrap DP 的受控詞彙：</p>
+<div class="tbl"><table>
+<thead><tr><th>原始物種標籤</th><th>observationType</th><th>cameraSetupType</th><th>captureMethod</th><th>是否匯出</th></tr></thead>
+<tbody>
+<tr><td>動物（山羌、水鹿、鳥…）</td><td><code>animal</code></td><td></td><td>activityDetection</td><td>是</td></tr>
+<tr><td>空拍、錯誤空拍、空拍(黑)、空白標籤</td><td><code>blank</code></td><td></td><td>activityDetection</td><td>是</td></tr>
+<tr><td>測試、test（定時測試照）</td><td><code>blank</code></td><td></td><td><b>timeLapse</b></td><td>是</td></tr>
+<tr><td>工作照、收相機、研究人員到點結束片</td><td><code>human</code></td><td><b>setup</b></td><td>activityDetection</td><td>是</td></tr>
+<tr><td>人、人（有槍）、人＋狗、狗＋人、獵人、砍草工人、研究人員、研究人員自己、除草工人</td><td>—</td><td>—</td><td>—</td><td><b>否</b>（隱私）</td></tr>
+</tbody></table></div>
+<p>做物種分析時，篩選 <code>observationType = animal</code> 即可排除測試照、空拍與工作照；這些照片仍保留在資料中，可用來確認相機的運作期間。</p>
+
+<h3 id="c-names">學名對應（TaiCOL）</h3>
+<p>資料庫中的物種為中文俗名，匯出時透過<a href="https://taicol.tw/" rel="noopener">臺灣物種名錄 TaiCOL</a> 對應為拉丁學名與 TaiCOL 物種編號，並經人工校正，例如：</p>
+<ul>
+<li>別名與全名對應到同一物種：「野山羊」「山羊」「臺灣野山羊」皆為臺灣野山羊 <i>Capricornis swinhoei</i>；「臺灣山鷓鴣(深山竹雞)」「深山竹雞」皆為 <i>Arborophila crudigularis</i>。</li>
+<li>臺灣僅有單一亞種者，對應到該亞種：「野豬」為 <i>Sus scrofa taivanus</i>。</li>
+<li>使用 TaiCOL 目前的有效學名：「台灣噪眉」為 <i>Trochalopteron morrisonianum</i>，不使用已刪除的舊名。</li>
+</ul>
+<p>無法對應到單一物種的標籤，例如「鼠或鼩形目」「鳥」「松鼠」「無法辨識」「白氏/虎斑地鶇」，<code>observationType</code> 維持 <code>animal</code>、<code>scientificName</code> 留白，原始標籤保留在 <code>observationComments</code> 開頭。</p>
+
+<h3 id="c-time">時間與座標</h3>
+<ul>
+<li><strong>時間</strong>：照片時間在資料庫中以 UTC 儲存，匯出時轉為台灣時間（+08:00）；工作紀錄的起訖時間原本即為台灣時間。</li>
+<li><strong>座標</strong>：計畫 329 大部分相機位置以 TWD97 二度分帶（TM2 121 分帶，公尺）登錄，匯出時轉換為 WGS84 經緯度（EPSG:3826 → EPSG:4326）。原本已是經緯度的資料不變。</li>
+<li><strong>timestampIssues</strong>：符合以下任一條件時標記為 <code>true</code>，照片本身仍會匯出：
+  <ul>
+  <li>佈設或照片的時間早於 2000-01-01，或晚於匯出日期（相機時鐘重設、設定錯誤）。</li>
+  <li>照片時間超出該佈設起訖期間 1 天以上。</li>
+  </ul>
+  標記數量：287 有 7 個佈設、288 有 2 個、329 有 31 個。
+</li>
+</ul>
+
+<h3 id="c-exclude">排除與合併規則</h3>
+<ul>
+<li>標記為重複上傳的照片不匯出。</li>
+<li>已停用的相機位置不匯出。</li>
+<li>測試用的相機位置（以預設座標 1, 1 登錄者，如計畫 329 的 test、test0621 等）及其照片不匯出。</li>
+<li>真實人員入鏡照（見上表）不匯出。</li>
+<li>缺少拍攝時間的照片、缺少座標或起訖時間的佈設不匯出，以符合 Camtrap DP 必填規定。</li>
+<li>工作紀錄若被標記為無效或停機空檔，該紀錄的照片不匯出。</li>
+<li>同一張照片有多筆辨識時（例如拍到兩種動物），media.csv 只列一次，observations.csv 則每筆辨識各一列。</li>
+</ul>
+</section>
+
+<section id="caveats">
+<h2>使用注意事項</h2>
+<div class="note">
+<p><strong>座標可疑的相機位置</strong>：下列位置的座標在原始資料庫中即有誤，不在臺灣範圍內，進行空間分析前請排除或自行校正：</p>
+<ul>
+<li>計畫 287、288：<code>HL13B</code>（緯度 2.337…，疑為 23.37 的誤植）。</li>
+<li>計畫 288：<code>LD-LTMM-023</code>（緯度 20.998…）。</li>
+</ul>
+</div>
+<ul>
+<li><strong>努力量</strong>：<code>dep-</code> 佈設的運作期間為照片時間推估，會高估工作時數，見<a href="#c-deployment">兩種 deployment</a>。</li>
+<li><strong>事件</strong>：未將連拍照片合併為獨立事件，每張照片為一筆紀錄。計算相對豐度（OI 值）時，請依研究設計自行定義有效照片間隔（例如同位置同物種 30 分鐘或 1 小時內視為同一事件）。</li>
+<li><strong>海拔</strong>：<code>cameraHeight</code> 目前為相機位置的海拔，不是相機離地高度。</li>
+<li><strong>2007 年的資料</strong>：計畫 329 有少量照片日期為 2007 年，早於計畫開始時間（2015-09），可能是相機時鐘錯誤，但因落在合理年份內未被標記，使用時請留意。</li>
+<li><strong>照片存取</strong>：<code>filePublic</code> 皆為 <code>false</code>，照片網址可能無法直接瀏覽。</li>
+</ul>
+</section>
+
+</main>
+</div>
+
+<footer>TaiCAT 臺灣自動相機資料庫 · Camtrap DP Data Package 說明 · 匯出日期 2026-09-17</footer>
