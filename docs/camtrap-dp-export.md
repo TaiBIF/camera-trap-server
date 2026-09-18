@@ -3,6 +3,8 @@
 > 對象：計畫管理者（PM）
 > 程式：`scripts/export-camtrap-dp.py`
 > 規範：[Camtrap DP 1.0](https://camtrap-dp.tdwg.org/)
+> 給研究人員的文件：[`camtrap-dp-analysis-guide.zh-TW.html`](./camtrap-dp-analysis-guide.zh-TW.html)（使用與分析）、
+> [`camtrap-dp-export-guide.zh-TW.html`](./camtrap-dp-export-guide.zh-TW.html)（欄位說明與轉換方式）
 
 ---
 
@@ -16,9 +18,9 @@ Camtrap DP（Camera Trap Data Package）是 TDWG 制定的**自動相機資料�
 | `datapackage.json` | 計畫描述、授權、聯絡人、統計 | （整包的詮釋資料）|
 | `deployments.csv` | 相機佈設紀錄 | 一台相機在某地點、某段期間的運作 |
 | `media.csv` | 影像檔 | 一張照片 |
-| `observations.csv` | 物種辨識結果 | 一筆辨識（一張照片一筆）|
+| `observations.csv` | 物種辨識結果 | 一筆辨識（一張照片通常一筆，拍到多種動物時多筆）|
 
-三者的關聯：**一個 deployment 包含多張 media，每張 media 對應一筆 observation**。
+三者的關聯：**一個 deployment 包含多張 media，每張 media 對應一或多筆 observation**。
 
 ---
 
@@ -44,9 +46,15 @@ TaiCAT 的資料結構，對應到 Camtrap DP 與 DarwinCore 如下：
 
 ```
 有 DeploymentJournal 紀錄？
- ├─ 有  → 走【新版規則】（以工作期間為單位）
- └─ 沒有 → 走【舊版規則】（以相機位置點為單位）
+ ├─ 有  → 【新版規則】連結到工作紀錄的照片，以工作期間為單位（j-）
+ │        ＋【舊版規則】沒有連結工作紀錄的照片，以相機位置點為單位（dep-）
+ └─ 沒有 → 【舊版規則】全部照片以相機位置點為單位（dep-）
 ```
+
+> 有工作紀錄的計畫也可能含有沒連結工作紀錄的照片，例如 287、288 由舊系統移轉的影像
+> （`deployment_journal_id` 為空）。這些照片以前會被整批略過（288 曾匯出 0 筆），
+> 現在改依規則 B 歸到所屬相機位置的 `dep-` deployment。同一個位置可同時有 `j-` 與 `dep-`，
+> 以 `locationID` 對應；每張照片只會屬於其中一個。
 
 ### 規則 A — 新版計畫（有 DeploymentJournal）
 
@@ -60,12 +68,13 @@ TaiCAT 的資料結構，對應到 Camtrap DP 與 DarwinCore 如下：
 
 ### 規則 B — 舊版計畫（沒有 DeploymentJournal）
 
-早期計畫只有照片（occurrence）資料，**沒有架設作業的起訖時間紀錄**，
-只有相機位置點（`Deployment`）。
+早期計畫（以及上述沒連結工作紀錄的照片）只有照片（occurrence）資料，
+**沒有架設作業的起訖時間紀錄**，只有相機位置點（`Deployment`）。
 
 - **一個相機位置點 = 一個 deployment**
 - `deploymentID` 格式：`dep-{位置點編號}`（例：`dep-11559`）
-- 工作期間：用該位置點**所有照片的最早與最晚拍攝時間**推算
+- 工作期間：用該位置點**所有照片的最早與最晚拍攝時間**推算（只取 2000 年之後、匯出時間之前的合理時間；
+  若該位置只有不合理的時間才使用原值，並標記 `timestampIssues`）
 - 所有屬於該位置點的照片，都歸到這一個 deployment 底下
 
 #### 為什麼舊版這樣設計？
@@ -190,8 +199,9 @@ is_valid, scientific_name`），再經人工校正。匯出程式用 `--species-
 
 ### 對不到學名的標籤
 
-有些標籤對不到 TaiCOL（例如「獼猴」這種泛稱、TaiCOL 只收「臺灣獼猴」全名；或
-「白腹秧雞(白胸秧雞)」這種帶註解的字串）。這時：
+對照表已人工補上別名（如「臺灣山鷓鴣(深山竹雞)」「黑熊」「野兔」）並修正誤對（「野山羊」為臺灣野山羊
+*Capricornis swinhoei*，不是 *Capra aegagrus*）。仍有些標籤無法對到單一物種
+（例如「鳥」「鼠或鼩形目」「無法辨識」「白氏/虎斑地鶇」）。這時：
 
 - `observationType` 仍維持 `animal`（確實是動物，只是沒對到學名）
 - `scientificName` 留空（不能塞中文，否則違規）
@@ -202,8 +212,17 @@ is_valid, scientific_name`），再經人工校正。匯出程式用 `--species-
 ## 七、其他匯出規則摘要
 
 - **時間**：照片時間以 UTC 儲存，輸出時轉為台灣時間（+08:00）；DeploymentJournal 起訖時間本就是台灣時間。
+- **座標**：一律輸出 WGS84 經緯度。`geodetic_datum = TWD97` 且數值不在經緯度範圍的位置點，視為 TM2 二度分帶
+  公尺座標（EPSG:3826）轉換為 EPSG:4326，規則與 `taicat.utils.find_named_area` 相同（329 大部分位置點屬此類）。
+- **timestampIssues**：deployment 本身的起訖時間、或其照片時間早於 2000-01-01／晚於匯出時間，
+  或照片時間超出 deployment 起訖 1 天以上，該 deployment 標記為 `true`。照片仍照常匯出；
+  `datapackage.json` 的 `temporal` 會略過不合理的日期。
 - **排除**：標記為重複（`is_duplicated = Y`）的照片不匯出；已停用（deprecated）的位置點不匯出；
-  `Species.EXCLUDE_LIST` 的真實人員照不匯出（見第五節）。
+  座標為預設值 (1, 1) 的測試位置點（如 329 的 test、test0621）及其照片不匯出；
+  `Species.EXCLUDE_LIST` 的真實人員照不匯出（見第五節）；
+  連結到無效（`is_effective = False`）或停機空檔（`is_gap`）工作紀錄的照片不匯出。
+- **一張影像多筆標註**：同一 `image_uuid` 有多筆 `Image`（`annotation_seq`，例如一張拍到兩種動物）時，
+  `media.csv` 只寫一列，`observations.csv` 每筆標註各一列（Camtrap DP 規定 `mediaID` 不可重複）。
 - **必填欄位保護**：Camtrap DP 規定 deployment 必須有經緯度與工作起訖時間、media 必須有時間戳。
   若資料缺漏（例：行程沒有工作期間、位置點完全沒有照片、照片沒有拍攝時間），
   該筆 deployment／照片會**整筆略過不匯出**，以確保產出的資料包符合規範、能通過驗證。

@@ -31,9 +31,10 @@ Camtrap DP 資料夾，就能依本文件自行計算每個相機位置的**工�
   > 計算某個樣點的工作時數或 OI 時，請**以 `locationID` 來歸戶**，把屬於它的所有
   > deployment 期間加總。
 - **observation（一筆辨識）**：一張照片的辨識結果。`scientificName` 是物種名稱，
-  `observationType = animal` 表示有動物、`blank` 表示空拍。
+  `observationType = animal` 表示有動物、`blank` 表示空拍或定時測試照、`human` 表示架設回收相機的工作照。
+  `scientificName` 為拉丁學名（例如山羌為 `Muntiacus reevesi`），中文名在 `datapackage.json` 的 `taxonomic` 清單。
 
-所有時間欄位（`deploymentStart`、`deploymentEnd`、`timestamp`）都已經是
+所有時間欄位（`deploymentStart`、`deploymentEnd`、`eventStart`）都已經是
 **台灣時間（+08:00）**，可以直接使用，不需要再做時區換算。
 
 ---
@@ -149,6 +150,9 @@ def main(data_dir):
     deployments = load(f'{data_dir}/deployments.csv')
     observations = load(f'{data_dir}/observations.csv')
 
+    # 排除照片時間可能有誤的工作期間（timestampIssues = true）
+    deployments = [d for d in deployments if d.get('timestampIssues') != 'true']
+
     # deploymentID -> locationID 對照
     dep_to_loc = {d['deploymentID']: d['locationID'] for d in deployments}
 
@@ -166,7 +170,7 @@ def main(data_dir):
         loc = dep_to_loc.get(o['deploymentID'])
         if loc is None:
             continue
-        t = parse_iso(o['timestamp'])
+        t = parse_iso(o['eventStart'])
         photos[(loc, t.year, t.month, species)].append(t)
 
     rows = []
@@ -238,3 +242,11 @@ if __name__ == '__main__':
    若你需要「整段期間」或「整年」的 OI3，可自行把對應月份的 `independent_photos` 與
    `working_hours` 分別加總後再相除 × 1000。
 5. **時間已是台灣時間。** 不需要再做 +8 時區轉換。
+6. **時間可能有誤的期間已排除。** `timestampIssues = true` 的工作期間（相機時鐘錯誤等）不計入
+   工作時數與 OI3。
+7. **`dep-` 開頭的工作期間是推估值。** 早期資料沒有架設紀錄，期間為該位置第一張到最後一張照片，
+   中間停機空檔也被算入，工作時數偏高、OI3 偏低。比較時建議與 `j-` 開頭的期間分開。
+8. **檔案很大時。** 本程式把 CSV 全部讀進記憶體，適合數十萬筆以內的資料集。上千萬筆的資料集
+   （例如計畫 329）請改用 DuckDB，見
+   [`camtrap-dp-analysis-guide.zh-TW.html`](./camtrap-dp-analysis-guide.zh-TW.html)
+   與 [`camtrap_analysis.py`](./camtrap_analysis.py)。

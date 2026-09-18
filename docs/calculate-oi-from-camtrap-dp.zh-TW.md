@@ -58,7 +58,7 @@ POD = (該物種出現的不同天數) / (相機工作天數)
 | `calculate` 所需 | 來自正式資料庫 | 來自 Camtrap DP 套件 |
 |------------------|----------------|----------------------|
 | 物種照片（時間、個體 id） | `Image` 中該 deployment／物種、且 `is_duplicated != 'Y'` 的列 | `observations.csv` 中以 `scientificName` 篩選的列（重複照片已於匯出時排除） |
-| 拍攝時間 | `Image.datetime`（以 UTC 儲存，程式中位移為 +08:00） | `observations.csv.timestamp`——**已是 `+08:00`**，無需位移 |
+| 拍攝時間 | `Image.datetime`（以 UTC 儲存，程式中位移為 +08:00） | `observations.csv.eventStart`——**已是 `+08:00`**，無需位移 |
 | 個體 id | `Image.animal_id` | `observations.csv.individualID` |
 | 相機工作時間 | 由 `DeploymentJournal` 透過 `Deployment.count_working_day()` 計算（已排除缺失） | `deployments.csv` 的 `deploymentStart` / `deploymentEnd` 區間 |
 
@@ -70,10 +70,10 @@ POD = (該物種出現的不同天數) / (相機工作天數)
 |------|------|------------------|
 | `deploymentID` | `j-<journal_id>`（舊計畫為 `dep-<id>`） | 用以將照片依相機工作期間分組 |
 | `mediaID` | 影像 uuid | `Image.image_uuid` |
-| `timestamp` / `eventStart` | 拍攝時間，`+08:00` | `Image.datetime`（位移為台灣時間後） |
-| `scientificName` | 物種名稱 | `Image.species` |
+| `eventStart` / `eventEnd` | 拍攝時間，`+08:00`（兩者皆等於照片時間；`observations.csv` 沒有 `timestamp` 欄位，該欄位在 `media.csv`） | `Image.datetime`（位移為台灣時間後） |
+| `scientificName` | 拉丁學名（依 TaiCOL），例如 `Muntiacus reevesi`；未辨識到種的動物為空白 | `Image.species`（中文標籤，匯出時對應） |
 | `individualID` | 動物個體 id | `Image.animal_id` |
-| `observationType` | `animal` 或 `blank` | `'animal' if species else 'blank'` |
+| `observationType` | `animal`、`blank`（空拍／定時測試照）或 `human`（架設回收工作照） | 由 `Image.species` 標籤判斷 |
 
 **`deployments.csv`**（每段相機工作期間一列）：
 
@@ -127,8 +127,9 @@ def working_days_in_month(dep_rows, year, month):
     return len(days)
 ```
 
-> **舊計畫** 匯出時 `deploymentID = dep-<id>`，其 `deploymentStart`/`deploymentEnd`
-> 是由照片時間的最小／最大值推導而來（見 `write_deployments_legacy`）。此時工作時數
+> **沒有 DeploymentJournal 的照片**（舊計畫，以及 287／288 這類計畫中由舊系統移轉的照片）
+> 匯出為 `deploymentID = dep-<id>`，每個相機位置一個，其 `deploymentStart`/`deploymentEnd`
+> 是由照片時間的最小／最大值推導而來（見 `location_units`）。此時工作時數
 > 只是真實工作期間的近似值——由舊套件計算出的任何指數都應標註為近似。
 
 ---
@@ -143,13 +144,13 @@ def working_days_in_month(dep_rows, year, month):
 
 ```python
 def count_oi3(obs, image_interval_min):
-    """obs：某物種的列（observationType='animal'），已依 timestamp 排序。"""
+    """obs：某物種的列（observationType='animal'），已依 eventStart 排序。"""
     threshold = image_interval_min * 60
     count = 0
     last = None
     delta_acc = 0          # 自上一筆「計入」照片以來累積的秒數
     for o in obs:
-        t = parse_iso(o['timestamp'])
+        t = parse_iso(o['eventStart'])
         if last is None:
             count = 1               # 第一張照片必定計入
         else:
@@ -169,14 +170,14 @@ def count_oi3(obs, image_interval_min):
 
 ```python
 def count_oi1(obs, image_interval_min):
-    """obs 依 timestamp 排序；使用 individualID。"""
+    """obs 依 eventStart 排序；使用 individualID。"""
     threshold = image_interval_min * 60
     count = 0
     last = None
     delta_acc = 0
     prev_individual = None
     for o in obs:
-        t = parse_iso(o['timestamp'])
+        t = parse_iso(o['eventStart'])
         ind = (o.get('individualID') or '').strip()
         if last is None:
             count = 1 if ind else 0     # 第一張照片只有在有 id 時才計入
@@ -223,7 +224,7 @@ def oi(count, working_days):
 
 ```python
 def count_pod(obs, working_days):
-    days_with_species = {parse_iso(o['timestamp']).date() for o in obs}
+    days_with_species = {parse_iso(o['eventStart']).date() for o in obs}
     return len(days_with_species) / working_days if working_days > 0 else None
 ```
 
@@ -242,11 +243,11 @@ mdh[day] = [當日是否出現該物種(0/1), [第0時是否出現, ... 第23時
 ```
 
 由 `observations.csv` 計算時非常簡單：對每張物種照片，標記
-`mdh[timestamp.day-1][0] = 1` 及 `mdh[timestamp.day-1][1][timestamp.hour] = 1`。
+`mdh[eventStart.day-1][0] = 1` 及 `mdh[eventStart.day-1][1][eventStart.hour] = 1`。
 
 > 模型會把小時數從 UTC 位移到台灣時間（`utc_hour + 8`），因為 `Image.datetime`
-> 以 UTC 儲存。**在 Camtrap DP 匯出資料中，`timestamp` 已是 `+08:00`，因此不需要
-> 任何小時位移**——直接使用 `timestamp.hour` 即可。
+> 以 UTC 儲存。**在 Camtrap DP 匯出資料中，`eventStart` 已是 `+08:00`，因此不需要
+> 任何小時位移**——直接使用 `eventStart.hour` 即可。
 
 ---
 
@@ -267,7 +268,7 @@ deployments  = load('deployments.csv')
 observations = load('observations.csv')
 
 location_id   = 'loc-12345'
-species       = '山羌'
+species       = 'Muntiacus reevesi'   # 山羌；scientificName 為拉丁學名
 year, month   = 2024, 3
 image_interval = 30        # 分鐘
 event_interval = 60        # 分鐘（僅用於 event_count）
@@ -285,10 +286,10 @@ obs = [
     if o['deploymentID'] in dep_ids
     and o['observationType'] == 'animal'
     and o['scientificName'] == species
-    and parse_iso(o['timestamp']).year == year
-    and parse_iso(o['timestamp']).month == month
+    and parse_iso(o['eventStart']).year == year
+    and parse_iso(o['eventStart']).month == month
 ]
-obs.sort(key=lambda o: o['timestamp'])
+obs.sort(key=lambda o: o['eventStart'])
 
 # 4. 各指數
 oi1 = oi(count_oi1(obs, image_interval), wdays)
@@ -309,11 +310,12 @@ print(year, month, species, 'OI1', oi1, 'OI2', oi2, 'OI3', oi3, 'POD', pod)
    時被正確排除（匯出時已透過 `is_gap` 過濾），工作日集合應該相符。舊版（`dep-*`）
    套件以照片最小／最大時間推導工作區間，僅為近似。
 2. **月份邊界／時區。** 模型以對應台灣月份的 UTC 區間挑選照片；套件的時間戳已是
-   `+08:00`，因此直接以 `timestamp.month` 篩選即為自然對應，並可避免 UTC↔台灣時間
+   `+08:00`，因此直接以 `eventStart.month` 篩選即為自然對應，並可避免 UTC↔台灣時間
    的邊界處理。
 3. **OI2 bug。** 正式 OI2 是壞的（過時的 `image_dt`）；上述範例採用其應有的定義
    （對所有物種列套用 OI3 規則）。
 4. **重複照片。** `is_duplicated = 'Y'` 的影像*在匯出時*即已排除，因此套件已與模型的
-   `.exclude(is_duplicated='Y')` 相符。
+   `.exclude(is_duplicated='Y')` 相符。一張照片有多筆辨識時，會是共用同一個 `mediaID`、
+   相同 `eventStart` 的多列 observation，依間隔規則只會計入一次。
 5. **個體 ID。** 只有在 `individualID` 有填值時，`OI1` 才會與 `OI2`／`OI3` 分歧；
    對多數計畫而言此欄為空，三者的分子會收斂一致。
