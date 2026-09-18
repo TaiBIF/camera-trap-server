@@ -6,10 +6,10 @@ Camtrap DP Data Package 基本分析：物種紀錄數、相機工作時數、OI
     python camtrap_analysis.py <Data Package 資料夾> [輸出資料夾]
 
 輸出（UTF-8 BOM，可直接用 Excel 開啟）：
-    species_summary.csv    各物種紀錄數、獨立有效照片數、出現樣點數
+    species_summary.csv    各物種紀錄數、有效照片數、出現樣點數
     effort_by_location.csv 各相機位置的工作天數與工作時數
     oi3_by_location.csv    各相機位置 × 物種的 OI3
-    activity_by_hour.csv   各物種 0–23 時的獨立有效照片數
+    activity_by_hour.csv   各物種 0–23 時的有效照片數
 """
 
 import csv
@@ -19,7 +19,7 @@ from pathlib import Path
 
 import duckdb
 
-IMAGE_INTERVAL_MIN = 60           # 獨立有效照片的間隔門檻（分鐘）
+IMAGE_INTERVAL_MIN = 60           # 有效照片的間隔門檻（分鐘）
 EXCLUDE_TIMESTAMP_ISSUES = True   # 排除 timestampIssues = true 的相機期間
 BBOX = (21.5, 26.5, 118.0, 123.5) # 臺灣範圍：緯度下限、上限、經度下限、上限
 
@@ -90,12 +90,12 @@ def main(pkg, out):
         ORDER BY g.locationID, o.scientificName, o.eventStart
     """)
 
-    # 獨立有效照片：與上一張「計入」的照片相隔 >= IMAGE_INTERVAL_MIN 才算新的一張
+    # 有效照片：與上一張「計入」的照片相隔 >= IMAGE_INTERVAL_MIN 才算新的一張
     threshold = IMAGE_INTERVAL_MIN * 60
     from datetime import datetime
     records = {}      # species -> 紀錄數
-    independent = {}  # (location, species) -> 獨立有效照片數
-    by_hour = {}      # (species, hour) -> 獨立有效照片數
+    independent = {}  # (location, species) -> 有效照片數
+    by_hour = {}      # (species, hour) -> 有效照片數
     key = last_counted = None
     while batch := rows.fetchmany(100_000):
         for loc, sp, ts in batch:
