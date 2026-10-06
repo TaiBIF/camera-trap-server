@@ -22,6 +22,6 @@ db-bak: ## bak inindb dump file
 	sudo mv ./initdb/*.sql.gz .
 	@echo "dump files moved to project root."
 
-delete-folder: ## delete upload folder on remote. Usage: make delete-folder FOLDER=name [DRY_RUN=1] [HOST=ct-prod]
-	@test -n "$(FOLDER)" || { echo "ERROR: FOLDER is required, e.g. make delete-folder FOLDER=some_folder"; exit 1; }
-	ssh $(HOST) "cd camera-trap-server;docker-compose -f compose.yml exec -T django python scripts/delete_upload_folder.py $(if $(DRY_RUN),--dry-run )$(FOLDER)"
+delete-folder: ## delete upload folder on remote. Usage: make delete-folder FOLDER=name|ID=journal_id [DRY_RUN=1] [HOST=ct-prod]
+	@test -n "$(FOLDER)$(ID)" || { echo "ERROR: FOLDER or ID is required, e.g. make delete-folder FOLDER=some_folder"; exit 1; }
+	ssh $(HOST) "cd camera-trap-server;docker-compose -f compose.yml exec -T django python scripts/delete_upload_folder.py $(if $(DRY_RUN),--dry-run )$(if $(ID),--id $(ID),'$(FOLDER)')"

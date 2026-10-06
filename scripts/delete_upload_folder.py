@@ -7,6 +7,7 @@ Usage:
   python scripts/delete_upload_folder.py some_folder
   python scripts/delete_upload_folder.py --file folders.txt
   python scripts/delete_upload_folder.py --dry-run some_folder
+  python scripts/delete_upload_folder.py --id 12345   # a specific journal, when folder_name is duplicated
 """
 
 import argparse
@@ -106,13 +107,31 @@ def delete_folder(folder_name, s3_client, dry_run=False):
         delete_folder_by_dj(djs[0], s3_client, dry_run)
 
 
+def delete_journal(journal_id, s3_client, dry_run=False):
+    dj = DeploymentJournal.objects.filter(id=journal_id).first()
+    if not dj:
+        print(f"\n[NOT FOUND] deployment_journal id={journal_id}")
+        return
+    delete_folder_by_dj(dj, s3_client, dry_run)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Delete upload folder data by folder_name')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('folder_name', nargs='?', help='Single folder name to delete')
     group.add_argument('--file', '-f', help='File with folder names (one per line)')
+    group.add_argument('--id', type=int, help='DeploymentJournal id to delete')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be deleted without actually deleting')
     args = parser.parse_args()
+
+    if args.dry_run:
+        print("[DRY-RUN MODE] No data will be deleted.\n")
+
+    if args.id:
+        delete_journal(args.id, get_s3_client(), args.dry_run)
+        print(f"\n{'='*60}")
+        print("Done.")
+        return
 
     folders = []
     if args.file:
@@ -120,9 +139,6 @@ def main():
             folders = [line.strip() for line in f if line.strip()]
     else:
         folders = [args.folder_name]
-
-    if args.dry_run:
-        print("[DRY-RUN MODE] No data will be deleted.\n")
 
     print(f"Processing {len(folders)} folder(s)...")
 
